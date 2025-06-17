@@ -1,0 +1,1 @@
+// redirect to the dashboard accoding to the user's role
