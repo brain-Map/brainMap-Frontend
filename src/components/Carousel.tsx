@@ -7,6 +7,7 @@ interface Service {
   image?: string;
   description?: string;
   link?: string;
+  
 }
 
 interface PopularServicesProps {
