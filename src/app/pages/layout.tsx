@@ -1,4 +1,4 @@
-import Sidebar from '../../components/SideBar'
+import Sidebar from '../../components/SideBar';
 import React, { ReactNode } from 'react';
 
 export default function TestLayout({ children }: { children: ReactNode }) {
