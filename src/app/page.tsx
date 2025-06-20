@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import ErrorDialog from '../components/modals/ErrorDialog.Modal';
+import ErrorDialog from '../components/modals/ErrorDialogModal';
 import NavBar from '../components/NavBar.Model'
-import CustomButton from '../components/CustomButton.Model';
+import CustomButton from '../components/CustomButtonModel';
 import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';
 import ConnectLearnAchieveHero from '../components/ConnectLearnAchievePoster';
