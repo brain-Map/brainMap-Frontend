@@ -1,21 +1,41 @@
 'use client';
 
 import React, { useState } from 'react';
-import ErrorDialog from '../components/ErrorDialog';
-import NavBar from '../components/NavBar'
-import CustomButton from '../components/CustomButton';
-import Card_1 from '@/components/Card-1';
+import ErrorDialog from '../components/ErrorDialog.Model';
+import NavBar from '../components/NavBar.Model'
+import CustomButton from '../components/CustomButton.Model';
 import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';
-import ConnectLearnAchieveHero from '../components/ConnectLearnAchieveHero';
-import PopularServices from '../components/PopularServices'
-import DeuploadLanding from '../components/DeuploadLanding'
-import { ArrowRight, Download, Play, Plus, Heart,Star,Send, Settings,TrendingUp } from 'lucide-react';
+import ConnectLearnAchieveHero from '../components/ConnectLearnAchievePoster';
+import PopularServices from '../components/Carousel'
+import { ArrowRight, Download, Play, Plus, Heart,Star,Send, Settings,TrendingUp,
+  Search, ChevronRight, Upload, Users, Shield, Zap,  Globe, FileText
+} from 'lucide-react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
 
 const Home: React.FC = () => {
+
+
+    const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  
+    const handleSearch = (e: React.FormEvent) => {
+      e.preventDefault();
+      console.log('Searching for:', searchQuery);
+      // Add your search logic here
+    };
+
+
+    
+    const handleClick = (buttonName: string) => {
+    console.log(`${buttonName} button clicked!`);
+  };
+
+
+
 
   interface SuccessStory {
   id: string;
@@ -52,93 +72,114 @@ const successStories: SuccessStory[] = [
 
 
 
-
-    const handleClick = (buttonName: string) => {
-    console.log(`${buttonName} button clicked!`);
-  };
-
-  // const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  // const handleOpenDialog = () => {
-  //   setIsDialogOpen(true);
-  // };
-
-  // const handleCloseDialog = () => {
-  //   setIsDialogOpen(false);
-  // };
-
-  // const handleSecondaryAction = () => {
-  //   console.log('Secondary action clicked');
-  //   setIsDialogOpen(false);
-  // };
-
-  // const handlePrimaryAction = () => {
-  //   console.log('Primary action clicked');
-  //   setIsDialogOpen(false);
-  // };
-
   return (
 
     <>
     <NavBar/>
+
+
+{/* Hero section */}
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
+      
+
+      {/* Hero Section */}
+      <main className="relative z-10 px-6 py-20 w-full">
+        <div className="max-w-7xl mx-auto text-center">
+          {/* Main Heading */}
+          <div className="mb-12">
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/20">
+              <Star className="w-5 h-5 text-accent mr-2" />
+              <span className="text-value3 font-medium">Trusted by 10,000+ researchers worldwide</span>
+            </div>
+            
+            <h1 className="text-5xl md:text-5xl font-extrabold text-white mb-8 leading-tight">
+              Connect, collaborate, and track{' '}
+              <span className="bg-gradient-to-r from-accent via-info to-accent bg-clip-text text-transparent animate-gradient-x">
+              <br />  academic work
+              </span>{' '}
+              
+              with trusted domain experts
+            </h1>
+            
+            <p className="text-xl md:text-xl text-value3 max-w-5xl mx-auto leading-relaxed font-light">
+              Deupload is an innovative online file manager built on decentralized cloud storage and IPFS technology, 
+              enabling secure storage, seamless sharing, and private collaboration without subscription fees.
+            </p>
+          </div>
+
+          {/* Enhanced Search Bar */}
+                 <div className="mb-10">
+                    <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+                      <div className="flex items-center border border-gray-300 rounded-xl bg-white px-4 py-3 shadow-sm">
+                        <Search className="w-5 h-5 text-gray-500 mr-3" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search for files, people, or projects..."
+                          className="flex-1 text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none text-base"
+                        />
+                        {/* <button
+                          type="submit"
+                          className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold text-sm transition"
+                        >
+                          Search
+                        </button> */}
+
+
+                        
+                        <CustomButton
+                          text="Search"
+                          type = 'submit'
+                          backgroundColor="bg-gradient-to-r from-primary to-secondary"
+                          textColor="text-white"
+                          hoverBackgroundColor="hover:bg-value1 hover:text-black"
+                          onClick={() => handleClick('Get Started')}
+                        />
+                      </div>
+                    </form>
+                  </div>
+
     
-<DeuploadLanding/>
 
-{/* <div className='flex size-auto justify-center '>
-<div className="top-head">
-  <img src="/image/freepik__a-38-year-old-caucasian-man-with-a-beard-and-glass__85832.png" alt="" className='w-full h-full object-cover opacity-15' />
 
-  <div className='absolute flex flex-col justify-center items-center gap-5'>
-    <h1 className='text-white text-6xl text-center font-bold'>Connect, collaborate, and track academic <br/> work with trusted domain experts.</h1>
-    <h1 className='text-white text-xl text-center'>Deupload is a online file manager on decentralized cloud storage and IPFS that allows you <br/> storage, share, collect files privately and team collaboration without subscription.</h1>
+           
 
-    <div className='flex gap-3'>
-              <CustomButton
-                text="Get Started"
-                backgroundColor="bg-secondary"
-                textColor="text-gray-800"
-                hoverBackgroundColor="hover:bg-info"
-                icon={ArrowRight}
-                onClick={() => handleClick('Get Started')}
-              />
+          {/* Enhanced CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-20">
+            <button
+              onClick={() => handleClick('Get Started')}
+              className="group relative px-10 py-5 bg-gradient-to-r from-primary to-secondary text-white font-bold text-xl rounded-3xl transition-all duration-500 transform hover:scale-105 hover:shadow-2xl shadow-xl"
+            >
+              <span className="flex items-center">
+                <Upload className="w-6 h-6 mr-3" />
+                Get Started Free
+                <ChevronRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform duration-300" />
+              </span>
+            </button>
+            
+            <button
+              onClick={() => handleClick('Pricing')}
+              className="px-10 py-5 bg-white/15 backdrop-blur-xl hover:bg-white/25 text-white font-bold text-xl rounded-3xl border-2 border-white/30 hover:border-accent/50 transition-all duration-500 transform hover:scale-110 shadow-xl"
+            >
+              <span className="flex items-center">
+                <Globe className="w-6 h-6 mr-3" />
+                View Pricing
+              </span>
+            </button>
+          </div>
 
-                <CustomButton
-                text="Pricing"
-                backgroundColor="none"
-                border='border border-white'
-                textColor="text-white"
-                hoverBackgroundColor="hover:bg-white hover:text-black"
-                icon={TrendingUp }
-                onClick={() => handleClick('Get Started')}
-              />
-    </div>
-  </div>
 
-</div>
-</div> */}
-
-{/* 
-<div className='w-full h-auto flex justify-center items-center mt-5 gap-5'>
-
-    <Card_1 image='/icon/engineering.png' text='engineering' />
-    <Card_1 image='/icon/engineering.png' text='Medicine' />
-    <Card_1 image='/icon/engineering.png' text='Programming & Tech' />
-    <Card_1 image='/icon/engineering.png' text='Digital Marketing' />
-    <Card_1 image='/icon/engineering.png' text='engineering' />
-    <Card_1 image='/icon/engineering.png' text='engineering' />
-    <Card_1 image='/icon/engineering.png' text='engineering' />
-    <Card_1 image='/icon/engineering.png' text='engineering' />
-
-</div> */}
-
-{/* <div className='w-full h-auto flex justify-center items-center bg-accent mt-10'>
-  <div className='w-355 h-50 bg-amber-600 flex flex-col justify-center'>
-    <h1 className='text-4xl font-semibold pt-2 pb-2'>Popular Services</h1>
-    <div className='w-full h-full bg-amber-950'>
+          
+        </div>
+      </main>
 
     </div>
-  </div>
-</div> */}
+
+
+    {/* Hero section */}
+
+    
 
 <PopularServices className='mt-16'/>
 
@@ -241,10 +282,6 @@ const successStories: SuccessStory[] = [
                   </div>
                 </div>
                 
-                {/* Decorative circles
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-200 rounded-full opacity-60"></div>
-                <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-blue-100 rounded-full opacity-40"></div>
-                <div className="absolute top-1/2 -right-8 w-6 h-6 bg-blue-300 rounded-full opacity-50"></div> */}
               </div>
             </div>
           </div>
