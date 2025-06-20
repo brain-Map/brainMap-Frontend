@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import ErrorDialog from '../components/ErrorDialog.Model';
+import ErrorDialog from '../components/modals/ErrorDialog.Model';
 import NavBar from '../components/NavBar.Model'
 import CustomButton from '../components/CustomButton.Model';
 import JoinCommunity from '../components/JoinCommunity';
