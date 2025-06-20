@@ -95,3 +95,31 @@ const ErrorDialog: React.FC<ErrorDialogProps> = ({
 };
 
 export default ErrorDialog;
+
+
+
+{/* <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">
+          Error Dialog Component Demo
+        </h1>
+        
+        <button
+          onClick={handleOpenDialog}
+          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          Show Error Dialog
+        </button>
+
+        <ErrorDialog
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          onSecondary={handleSecondaryAction}
+          onPrimary={handlePrimaryAction}
+          title="You have unsaved data"
+          message="Do you know Material X system contains material design components so stayed as it should look and behave for today"
+          secondaryLabel="Cancel"
+          primaryLabel="Delete"
+        />
+      </div>
+    </div> */}
