@@ -48,11 +48,6 @@ const DeuploadLanding: React.FC = () => {
           </div>
 
           {/* Enhanced Search Bar */}
-          <div className="mb-16">
-            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-              <div className="relative group">
-                
-
                  <div className="mb-10">
                     <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
                       <div className="flex items-center border border-gray-300 rounded-xl bg-white px-4 py-3 shadow-sm">
@@ -76,8 +71,8 @@ const DeuploadLanding: React.FC = () => {
                         <CustomButton
                           text="Search"
                           type = 'submit'
-                          backgroundColor="bg-secondary"
-                          textColor="text-blck"
+                          backgroundColor="bg-gradient-to-r from-primary to-secondary"
+                          textColor="text-white"
                           hoverBackgroundColor="hover:bg-value1 hover:text-black"
                           onClick={() => handleClick('Get Started')}
                         />
@@ -85,9 +80,7 @@ const DeuploadLanding: React.FC = () => {
                     </form>
                   </div>
 
-              </div>
-            </form>
-          </div>
+    
 
 
            
