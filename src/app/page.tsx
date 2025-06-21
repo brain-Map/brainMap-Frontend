@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ErrorDialog from '../components/modals/ErrorDialogModal';
-import NavBar from '../components/NavBar.Model'
+import NavBar from '../components/NavBarModel'
 import CustomButton from '../components/CustomButtonModel';
 import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';

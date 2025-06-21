@@ -1,11 +1,19 @@
-import React from 'react'
+// import React from 'react'
 
-const Student = () => {
-  return (
-    <div>
+// const Student = () => {
+//   return (
+//     <div>
       
-    </div>
-  )
-}
+//     </div>
+//   )
+// }
 
-export default Student
+// export default Student
+
+
+
+
+
+
+
+//Me file eka ona na neda................?
