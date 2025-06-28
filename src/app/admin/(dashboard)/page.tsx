@@ -21,7 +21,10 @@ import {
   Flag,
   UserPlus,
   UserX,
-  UserCheck
+  UserCheck,
+  Brain,
+  FolderOpen,
+  AlertTriangle
 } from 'lucide-react';
 
 // Dashboard Icons
@@ -88,28 +91,28 @@ export default function AdminDashboard() {
       title: 'Total Brain Maps',
       value: '2544',
       change: '+12%',
-      icon: <BrainIcon />,
+      icon: <Brain className="h-6 w-6" />,
       color: 'bg-blue-500'
     },
     {
       title: 'Active Projects',
       value: '156',
       change: '+8%',
-      icon: <ChartIcon />,
+      icon: <FolderOpen className="h-6 w-6" />,
       color: 'bg-green-500'
     },
     {
       title: 'Pending Expert Verfications',
       value: '89',
       change: '+15%',
-      icon: <UsersIcon />,
+      icon: <UserCheck className="h-6 w-6" />,
       color: 'bg-purple-500'
     },
     {
-      title: 'Learning Modules',
+      title: 'Open Issues',
       value: '12',
       change: '+3%',
-      icon: <BookIcon />,
+      icon: <AlertTriangle className="h-6 w-6" />,
       color: 'bg-orange-500'
     }
   ];
@@ -189,7 +192,7 @@ export default function AdminDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {dashboardCards.map((card, index) => (
-            <SummaryCard 
+            <SummaryCard
               key={index}
               title={card.title}
               value={card.value}
