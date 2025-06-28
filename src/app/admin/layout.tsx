@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useState } from 'react';
 import Navbar from '../../components/DashboardNavBar';
-import AdminSideBar from '@/components/AdminSideBar';
+import AdminSideBar from '@/components/admin/AdminSideBar';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
