@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import SummaryCard from '@/components/admin/SummaryCard';
 
 // Import additional icons
 import { 
@@ -84,21 +85,21 @@ export default function AdminDashboard() {
   // Mock data - in real app, this would come from API
   const dashboardCards: DashboardCard[] = [
     {
-      title: 'Brain Maps Created',
-      value: '24',
+      title: 'Total Brain Maps',
+      value: '2544',
       change: '+12%',
       icon: <BrainIcon />,
       color: 'bg-blue-500'
     },
     {
-      title: 'Analyses Completed',
+      title: 'Active Projects',
       value: '156',
       change: '+8%',
       icon: <ChartIcon />,
       color: 'bg-green-500'
     },
     {
-      title: 'Collaborations',
+      title: 'Pending Expert Verfications',
       value: '89',
       change: '+15%',
       icon: <UsersIcon />,
@@ -188,21 +189,14 @@ export default function AdminDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {dashboardCards.map((card, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                </div>
-                <div className={`p-3 rounded-full ${card.color} text-white`}>
-                  {card.icon}
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-sm font-medium text-green-600">{card.change}</span>
-                <span className="text-sm text-gray-600"> from last month</span>
-              </div>
-            </div>
+            <SummaryCard 
+              key={index}
+              title={card.title}
+              value={card.value}
+              change={card.change}
+              icon={card.icon}
+              color={card.color}
+            />
           ))}
         </div>
 
