@@ -153,6 +153,17 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   return (
     <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
       <div className="flex-1">
+        {/* Header/Logo Section */}
+        <div className="flex items-center gap-3 p-6 border-b border-gray-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
+            <p className="text-xs text-gray-500 font-medium">Management System</p>
+          </div>
+        </div>
+        
         <div className="p-4 space-y-6">
           {/* Main Menu */}
           <div>
