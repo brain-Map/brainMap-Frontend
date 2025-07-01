@@ -1,26 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import SummaryCard from '@/components/admin/SummaryCard';
 
 // Import additional icons
 import { 
-  Home, 
-  Users, 
-  FileText, 
-  MessageSquare, 
-  Settings, 
-  BarChart3, 
-  CheckCircle, 
-  Lock, 
-  TrendingUp,
-  Shield,
-  Bell,
-  Calendar,
-  Flag,
-  UserPlus,
-  UserX,
   UserCheck,
   Brain,
   FolderOpen,
