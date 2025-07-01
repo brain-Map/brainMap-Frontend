@@ -125,64 +125,58 @@ const avgMonthlyGrowth = (totalRegistrations / registrationData.length).toFixed(
 export class CountChart extends Component {
   render() {
     return (
-      <Card>
+      <Card className=" border-0 shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-custom-primary">
+              <CardTitle className="text-2xl font-bold text-primary mb-1">
                 User Registration Trends
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm text-gray-500">
                 Monthly user registrations over the past 12 months
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2 text-custom-success">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700">
                 +{growthRate}% this month
               </span>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
             {/* Growth Metrics */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="flex items-center gap-3 p-3 bg-custom-value3 rounded-lg">
-                <div className="p-2 bg-custom-secondary rounded-lg">
-                  <Users className="h-4 w-4 text-white" />
+            <div className="grid gap-4 md:grid-cols-3 mb-6 p-4">
+              {/* Total Registrations */}
+              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+                  <Users className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-custom-value1">
-                    Total Registrations
-                  </p>
-                  <p className="text-lg font-bold text-custom-primary">
-                    {totalRegistrations.toLocaleString()}
-                  </p>
+                  <p className="text-xs text-gray-500 font-medium mb-1">Total Registrations</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">{totalRegistrations.toLocaleString()}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-custom-value3 rounded-lg">
-                <div className="p-2 bg-custom-primary rounded-lg">
-                  <TrendingUp className="h-4 w-4 text-white" />
+              {/* Avg Monthly */}
+              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100">
+                  <TrendingUp className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-custom-value1">Avg Monthly</p>
-                  <p className="text-lg font-bold text-custom-primary">
-                    {avgMonthlyGrowth}
-                  </p>
+                  <p className="text-xs text-gray-500 font-medium mb-1">Avg Monthly</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">{avgMonthlyGrowth}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-custom-value3 rounded-lg">
-                <div className="p-2 bg-custom-success rounded-lg">
-                  <Award className="h-4 w-4 text-white" />
+              {/* Peak Month */}
+              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-100">
+                  <Award className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-custom-value1">Peak Month</p>
-                  <p className="text-lg font-bold text-custom-primary">
-                    Dec 2024
-                  </p>
+                  <p className="text-xs text-gray-500 font-medium mb-1">Peak Month</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">Dec 2024</p>
                 </div>
               </div>
             </div>
@@ -266,7 +260,6 @@ export class CountChart extends Component {
                 </p>
               </div>
             </div>
-          </div>
         </CardContent>
       </Card>
     );
