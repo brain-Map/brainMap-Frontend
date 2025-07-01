@@ -158,10 +158,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
             <Shield className="h-5 w-5" />
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
-            <p className="text-xs text-gray-500 font-medium">Management System</p>
-          </div>
+            <div className="flex flex-col items-center">
+              <img src="/image/BrainMap.png" alt="BrainMap Logo" className="h-10 -mb-3" />
+              <div className="flex flex-col items-center">
+                <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
+                <p className="text-xs text-gray-500 font-medium">Management System</p>
+              </div>
+            </div>
         </div>
         
         <div className="p-4 space-y-6">
