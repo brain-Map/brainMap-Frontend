@@ -23,13 +23,13 @@ import {
 
 interface MenuItem {
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   url: string;
 }
 
 interface UserManagementItem {
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   url: string;
   count: string;
   color: string;
@@ -39,7 +39,7 @@ interface UserManagementItem {
 
 interface ModerationItem {
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   url: string;
   count: string;
   color: string;
@@ -65,7 +65,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const userManagement: UserManagementItem[] = [
     {
       title: "Users",
-      url: "users", 
+      url: "users",
       icon: Users,
       count: "1847",
       color: "bg-blue-500",
@@ -73,7 +73,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       children: [
         {
           title: "All Users",
-          url: "users", 
+          url: "users",
           icon: Users,
           count: "1847",
           color: "bg-blue-500",
@@ -99,7 +99,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           count: "12",
           color: "bg-purple-500",
         },
-      ]
+      ],
     },
     {
       title: "New Users",
@@ -124,7 +124,6 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     },
   ];
 
-  // user list
 
   // Moderation Items
   const moderationItems: ModerationItem[] = [
@@ -201,23 +200,29 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
-                    {/* <div className={`w-2 h-2 rounded-full ${item.color}`}></div> */}
                     <item.icon className="h-4 w-4" />
                     <span className="flex-1 text-left">{item.title}</span>
                     <span className="text-xs text-gray-500">{item.count}</span>
                     {item.children && (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className={`h-4 w-4 transition-transform ${item.isOpen ? "transform rotate-180" : ""}`}
+                        className={`h-4 w-4 transition-transform ${
+                          item.isOpen ? "transform rotate-180" : ""
+                        }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     )}
                   </button>
-                  
+
                   {item.children && item.isOpen && (
                     <div className="pl-4 space-y-1 mt-1">
                       {item.children.map((child) => (
@@ -230,10 +235,16 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           }`}
                         >
-                          <div className={`w-2 h-2 rounded-full ${child.color}`}></div>
+                          <div
+                            className={`w-2 h-2 rounded-full ${child.color}`}
+                          ></div>
                           <child.icon className="h-4 w-4" />
-                          <span className="flex-1 text-left">{child.title}</span>
-                          <span className="text-xs text-gray-500">{child.count}</span>
+                          <span className="flex-1 text-left">
+                            {child.title}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {child.count}
+                          </span>
                         </button>
                       ))}
                     </div>
