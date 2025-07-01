@@ -26,6 +26,7 @@ import {
   FolderOpen,
   AlertTriangle
 } from 'lucide-react';
+import CountChart from '@/components/admin/CountChart';
 
 // Dashboard Icons
 const BrainIcon = () => (
@@ -201,6 +202,11 @@ export default function AdminDashboard() {
               color={card.color}
             />
           ))}
+        </div>
+
+        {/* Charts */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <CountChart />
         </div>
 
         {/* Recent Activity */}
