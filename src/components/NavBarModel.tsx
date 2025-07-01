@@ -79,10 +79,10 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 z-1000 ${
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl border-b border-value2/20 shadow-lg' 
-          : 'bg-white/80 backdrop-blur-sm border-b border-value3/30'
+          ? 'bg-white backdrop-blur-xl border-b border-value2/20 shadow-lg' 
+          : 'bg-white backdrop-blur-sm border-b border-value3/30'
       }`}>
         <nav className=" mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -186,7 +186,7 @@ const Navbar: React.FC = () => {
               {/* Sign In Button */}
               <Link
                 href="/login"
-                className="hidden sm:flex items-center bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                className="hidden sm:flex items-center bg-gradient-to-r bg-primary hover:bg-secondary hover:text-black text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:shadow-lg"
               >
                 Sign In
                 <User className="ml-2 h-4 w-4" />

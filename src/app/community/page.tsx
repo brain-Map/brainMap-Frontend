@@ -6,9 +6,9 @@ import Navbar from "@/components/NavBarModel"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Search,
   Plus,
@@ -16,19 +16,11 @@ import {
   MessageCircle,
   Share2,
   Bookmark,
-  Users,
-  Code,
-  HelpCircle,
   Eye,
-  Calendar,
-  Tag,
-  ArrowUp,
-  Filter,
-  Sparkles,
   FlameIcon as Fire,
   Clock,
-  TrendingUp,
-  Award,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react"
 
 interface Post {
@@ -148,6 +140,7 @@ export default function CommunityPage() {
     router.push(`/community/post/${postId}`)
   }
 
+
   const filteredPosts = posts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -167,402 +160,303 @@ export default function CommunityPage() {
     }
   })
 
+  const popularTags = [
+    { name: 'javascript', count: 1200, color: 'bg-yellow-100 text-yellow-800' },
+    { name: 'react', count: 859, color: 'bg-blue-100 text-blue-800' },
+    { name: 'python', count: 743, color: 'bg-green-100 text-green-800' },
+    { name: 'css', count: 621, color: 'bg-purple-100 text-purple-800' }
+  ];
+
+  const topContributors = [
+    { name: 'John Smith', points: 2843, avatar: '👨‍💻' },
+    { name: 'Sarah Johnson', points: 1876, avatar: '👩‍💼' },
+    { name: 'Jake Chen', points: 1654, avatar: '👨‍🎓' }
+  ];
+
   return (
     <>
-    <Navbar/>
-        <div className="min-h-screen bg-gradient-to-br from-[#EDE8F5] via-[#ADBBDA]/30 to-[#8697C4]/50 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#3D52A0]/20 to-[#7091E6]/20 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-br from-[#7091E6]/20 to-[#8697C4]/20 rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
-            <div className="absolute bottom-20 right-1/3 w-64 h-64 bg-gradient-to-br from-[#3D52A0]/20 to-[#ADBBDA]/20 rounded-full blur-3xl animate-pulse animation-delay-4000"></div>
-        </div>
-
+      <Navbar/>
+      <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-white/70 backdrop-blur-2xl border-b border-white/20 top-0 z-50 shadow-2xl shadow-blackwhen/5">
-            <div className="container mx-auto px-6 py-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="flex items-center gap-6">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#3D52A0] to-[#7091E6] rounded-3xl blur-xl opacity-75 animate-pulse"></div>
-                    <div className="relative p-4 bg-gradient-to-br from-[#3D52A0] via-[#7091E6] to-[#8697C4] rounded-3xl shadow-2xl">
-                    <Users className="w-8 h-8 text-white" />
-                    </div>
-                </div>
-                <div>
-                    <h1 className="text-4xl font-black bg-gradient-to-r from-[#3D52A0] via-[#7091E6] to-[#8697C4] bg-clip-text text-transparent tracking-tight">
-                    Community Hub
-                    </h1>
-                    <p className="text-slate-600 mt-2 text-lg font-medium">Where innovation meets collaboration</p>
-                </div>
-                </div>
-                <div className="flex items-center gap-4">
-                <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="gap-3 border-2 border-slate-200 hover:border-[#3D52A0]/30 hover:bg-[#3D52A0]/5 transition-all duration-300 rounded-2xl px-6"
-                >
-                    <Filter className="w-5 h-5" />
-                    Filters
-                </Button>
-                <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-[#3D52A0] via-[#7091E6] to-[#8697C4] hover:from-[#3D52A0]/90 hover:via-[#7091E6]/90 hover:to-[#8697C4]/90 shadow-2xl shadow-[#3D52A0]/25 hover:shadow-[#3D52A0]/40 transition-all duration-300 rounded-2xl px-8 py-3 text-white font-semibold cursor-pointer"
-                    onClick={() => router.push("/community/new")}
-                >
-                    <Plus className="w-5 h-5 mr-3" />
-                    Create Post
-                </Button>
-                </div>
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="w-6 h-6 text-blue-600" />
+                <span className="text-xl font-semibold text-gray-900">Community</span>
+              </div>
+              <nav className="flex space-x-6">
+                <button className="text-blue-600 font-medium">Questions</button>
+                <button className="text-gray-600 hover:text-gray-900">Tags</button>
+                <button className="text-gray-600 hover:text-gray-900">Users</button>
+              </nav>
             </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search questions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <Button
+                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black font-medium"
+                onClick={() => router.push("/community/new")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Ask Question
+              </Button>
             </div>
-        </div>
+          </div>
+        </header>
 
-        <div className="container mx-auto px-6 py-10">
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-10">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar */}
-            <div className="xl:col-span-1">
-                <div className="space-y-8 sticky top-40">
-                {/* Search */}
-                <Card className="border-0 shadow-2xl shadow-black/10 bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
-                    <CardContent className="p-8">
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#3D52A0]/20 to-[#7091E6]/20 rounded-2xl blur-xl group-focus-within:blur-2xl transition-all duration-300"></div>
-                        <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 transition-colors group-focus-within:text-[#3D52A0]" />
-                        <Input
-                            placeholder="Search the community..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-12 pr-4 py-4 border-0 bg-slate-50/80 focus:bg-white rounded-2xl text-base font-medium transition-all duration-300 focus:ring-2 focus:ring-[#3D52A0]/20"
-                        />
-                        </div>
+            <div className="lg:col-span-1 space-y-6">
+              {/* Popular Tags */}
+              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
+                <CardTitle className="font-semibold text-gray-900 mb-3">Popular Tags</CardTitle>
+                <div className="space-y-2">
+                  {popularTags.map((tag) => (
+                    <div key={tag.name} className="flex items-center justify-between">
+                      <Badge className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
+                        {tag.name}
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
+                      </span>
                     </div>
-                    </CardContent>
-                </Card>
-
-                {/* Premium Sort Options */}
-                <Card className="border-0 shadow-2xl shadow-black/10 bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
-                    <CardHeader className="pb-4">
-                    <CardTitle className="text-xl font-bold flex items-center gap-3 text-slate-800">
-                        <div className="p-2 bg-gradient-to-br from-[#3D52A0]/20 to-[#7091E6]/20 rounded-xl">
-                        <TrendingUp className="w-5 h-5 text-[#3D52A0]" />
-                        </div>
-                        Sort & Filter
-                    </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                    {[
-                        { value: "recent", label: "Latest Posts", icon: Clock, color: "from-[#7091E6] to-[#8697C4]" },
-                        { value: "popular", label: "Most Liked", icon: Heart, color: "from-[#FF6B6B] to-[#FF6B6B]/80" },
-                        { value: "trending", label: "Trending Now", icon: Fire, color: "from-[#F4D06F] to-[#F4D06F]/80" },
-                    ].map(({ value, label, icon: Icon, color }) => (
-                        <Button
-                        key={value}
-                        variant={sortBy === value ? "default" : "ghost"}
-                        size="lg"
-                        onClick={() => setSortBy(value)}
-                        className={`w-full justify-start gap-4 rounded-2xl py-4 px-4 transition-all duration-300 ${
-                            sortBy === value
-                            ? `bg-gradient-to-r ${color} text-white shadow-xl hover:shadow-2xl`
-                            : "hover:bg-slate-50 text-slate-600 hover:text-slate-800"
-                        }`}
-                        >
-                        <Icon className="w-5 h-5" />
-                        <span className="font-semibold">{label}</span>
-                        </Button>
-                    ))}
-                    </CardContent>
-                </Card>
-
-                {/* Glassmorphic Community Stats */}
-                <Card className="border-0 shadow-2xl shadow-black/10 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-xl rounded-3xl overflow-hidden">
-                    <CardHeader>
-                    <CardTitle className="text-xl font-bold flex items-center gap-3 text-slate-800">
-                        <div className="p-2 bg-gradient-to-br from-[#4CAF50]/20 to-[#4CAF50]/30 rounded-xl">
-                        <Award className="w-5 h-5 text-[#4CAF50]" />
-                        </div>
-                        Community Pulse
-                    </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                    {[
-                        { icon: Users, label: "Active Members", value: "2,847", trend: "+12%", color: "from-[#3D52A0] to-[#7091E6]" },
-                        { icon: MessageCircle, label: "Discussions", value: "1,234", trend: "+8%", color: "from-[#7091E6] to-[#8697C4]" },
-                        { icon: Code, label: "Projects", value: "567", trend: "+15%", color: "from-[#4CAF50] to-[#4CAF50]/80" },
-                        { icon: HelpCircle, label: "Solved", value: "892", trend: "+23%", color: "from-[#00B8D9] to-[#00B8D9]/80" },
-                    ].map(({ icon: Icon, label, value, trend, color }) => (
-                        <div key={label} className="group">
-                        <div className="flex items-center justify-between p-5 rounded-2xl bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all duration-300 hover:shadow-lg border border-white/20">
-                            <div className="flex items-center gap-4">
-                            <div className={`p-3 rounded-2xl bg-gradient-to-br ${color} shadow-lg`}>
-                                <Icon className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <span className="text-sm font-medium text-slate-600 block">{label}</span>
-                                <span className="font-bold text-xl text-slate-800">{value}</span>
-                            </div>
-                            </div>
-                            <div className="text-right">
-                            <div className="flex items-center gap-1 text-[#4CAF50] text-sm font-semibold">
-                                <ArrowUp className="w-3 h-3" />
-                                {trend}
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                    ))}
-                    </CardContent>
-                </Card>
-
-                {/* Interactive Trending Tags */}
-                <Card className="border-0 shadow-2xl shadow-black/10 bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
-                    <CardHeader>
-                    <CardTitle className="text-xl font-bold flex items-center gap-3 text-slate-800">
-                        <div className="p-2 bg-gradient-to-br from-[#FF6B6B]/20 to-[#FF6B6B]/30 rounded-xl">
-                        <Tag className="w-5 h-5 text-[#FF6B6B]" />
-                        </div>
-                        Trending Topics
-                    </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    <div className="flex flex-wrap gap-3">
-                        {[
-                        { name: "React", count: 234, color: "from-[#7091E6] to-[#8697C4]" },
-                        { name: "Next.js", count: 189, color: "from-slate-700 to-slate-900" },
-                        { name: "TypeScript", count: 156, color: "from-[#3D52A0] to-[#7091E6]" },
-                        { name: "AI/ML", count: 98, color: "from-[#3D52A0] to-[#8697C4]" },
-                        { name: "DevOps", count: 87, color: "from-[#4CAF50] to-[#4CAF50]/80" },
-                        { name: "Database", count: 76, color: "from-[#00B8D9] to-[#00B8D9]/80" },
-                        ].map(({ name, count, color }) => (
-                        <div
-                            key={name}
-                            className={`group cursor-pointer transition-all duration-300 hover:scale-105`}
-                        >
-                            <Badge
-                            className={`bg-gradient-to-r ${color} text-white border-0 px-4 py-2 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                            >
-                            #{name}
-                            <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs">
-                                {count}
-                            </span>
-                            </Badge>
-                        </div>
-                        ))}
-                    </div>
-                    </CardContent>
-                </Card>
+                  ))}
                 </div>
+              </Card>
+
+              {/* Top Contributors */}
+              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
+                <CardTitle className="font-semibold text-gray-900 mb-3">Top Contributors</CardTitle>
+                <div className="space-y-3">
+                  {topContributors.map((contributor) => (
+                    <div key={contributor.name} className="flex items-center space-x-3">
+                      <div className="text-2xl">{contributor.avatar}</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 text-sm">{contributor.name}</div>
+                        <div className="text-xs text-gray-500">{contributor.points.toLocaleString()} points</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Sort Options */}
+              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
+                <CardTitle className="font-semibold text-gray-900 mb-3">Sort Posts</CardTitle>
+                <div className="space-y-2">
+                  {[
+                    { value: "recent", label: "Latest", icon: Clock },
+                    { value: "popular", label: "Popular", icon: Heart },
+                    { value: "trending", label: "Trending", icon: Fire },
+                  ].map(({ value, label, icon: Icon }) => (
+                    <Button
+                      key={value}
+                      variant={sortBy === value ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setSortBy(value)}
+                      className={`w-full justify-start ${
+                        sortBy === value ? "bg-primary text-white" : "text-gray-600"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </Card>
             </div>
 
             {/* Main Content */}
-            <div className="xl:col-span-4">
-                <div className="space-y-8">
-                {/* Tabs */}
+            <div className="lg:col-span-3">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Recent Questions</h1>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-4 bg-white/70 backdrop-blur-xl border-0 shadow-2xl shadow-black/10 rounded-3xl p-10 place-items-center m-0">
-                    {[
-                        { value: "all", label: "All Posts", icon: Sparkles },
-                        { value: "discussion", label: "Discussions", icon: MessageCircle },
-                        { value: "project", label: "Projects", icon: Code },
-                        { value: "help", label: "Help", icon: HelpCircle },
-                    ].map(({ value, label, icon: Icon }) => (
-                        <TabsTrigger
-                        key={value}
-                        value={value}
-                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3D52A0] data-[state=active]:to-[#7091E6] data-[state=active]:text-white data-[state=active]:shadow-2xl data-[state=active]:shadow-[#3D52A0]/25 transition-all duration-300 rounded-2xl py-4 px-6 font-semibold flex items-center justify-center w-full h-full m-[-20px]"
-                        >
-                        <Icon className="w-4 h-4 mr-2" />
-                        {label}
-                        </TabsTrigger>
-                    ))}
-                    </TabsList>
-
-                    <TabsContent value={activeTab} className="space-y-8 mt-8">
-                    {/* Ultra-Modern Posts */}
-                    <div className="space-y-8">
-                        {sortedPosts.map((post, index) => (
-                        <Card
-                            key={post.id}
-                            className="border-0 shadow-2xl shadow-black/5 hover:shadow-black/10 transition-all duration-500 transform hover:-translate-y-2 bg-white/90 backdrop-blur-xl cursor-pointer overflow-hidden group rounded-3xl"
-                            onClick={() => handlePostClick(post.id)}
-                            style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                            {(post.featured || post.trending) && (
-                            <div className="h-2 bg-gradient-to-r from-[#3D52A0] via-[#7091E6] to-[#8697C4]"></div>
-                            )}
-                            <CardHeader className="pb-4">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                <div className="relative">
-                                    <Avatar className="ring-4 ring-white shadow-2xl w-14 h-14">
-                                    <AvatarImage src={post.author.avatar || "/placeholder.svg"} alt={post.author.name} />
-                                    <AvatarFallback className="bg-gradient-to-br from-[#3D52A0] to-[#7091E6] text-white font-bold text-lg">
-                                        {post.author.name
-                                        .split(" ")
-                                        .map((n) => n[0])
-                                        .join("")}
-                                    </AvatarFallback>
-                                    </Avatar>
-                                    {post.author.verified && (
-                                    <div className="absolute -bottom-1 -right-1 bg-[#4CAF50] rounded-full p-1.5 shadow-lg">
-                                        <div className="w-3 h-3 bg-white rounded-full"></div>
-                                    </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-3">
-                                    <h3 className="font-bold text-lg text-slate-800">{post.author.name}</h3>
-                                    <Badge
-                                        variant="secondary"
-                                        className="text-sm bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-0 px-3 py-1 rounded-2xl font-semibold"
-                                    >
-                                        {post.author.role}
-                                    </Badge>
-                                    {post.trending && (
-                                        <Badge className="text-sm bg-gradient-to-r from-[#F4D06F] to-[#F4D06F]/80 text-white px-3 py-1 rounded-2xl font-semibold shadow-lg">
-                                        <Fire className="w-3 h-3 mr-1 animate-pulse" />
-                                        Hot
-                                        </Badge>
-                                    )}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
-                                    <Calendar className="w-4 h-4" />
-                                    {post.createdAt}
-                                    <span>•</span>
-                                    <Tag className="w-4 h-4" />
-                                    {post.category}
-                                    </div>
-                                </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                {post.type === "project" && (
-                                    <div className="p-3 bg-gradient-to-br from-[#4CAF50]/20 to-[#4CAF50]/30 rounded-2xl">
-                                    <Code className="w-5 h-5 text-[#4CAF50]" />
-                                    </div>
-                                )}
-                                {post.type === "help" && (
-                                    <div className="p-3 bg-gradient-to-br from-[#00B8D9]/20 to-[#00B8D9]/30 rounded-2xl">
-                                    <HelpCircle className="w-5 h-5 text-[#00B8D9]" />
-                                    </div>
-                                )}
-                                {post.type === "discussion" && (
-                                    <div className="p-3 bg-gradient-to-br from-[#3D52A0]/20 to-[#7091E6]/20 rounded-2xl">
-                                    <MessageCircle className="w-5 h-5 text-[#3D52A0]" />
-                                    </div>
-                                )}
-                                </div>
-                            </div>
-                            </CardHeader>
-                            <CardContent className="pt-0">
-                            <h2 className="text-2xl font-bold mb-4 text-slate-800 group-hover:text-[#3D52A0] transition-colors duration-300 leading-tight">
-                                {post.title}
-                            </h2>
-                            <p className="text-slate-600 mb-6 line-clamp-3 leading-relaxed text-base">{post.content}</p>
-
-                            {/* Enhanced Tags */}
-                            <div className="flex flex-wrap gap-3 mb-8">
-                                {post.tags.map((tag) => (
-                                <Badge
-                                    key={tag}
-                                    className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 hover:from-[#EDE8F5] hover:to-[#ADBBDA] hover:text-[#3D52A0] transition-all duration-300 rounded-2xl px-4 py-2 font-semibold border-0"
-                                >
-                                    #{tag}
-                                </Badge>
-                                ))}
-                            </div>
-
-                            {/* Premium Actions */}
-                            <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-                                <div className="flex items-center gap-8">
-                                <Button
-                                    variant="ghost"
-                                    size="lg"
-                                    onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleLike(post.id)
-                                    }}
-                                    className={`gap-3 hover:bg-[#FF6B6B]/10 transition-all duration-300 rounded-2xl px-6 py-3 ${
-                                    post.isLiked ? "text-[#FF6B6B] bg-[#FF6B6B]/10" : "text-slate-500"
-                                    }`}
-                                >
-                                    <Heart className={`w-5 h-5 ${post.isLiked ? "fill-current animate-pulse" : ""}`} />
-                                    <span className="font-semibold">{post.likes}</span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="lg"
-                                    className="gap-3 text-slate-500 hover:bg-[#00B8D9]/10 hover:text-[#00B8D9] transition-all duration-300 rounded-2xl px-6 py-3"
-                                >
-                                    <MessageCircle className="w-5 h-5" />
-                                    <span className="font-semibold">{post.comments}</span>
-                                </Button>
-                                <div className="flex items-center gap-2 text-slate-500">
-                                    <Eye className="w-5 h-5" />
-                                    <span className="font-semibold">{post.views} views</span>
-                                </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                <Button
-                                    variant="ghost"
-                                    size="lg"
-                                    onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleBookmark(post.id)
-                                    }}
-                                    className={`hover:bg-[#F4D06F]/10 transition-all duration-300 rounded-2xl p-3 ${
-                                    post.isBookmarked ? "text-[#F4D06F] bg-[#F4D06F]/10" : "text-slate-500"
-                                    }`}
-                                >
-                                    <Bookmark className={`w-5 h-5 ${post.isBookmarked ? "fill-current" : ""}`} />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="lg"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all duration-300 rounded-2xl p-3"
-                                >
-                                    <Share2 className="w-5 h-5" />
-                                </Button>
-                                </div>
-                            </div>
-                            </CardContent>
-                        </Card>
-                        ))}
-                    </div>
-
-                    {sortedPosts.length === 0 && (
-                        <Card className="border-0 shadow-2xl shadow-black/5 bg-white/90 backdrop-blur-xl rounded-3xl">
-                        <CardContent className="text-center py-20">
-                            <div className="relative mx-auto mb-8 w-28 h-28">
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#3D52A0]/30 to-[#7091E6]/30 rounded-full blur-2xl"></div>
-                            <div className="relative w-28 h-28 bg-gradient-to-br from-[#EDE8F5] to-[#ADBBDA] rounded-full flex items-center justify-center">
-                                <MessageCircle className="w-14 h-14 text-[#3D52A0]" />
-                            </div>
-                            </div>
-                            <h3 className="text-2xl font-bold mb-4 text-slate-800">No posts found</h3>
-                            <p className="text-slate-600 mb-8 max-w-md mx-auto text-lg leading-relaxed">
-                            {searchQuery
-                                ? "Try adjusting your search terms or explore different categories to discover amazing content"
-                                : "Be the first to spark a conversation and help build our thriving community!"}
-                            </p>
-                            <Button 
-                            size="lg"
-                            className="bg-gradient-to-r from-[#3D52A0] to-[#7091E6] hover:from-[#3D52A0]/90 hover:to-[#7091E6]/90 shadow-2xl shadow-[#3D52A0]/25 rounded-2xl px-8 py-4 font-semibold text-lg"
-                            >
-                            <Plus className="w-5 h-5 mr-3" />
-                            Create First Post
-                            </Button>
-                        </CardContent>
-                        </Card>
-                    )}
-                    </TabsContent>
+                  <TabsList className="grid grid-cols-4 bg-gray-100 rounded-lg p-1">
+                    <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
+                    <TabsTrigger value="discussion" className="text-sm">Discussion</TabsTrigger>
+                    <TabsTrigger value="project" className="text-sm">Projects</TabsTrigger>
+                    <TabsTrigger value="help" className="text-sm">Help</TabsTrigger>
+                  </TabsList>
                 </Tabs>
+              </div>
+
+              {/* Posts List */}
+              <div className="space-y-4">
+                {sortedPosts.map((post) => (
+                  <Card key={post.id} className="bg-white shadow-none border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-4">
+                        {/* Vote/Stats Column */}
+                        <div className="flex flex-col items-center space-y-2 text-sm text-gray-500 min-w-0">
+                          <div className="flex flex-col items-center">
+                            <ChevronUp 
+                              className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleLike(post.id)
+                              }}
+                            />
+                            <span className="font-medium text-gray-700">{post.likes}</span>
+                            <ChevronDown className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                          </div>
+                          <div className="flex space-x-3 mt-2 text-xs">
+                            <div className="flex items-center space-x-1">
+                              <MessageCircle className="w-4 h-4" />
+                              <span>{post.comments}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Eye className="w-4 h-4" />
+                              <span>{post.views}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Question Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            
+                              <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-2">
+                                {post.title}
+                              </h3>
+                            
+                            {post.trending && (
+                              <Badge className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-md ml-2">
+                                <Fire className="w-3 h-3 mr-1" />
+                                Hot
+                              </Badge>
+                            )}
+                          </div>
+
+                          <p className="mt-2 text-gray-600 text-sm leading-relaxed mb-4">
+                              {post.content}
+                            </p>
+                          
+                         
+
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex flex-wrap gap-2">
+                              {post.tags.map((tag) => (
+                                <Badge
+                                  key={tag}
+                                  className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium hover:bg-gray-200"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                            
+                            <div className="flex items-center space-x-3 text-sm text-gray-500">
+                              <Avatar className="w-6 h-6">
+                                <AvatarImage src={post.author.avatar} alt={post.author.name} />
+                                <AvatarFallback className="text-xs">
+                                  {post.author.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex items-center space-x-1">
+                                <span className="font-medium text-gray-700">{post.author.name}</span>
+                                {post.author.verified && (
+                                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                )}
+                              </div>
+                              <span>•</span>
+                              <span>{post.createdAt}</span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                            <div className="flex items-center space-x-4">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleLike(post.id)
+                                }}
+                                className={`text-xs ${post.isLiked ? "text-red-600" : "text-gray-500"}`}
+                              >
+                                <Heart className={`w-4 h-4 mr-1 ${post.isLiked ? "fill-current" : ""}`} />
+                                Like
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-gray-500 text-xs"
+                                onClick={() => handlePostClick(post.id)}
+                              >
+                                <MessageCircle className="w-4 h-4 mr-1" />
+                                Comment
+                              </Button>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleBookmark(post.id)
+                                }}
+                                className={`text-xs ${post.isBookmarked ? "text-blue-600" : "text-gray-500"}`}
+                              >
+                                <Bookmark className={`w-4 h-4 ${post.isBookmarked ? "fill-current" : ""}`} />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-gray-500 text-xs">
+                                <Share2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Load More */}
+              {sortedPosts.length > 0 && (
+                <div className="text-center mt-8">
+                  <Button variant="outline" className="text-blue-600 hover:text-blue-700 border-blue-200">
+                    Load More Questions
+                  </Button>
                 </div>
+              )}
+
+              {/* No Results */}
+              {sortedPosts.length === 0 && (
+                <Card className="bg-white border border-gray-200 rounded-lg">
+                  <CardContent className="text-center py-12">
+                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900">No posts found</h3>
+                    <p className="text-gray-600 mb-6">
+                      {searchQuery
+                        ? "Try adjusting your search terms or browse different categories."
+                        : "Be the first to start a discussion!"}
+                    </p>
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => router.push("/community/new")}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create First Post
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
     </>
   )
 }

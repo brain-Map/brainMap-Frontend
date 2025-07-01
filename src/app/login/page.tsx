@@ -18,7 +18,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <NavBar />
+      {/* <NavBar /> */}
       <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-primary via-secondary to-primary">
         <div className="w-full max-w-md p-8 space-y-8 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
           <div className="text-center">

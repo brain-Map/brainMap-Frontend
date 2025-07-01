@@ -1,81 +1,79 @@
-'use client';
-
 import React from 'react';
-import Link from 'next/link';
-import {
-  Calendar,
-  CheckSquare,
-  Folder,
-  Star,
-  StickyNote,
-  Settings,
-  MoreVertical,
-} from 'lucide-react';
+import { Calendar, CheckSquare, Folder, Star, FileText } from 'lucide-react';
 
-const StudentSidebar = () => {
+interface Project {
+  name: string;
+  count: number;
+  color: string;
+}
+
+const Sidebar: React.FC = () => {
+  const projects: Project[] = [
+    { name: 'Flower Shop', count: 23, color: 'bg-yellow-400' },
+    { name: 'Cloth', count: 345, color: 'bg-red-500' },
+    { name: 'Gamer Boy', count: 568, color: 'bg-orange-500' }
+  ];
+
+  const menuItems = [
+    { icon: Calendar, label: 'Calendar', active: false },
+    { icon: CheckSquare, label: 'Todo', active: false },
+    { icon: Folder, label: 'Projects', active: true },
+    { icon: Star, label: 'Starred', active: false },
+    { icon: FileText, label: 'Notes', active: false }
+  ];
+
   return (
-    <aside className="w-[260px] h-screen bg-white border-r border-gray-200 flex flex-col justify-between shadow-sm">
-      {/* Top Logo */}
-      <div>
-     
-        {/* Navigation Menu */}
-        <div className="mt-4 px-4 space-y-1 text-sm text-gray-600 font-medium">
-          <SidebarItem icon={<Calendar size={18} />} label="Calendar" />
-          <SidebarItem icon={<CheckSquare size={18} />} label="Todo" />
-          <SidebarItem icon={<Folder size={18} />} label="Projects" active />
-          <SidebarItem icon={<Star size={18} />} label="Starred" />
-          <SidebarItem icon={<StickyNote size={18} />} label="Notes" />
-        </div>
+    <div className="w-64 h-screen bg-gray-50 border-r border-gray-200 flex flex-col">
+      {/* Main Navigation */}
+      <div className="flex-1">
+        <nav className="mt-8 px-4">
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <li key={index}>
+                  <a
+                    href="#"
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      item.active
+                        ? 'bg-gray-200 text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <IconComponent className="mr-3 h-5 w-5" />
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
         {/* Projects Section */}
         <div className="mt-8 px-4">
-          <p className="text-xs text-gray-400 font-semibold mb-3">PROJECTS</p>
-          <ProjectItem iconColor="bg-yellow-400" label="Flower Shop" count={23} />
-          <ProjectItem iconColor="bg-red-600" label="Cloth" count={345} />
-          <ProjectItem iconColor="bg-orange-400" label="Gamer Boy" count={568} />
+          <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Projects
+          </h3>
+          <div className="mt-4 space-y-2">
+            {projects.map((project, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center">
+                  <div className={`w-6 h-6 rounded-full mr-3 ${project.color}`}></div>
+                  <span>{project.name}</span>
+                </div>
+                <span className="text-xs text-gray-500 font-normal">
+                  {project.count}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-    
-    </aside>
+    </div>
   );
 };
 
-const SidebarItem = ({
-  icon,
-  label,
-  active = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-}) => (
-  <button
-    className={`flex items-center w-full px-3 py-2 rounded-md ${
-      active ? 'bg-gray-100 text-black font-semibold' : 'hover:bg-gray-50'
-    }`}
-  >
-    <span className="mr-3 text-lg">{icon}</span>
-    {label}
-  </button>
-);
-
-const ProjectItem = ({
-  iconColor,
-  label,
-  count,
-}: {
-  iconColor: string;
-  label: string;
-  count: number;
-}) => (
-  <div className="flex items-center justify-between text-sm py-2 px-2 hover:bg-gray-50 rounded-md">
-    <div className="flex items-center space-x-2">
-      <div className={`w-5 h-5 rounded-full ${iconColor}`}></div>
-      <span className="text-gray-700">{label}</span>
-    </div>
-    <span className="text-gray-400 text-xs">{count}</span>
-  </div>
-);
-
-export default StudentSidebar;
+export default Sidebar;
