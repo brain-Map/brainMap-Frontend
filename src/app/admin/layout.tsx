@@ -1,8 +1,8 @@
 "use client";
 
 import React, { ReactNode, useState } from "react";
-import Navbar from "../../components/DashboardNavBar";
 import AdminSideBar from "@/components/admin/AdminSideBar";
+import AdminNavbar from "@/components/admin/AdminNavbar";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState<string>("dashboard");
@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen">
         <AdminSideBar currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="flex-1 flex flex-col">
-          <Navbar />
+          <AdminNavbar />
           <main className="flex-1 bg-gray-50">{children}</main>
         </div>
       </div>
