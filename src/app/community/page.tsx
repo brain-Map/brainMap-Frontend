@@ -6,9 +6,9 @@ import Navbar from "@/components/NavBarModel"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Search,
   Plus,
@@ -16,19 +16,9 @@ import {
   MessageCircle,
   Share2,
   Bookmark,
-  Users,
-  Code,
-  HelpCircle,
   Eye,
-  Calendar,
-  Tag,
-  ArrowUp,
-  Filter,
-  Sparkles,
   FlameIcon as Fire,
   Clock,
-  TrendingUp,
-  Award,
   ChevronUp,
   ChevronDown,
 } from "lucide-react"

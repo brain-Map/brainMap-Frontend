@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,24 +28,7 @@ import {
   List,
   ListOrdered,
   Quote,
-  Image,
   Hash,
-  Search,
-  Grid3X3,
-  User,
-  Bell,
-  Settings,
-  ChevronDown,
-  Heart,
-  MessageSquare,
-  Bookmark,
-  Share2,
-  TrendingUp,
-  Clock,
-  Users,
-  Tag,
-  Filter,
-  SortDesc
 } from "lucide-react"
 
 interface PostDraft {

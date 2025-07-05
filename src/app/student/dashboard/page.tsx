@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, ChevronDown, Star, MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown, TrendingUp } from 'lucide-react';
+import { Search, ChevronDown, Star, MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import TodoNotesSidebar from '@/components/TodoNotesSidebar';
 
 

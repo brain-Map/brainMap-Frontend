@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Clock, TrendingUp } from "lucide-react"
+import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile } from "lucide-react"
 
 interface Comment {
   id: string
