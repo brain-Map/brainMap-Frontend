@@ -163,19 +163,6 @@ export function Sidebar() {
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="flex-1">
         <div className="p-4 space-y-6">
-          {/* Profile Section */}
-          <div className="border-b border-gray-200 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                DE
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Dr. Jane Smith</p>
-                <p className="text-xs text-gray-500">Domain Expert</p>
-              </div>
-            </div>
-          </div>
-
           {/* Main Menu */}
           <div>
             <div className="space-y-1">
