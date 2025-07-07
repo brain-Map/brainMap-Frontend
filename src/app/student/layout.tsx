@@ -15,7 +15,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
       setCurrentPage(url);
       // sidebarRef.current = url;
       // In a real app, you would navigate to the actual page
-      console.log(`Navigating to: ${url}`);
+      //console.log(Navigating to: ${url});
     };
 
   return (
