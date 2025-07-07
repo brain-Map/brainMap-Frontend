@@ -11,7 +11,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 
-const JiraNavbar: React.FC = () => {
+const DashboardNavBar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
@@ -91,4 +91,4 @@ const JiraNavbar: React.FC = () => {
   );
 };
 
-export default JiraNavbar;
+export default DashboardNavBar;
