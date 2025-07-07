@@ -36,7 +36,7 @@ export default function LoginPage() {
     <>
       <NavBar />
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-[-2px_4px_20px_rgba(0,0,0,0.1)] border border-gray-200">
+        <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-lg">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-black mb-2">Login</h2>
             <p className="text-[#8697C4] text-lg">
