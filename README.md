@@ -13,6 +13,7 @@ cd brainMap-Frontend
 
 ```bash
 npm i
+npm install @supabase/supabase-js
 ```
 
 ### Run the Development Server
