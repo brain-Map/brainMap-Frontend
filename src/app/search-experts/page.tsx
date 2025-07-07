@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   Star,
@@ -11,6 +12,7 @@ import {
 import Navbar from '@/components/NavBarModel';
 
 const Page = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Relevance');
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,6 +152,10 @@ const Page = () => {
     });
   };
 
+  const handleViewProfile = (expertId: string) => {
+    router.push(`/search-experts/viewprofile?id=${expertId}`);
+  };
+
   const renderDropdown = (label: string, category: keyof typeof selectedFilters, options: Array<{ name: string; count: number }>) => {
     const searchTerm = searchTerms[category];
     const visibleOptions = searchTerm
@@ -160,9 +166,10 @@ const Page = () => {
       <div className="relative w-44" ref={dropdownRefs[category]}>
         <button
           onClick={() => setOpenDropdown(openDropdown === category ? '' : category)}
-          className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center text-sm text-gray-700 focus:ring-2 focus:ring-primary"
+          className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center text-sm text-gray-700 focus:ring-2 focus:ring-primary text-left"
         >
-          {label} <ChevronDown className="w-4 h-4" />
+          <span>{label}</span>
+          <ChevronDown className="w-4 h-4" />
         </button>
         {openDropdown === category && (
           <div className="absolute mt-2 w-full z-10 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -175,14 +182,17 @@ const Page = () => {
             />
             <div className="max-h-44 overflow-y-auto">
               {visibleOptions.map((opt: { name: string; count: number }) => (
-                <label key={opt.name} className="flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedFilters[category].includes(opt.name)}
-                    onChange={() => toggleFilter(category, opt.name)}
-                    className="mr-2"
-                  />
-                  {opt.name}
+                <label key={opt.name} className="flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer text-left">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters[category].includes(opt.name)}
+                      onChange={() => toggleFilter(category, opt.name)}
+                      className="mr-2"
+                    />
+                    <span>{opt.name}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{opt.count}</span>
                 </label>
               ))}
             </div>
@@ -218,28 +228,30 @@ const Page = () => {
           <p className="text-white/90">Connect with verified experts across fields and topics.</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 py-4 bg-white border-b border-gray-200 flex flex-wrap gap-4 items-center relative z-10">
-        <div className="relative w-full md:w-1/4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search experts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm bg-gray-50"
-          />
+      <div className="w-full bg-white border-b border-gray-200 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap gap-4 items-center">
+          <div className="relative w-full md:w-1/4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search experts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm bg-gray-50"
+            />
+          </div>
+          {renderDropdown('Expertise', 'expertise', filterOptions.expertise)}
+          {renderDropdown('Availability', 'availability', filterOptions.availability)}
+          {renderDropdown('Pricing', 'pricing', filterOptions.pricing)}
+          {renderDropdown('Rating', 'rating', filterOptions.rating)}
+          <button
+            onClick={clearAllFilters}
+            className="text-sm text-primary hover:text-primary/80 px-3 py-2 border border-value2 rounded-md hover:bg-value3"
+          >
+            Clear All
+          </button>
+          {renderFilterBadges()}
         </div>
-        {renderDropdown('Expertise', 'expertise', filterOptions.expertise)}
-        {renderDropdown('Availability', 'availability', filterOptions.availability)}
-        {renderDropdown('Pricing', 'pricing', filterOptions.pricing)}
-        {renderDropdown('Rating', 'rating', filterOptions.rating)}
-        <button
-          onClick={clearAllFilters}
-          className="text-sm text-primary hover:text-primary/80 px-3 py-2 border border-value2 rounded-md hover:bg-value3"
-        >
-          Clear All
-        </button>
-        {renderFilterBadges()}
       </div>
       <div className="max-w-7xl mx-auto p-6">
         {paginatedExperts.map(expert => (
@@ -276,7 +288,10 @@ const Page = () => {
                   <button className="bg-primary text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg">
                     Contact Expert
                   </button>
-                  <button className="bg-value3 text-primary px-6 py-3 rounded-lg text-sm font-semibold hover:bg-value2 transition-colors border border-value2">
+                  <button 
+                    onClick={() => handleViewProfile(expert.id)}
+                    className="bg-value3 text-primary px-6 py-3 rounded-lg text-sm font-semibold hover:bg-value2 transition-colors border border-value2"
+                  >
                     View Profile
                   </button>
                 </div>

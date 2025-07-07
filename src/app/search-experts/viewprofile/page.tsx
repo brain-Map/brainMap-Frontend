@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Star, 
   MapPin, 
@@ -24,6 +25,7 @@ import Navbar from '@/components/NavBarModel';
 
 const ExpertProfilePage = () => {
   const [activeTab, setActiveTab] = useState('about');
+  const router = useRouter();
 
   const expertData = {
     name: 'Dr. Sarah Chen',
@@ -163,11 +165,15 @@ Her research focuses on deep learning, natural language processing, and ethical 
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8 mt-16">
+      <div className="max-w-7xl mx-auto px-6 py-8 pt-24">
         {/* Back Button */}
-        <button className="flex items-center text-gray-600 hover:text-gray-900 mb-6">
+        <button 
+          onClick={() => router.push('/search-experts')}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors duration-200"
+        >
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back to experts
         </button>
