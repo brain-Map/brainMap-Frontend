@@ -1,10 +1,10 @@
 import React from 'react'
-import StudentProfile from './StudentProfile'
+import Projects from './Projects'
 
 const page = () => {
   return (
     <>
-    <StudentProfile />
+        <Projects/>
     </>
   )
 }
