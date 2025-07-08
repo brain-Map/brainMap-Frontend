@@ -1,10 +1,11 @@
-import React from 'react'
+import React from 'react';
+import ChatPage from './Chat';
 
 const page = () => {
   return (
-    <div>
-      <h1>chat</h1>
-    </div>
+    <>
+    <ChatPage/>
+    </>
   )
 }
 
