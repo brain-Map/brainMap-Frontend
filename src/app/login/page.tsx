@@ -25,9 +25,13 @@ export default function LoginPage() {
     })
 
     if (error) {
-      alert('Login failed: ' + error.message)
+      setError(error.message)
+
     } else {
       console.log('Login successful:', data)
+      localStorage.setItem('accessToken', data?.session?.access_token || '');
+      console.log(data?.session?.access_token);
+      
       router.push('/')
     }
   }
