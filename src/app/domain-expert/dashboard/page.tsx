@@ -51,7 +51,7 @@ export default function DashboardPage() {
       value: "8",
       change: "+3",
       icon: <Package className="h-6 w-6" />,
-      color: "bg-blue-500",
+      color: "bg-primary",
     },
     {
       title: "Pending Requests",
@@ -120,7 +120,7 @@ export default function DashboardPage() {
   // Package popularity data
   const packageData: ChartData[] = [
     { name: "Premium", value: 12, color: "bg-purple-500" },
-    { name: "Standard", value: 8, color: "bg-blue-500" },
+    { name: "Standard", value: 8, color: "bg-primary" },
     { name: "Quick", value: 4, color: "bg-green-500" },
   ]
 
@@ -134,7 +134,7 @@ export default function DashboardPage() {
         {revenueData.map((item, index) => (
           <div key={index} className="flex flex-col items-center flex-1">
             <div
-              className="w-full bg-blue-500 rounded-t-sm hover:bg-blue-600 transition-colors cursor-pointer"
+              className="w-full bg-primary rounded-t-sm hover:bg-blue-600 transition-colors cursor-pointer"
               style={{ height: `${(item.value / Math.max(...revenueData.map((d) => d.value))) * 150}px` }}
               title={`${item.name}: $${item.value}`}
             ></div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
               ].map((request, i) => (
                 <div key={i} className="flex items-center justify-between space-x-4 rounded-md border p-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-medium text-sm">
                       {request.avatar}
                     </div>
                     <div>
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                     <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                       Decline
                     </button>
-                    <button className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                    <button className="px-3 py-1 text-sm bg-primary text-white rounded-md hover:bg-blue-600 transition-colors">
                       Accept
                     </button>
                   </div>
@@ -345,7 +345,7 @@ export default function DashboardPage() {
             {recentActivities.map((activity) => (
               <div key={activity.id} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <BrainIcon />
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export default function DashboardPage() {
               <button className="block w-full text-left p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
                 Review New Requests
               </button>
-              <button className="block w-full text-left p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              <button className="block w-full text-left p-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
                 Manage Active Students
               </button>
             </div>
