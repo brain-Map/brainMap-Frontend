@@ -25,9 +25,13 @@ export default function LoginPage() {
     })
 
     if (error) {
-      alert('Login failed: ' + error.message)
+      setError(error.message)
+
     } else {
       console.log('Login successful:', data)
+      localStorage.setItem('accessToken', data?.session?.access_token || '');
+      console.log(data?.session?.access_token);
+      
       router.push('/')
     }
   }
@@ -36,10 +40,10 @@ export default function LoginPage() {
     <>
       <NavBar />
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-lg">
+        <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-(--my-shadow)">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-black mb-2">Login</h2>
-            <p className="text-[#8697C4] text-lg">
+            <p className="text-gray-600 text-lg">
               Access your brainMap account
             </p>
           </div>
@@ -52,26 +56,26 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
+              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
-                className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
+                className="w-full pl-12 pr-4 py-3 bg-white text-black rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-gray-400"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
+              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
-                className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
+                className="w-full pl-12 pr-4 py-3 bg-white text-black rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-gray-400"
               />
             </div>
 
@@ -81,11 +85,11 @@ export default function LoginPage() {
               className="w-full bg-primary hover:bg-secondary text-white hover:text-black transition-colors duration-200"
             />
 
-            <p className="text-center text-[#8697C4]">
+            <p className="text-center text-black">
               Don't have an account?{' '}
               <Link
-                href="/signup"
-                className="text-black hover:text-primary font-medium transition-colors duration-200"
+                href="/register"
+                className="text-blue-600 hover:text-primary hover:underline underline-offset-2 font-medium transition-colors duration-200"
               >
                 Sign up
               </Link>

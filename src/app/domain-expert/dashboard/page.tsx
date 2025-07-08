@@ -1,7 +1,8 @@
+"use client"
+
 import type React from "react"
-import { DollarSign, Package, BookOpen, Star, Video } from "lucide-react"
-import DashboardCard from "@/types/DashboardCard"
-import RecentActivity from "@/types/RecentActivity"
+import { DollarSign, Package, BookOpen, Star, Video, TrendingUp, Users, Activity } from "lucide-react"
+
 // Custom Icons
 const BrainIcon = () => (
   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,6 +15,27 @@ const BrainIcon = () => (
   </svg>
 )
 
+interface DashboardCard {
+  title: string
+  value: string
+  change: string
+  icon: React.ReactNode
+  color: string
+}
+
+interface RecentActivity {
+  id: number
+  title: string
+  description: string
+  time: string
+  type: string
+}
+
+interface ChartData {
+  name: string
+  value: number
+  color?: string
+}
 
 export default function DashboardPage() {
   const dashboardCards: DashboardCard[] = [
@@ -29,7 +51,7 @@ export default function DashboardPage() {
       value: "8",
       change: "+3",
       icon: <Package className="h-6 w-6" />,
-      color: "bg-blue-500",
+      color: "bg-primary",
     },
     {
       title: "Pending Requests",
@@ -78,6 +100,114 @@ export default function DashboardPage() {
     },
   ]
 
+  // Chart data for revenue trend
+  const revenueData: ChartData[] = [
+    { name: "Jan", value: 2400 },
+    { name: "Feb", value: 1398 },
+    { name: "Mar", value: 9800 },
+    { name: "Apr", value: 3908 },
+    { name: "May", value: 4800 },
+    { name: "Jun", value: 3800 },
+    { name: "Jul", value: 4300 },
+  ]
+
+  // Student engagement data
+  const engagementData: ChartData[] = [
+    { name: "Active", value: 18, color: "bg-green-500" },
+    { name: "Inactive", value: 6, color: "bg-gray-400" },
+  ]
+
+  // Package popularity data
+  const packageData: ChartData[] = [
+    { name: "Premium", value: 12, color: "bg-purple-500" },
+    { name: "Standard", value: 8, color: "bg-primary" },
+    { name: "Quick", value: 4, color: "bg-green-500" },
+  ]
+
+  const renderRevenueChart = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+        <TrendingUp className="h-5 w-5 text-gray-400" />
+      </div>
+      <div className="h-48 flex items-end justify-between space-x-2">
+        {revenueData.map((item, index) => (
+          <div key={index} className="flex flex-col items-center flex-1">
+            <div
+              className="w-full bg-primary rounded-t-sm hover:bg-blue-600 transition-colors cursor-pointer"
+              style={{ height: `${(item.value / Math.max(...revenueData.map((d) => d.value))) * 150}px` }}
+              title={`${item.name}: $${item.value}`}
+            ></div>
+            <span className="text-xs text-gray-500 mt-2">{item.name}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 text-center">
+        <p className="text-sm text-gray-600">
+          Monthly revenue growth: <span className="text-green-600 font-medium">+15.3%</span>
+        </p>
+      </div>
+    </div>
+  )
+
+  const renderEngagementChart = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Student Engagement</h3>
+        <Users className="h-5 w-5 text-gray-400" />
+      </div>
+      <div className="space-y-4">
+        {engagementData.map((item, index) => (
+          <div key={index} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">{item.name} Students</span>
+              <span className="text-sm text-gray-500">{item.value}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full ${item.color}`}
+                style={{ width: `${(item.value / (engagementData[0].value + engagementData[1].value)) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 text-center">
+        <p className="text-sm text-gray-600">
+          Engagement rate: <span className="text-green-600 font-medium">75%</span>
+        </p>
+      </div>
+    </div>
+  )
+
+  const renderPackageChart = () => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Package Popularity</h3>
+        <Activity className="h-5 w-5 text-gray-400" />
+      </div>
+      <div className="space-y-3">
+        {packageData.map((item, index) => (
+          <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+              <span className="text-sm text-gray-700">{item.name} Mentorship</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-16 bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${item.color}`}
+                  style={{ width: `${(item.value / Math.max(...packageData.map((d) => d.value))) * 100}%` }}
+                ></div>
+              </div>
+              <span className="text-sm font-medium text-gray-900">{item.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -104,6 +234,13 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {renderRevenueChart()}
+          {renderEngagementChart()}
+          {renderPackageChart()}
         </div>
 
         {/* Recent Student Requests */}
@@ -134,9 +271,9 @@ export default function DashboardPage() {
                   avatar: "MB",
                 },
               ].map((request, i) => (
-                <div key={i} className="flex items-center justify-between space-x-4 rounded-md border border-gray-200 p-4">
+                <div key={i} className="flex items-center justify-between space-x-4 rounded-md border p-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-medium text-sm">
                       {request.avatar}
                     </div>
                     <div>
@@ -153,7 +290,7 @@ export default function DashboardPage() {
                     <button className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                       Decline
                     </button>
-                    <button className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                    <button className="px-3 py-1 text-sm bg-primary text-white rounded-md hover:bg-blue-600 transition-colors">
                       Accept
                     </button>
                   </div>
@@ -180,7 +317,7 @@ export default function DashboardPage() {
                   avatar: "JW",
                 },
               ].map((meeting, i) => (
-                <div key={i} className="flex flex-col space-y-2 rounded-md border border-gray-200 p-4">
+                <div key={i} className="flex flex-col space-y-2 rounded-md border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-xs">
@@ -208,7 +345,7 @@ export default function DashboardPage() {
             {recentActivities.map((activity) => (
               <div key={activity.id} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <BrainIcon />
                   </div>
                 </div>
@@ -230,7 +367,7 @@ export default function DashboardPage() {
               <button className="block w-full text-left p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
                 Review New Requests
               </button>
-              <button className="block w-full text-left p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              <button className="block w-full text-left p-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
                 Manage Active Students
               </button>
             </div>
