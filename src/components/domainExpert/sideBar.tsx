@@ -66,7 +66,7 @@ export function Sidebar() {
       icon: ClipboardList,
       url: "/domain-expert/tasks",
       count: "8",
-      color: "bg-blue-500",
+      color: "bg-primary",
     },
     {
       title: "Chat Messages",
@@ -105,7 +105,7 @@ export function Sidebar() {
       icon: FileText,
       url: "/domain-expert/reports",
       count: "4",
-      color: "bg-blue-500",
+      color: "bg-primary",
     },
   ]
 
@@ -123,7 +123,7 @@ export function Sidebar() {
       icon: BookOpen,
       url: "/domain-expert/projects/edtech-learning",
       count: "Review",
-      color: "bg-blue-500",
+      color: "bg-primary",
     },
     {
       title: "FinTech Mobile App",
@@ -172,7 +172,7 @@ export function Sidebar() {
                   onClick={() => handleNavigate(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                     pathname === item.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -196,7 +196,7 @@ export function Sidebar() {
                   onClick={() => handleNavigate(project.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === project.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -242,7 +242,7 @@ export function Sidebar() {
                   onClick={() => handleNavigate(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === item.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -265,7 +265,7 @@ export function Sidebar() {
                   onClick={() => handleNavigate(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === item.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -286,7 +286,7 @@ export function Sidebar() {
                 onClick={() => handleNavigate("/domain-expert/support")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   pathname === "/domain-expert/support"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
