@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/superbaseClient'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
@@ -35,62 +36,92 @@ export default function LoginPage() {
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-lg">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-black mb-2">Login</h2>
-            <p className="text-[#8697C4] text-lg">
-              Access your brainMap account
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
+        <div className="w-full max-w-7xl mx-auto bg-white shadow-lg rounded-2xl">
+          <div className="min-h-[600px] flex">
+            {/* Left Side - Logo and Description */}
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-secondary to-primary items-center justify-center px-12 rounded-l-2xl">
+          <div className="text-center max-w-md">
+            <div className="mb-8">
+              <Image
+                src="/image/BrainMap2.png"
+                alt="BrainMap Logo"
+                width={300}
+                height={300}
+                className="mx-auto"
+              />
+            </div>
+            <h1 className="text-4xl font-bold text-[#3D52A0] mb-6">
+              Welcome to BrainMap
+            </h1>
+            <p className="text-lg text-white leading-relaxed">
+              Your comprehensive platform for academic collaboration, research management, 
+              and knowledge sharing. Connect with experts, manage your projects, and 
+              accelerate your learning journey.
             </p>
           </div>
+        </div>
 
-          {error && (
-            <div className="text-center text-red-600 font-medium">
-              {error}
+        {/* Right Side - Login Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-12">
+          <div className="max-w-md w-full space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-black mb-2">Login</h2>
+              <p className="text-[#8697C4] text-lg">
+                Access your brainMap account
+              </p>
             </div>
-          )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                required
-                className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
+            {error && (
+              <div className="text-center text-red-600 font-medium">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
+                />
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
+                />
+              </div>
+
+              <CustomButton
+                type="submit"
+                text="Login"
+                className="w-full bg-primary hover:bg-secondary text-white hover:text-black transition-colors duration-200"
               />
-            </div>
 
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8697C4]" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-                className="w-full pl-12 pr-4 py-3 bg-[#EDE8F5] text-[#3D52A0] rounded-lg border border-[#ADBBDA] focus:outline-none focus:ring-2 focus:ring-[#7091E6] placeholder-[#8697C4]"
-              />
-            </div>
-
-            <CustomButton
-              type="submit"
-              text="Login"
-              className="w-full bg-primary hover:bg-secondary text-white hover:text-black transition-colors duration-200"
-            />
-
-            <p className="text-center text-[#8697C4]">
-              Don't have an account?{' '}
-              <Link
-                href="/signup"
-                className="text-black hover:text-primary font-medium transition-colors duration-200"
-              >
-                Sign up
-              </Link>
-            </p>
-          </form>
+              <p className="text-center text-[#8697C4]">
+                Don't have an account?{' '}
+                <Link
+                  href="/signup"
+                  className="text-black hover:text-primary font-medium transition-colors duration-200"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </form>
+          </div>
+        </div>
+          </div>
         </div>
       </div>
     </>
