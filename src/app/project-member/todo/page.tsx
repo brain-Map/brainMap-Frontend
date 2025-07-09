@@ -1,9 +1,10 @@
 import React from 'react'
+import TodoList from './todolist'
 
 const page = () => {
   return (
     <div>
-      <h1>todo</h1>
+      <TodoList />
     </div>
   )
 }
