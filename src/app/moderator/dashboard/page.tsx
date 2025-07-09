@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,8 @@ interface WithdrawalRequest {
 }
 
 export default function ModeratorDashboard() {
+  const router = useRouter();
+  
   // Sample data
   const stats: DashboardStats = {
     totalUsers: 2847,
@@ -218,7 +221,11 @@ export default function ModeratorDashboard() {
                   <AlertTriangle className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Recent Reports
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/reports')}
+                >
                   View All Reports
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
@@ -392,12 +399,13 @@ export default function ModeratorDashboard() {
 
             {/* Quick Actions */}
             <div className="border-t border-gray-100 pt-4 mt-4">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex justify-center">
                 <Button 
                   size="sm" 
                   variant="outline"
-                  className="text-xs py-2 font-medium transition-all duration-200"
+                  className="text-xs py-2 px-6 font-medium transition-all duration-200"
                   style={{ borderColor: '#3D52A0', color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/users')}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#3D52A0';
                     e.currentTarget.style.color = 'white';
@@ -409,23 +417,6 @@ export default function ModeratorDashboard() {
                 >
                   <UserCheck className="w-3 h-3 mr-1" />
                   View All Users
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs py-2 font-medium transition-all duration-200"
-                  style={{ borderColor: '#10B981', color: '#10B981' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#10B981';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#10B981';
-                  }}
-                >
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Analytics
                 </Button>
               </div>
             </div>
@@ -450,7 +441,11 @@ export default function ModeratorDashboard() {
                   <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Expert Approval Queue
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/expert-approval')}
+                >
                   View All Experts
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
@@ -539,7 +534,11 @@ export default function ModeratorDashboard() {
                   <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Pending Withdrawal Requests
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/withdrawals')}
+                >
                   View All Requests
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
