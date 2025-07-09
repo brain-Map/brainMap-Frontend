@@ -1,11 +1,8 @@
-import React from 'react'
+import React from 'react';
+import SettingsPage from './settings';
 
-const page = () => {
-  return (
-    <div>
-      <h1>settings</h1>
-    </div>
-  )
-}
+const Page = () => {
+  return <SettingsPage />;
+};
 
-export default page
+export default Page;
