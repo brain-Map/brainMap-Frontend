@@ -40,6 +40,8 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isUploading, setIsUploading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isAddingInterest, setIsAddingInterest] = useState(false);
+  const [newInterest, setNewInterest] = useState('');
   const [notifications, setNotifications] = useState({
     email: {
       projectUpdates: true,
@@ -128,6 +130,28 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     // Simulate saving settings
     console.log('Saving settings...', { profileData, notifications, privacy });
     // Show success message
+  };
+
+  const handleAddInterest = () => {
+    if (newInterest.trim() && !profileData.researchInterests.includes(newInterest.trim())) {
+      const updatedInterests = [...profileData.researchInterests, newInterest.trim()];
+      handleProfileUpdate('researchInterests', updatedInterests);
+      setNewInterest('');
+      setIsAddingInterest(false);
+    }
+  };
+
+  const handleCancelAddInterest = () => {
+    setNewInterest('');
+    setIsAddingInterest(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddInterest();
+    } else if (e.key === 'Escape') {
+      handleCancelAddInterest();
+    }
   };
 
   const settingsTabs = [
@@ -357,11 +381,46 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                         </button>
                       </span>
                     ))}
-                    <button className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50">
-                      <Plus size={14} className="mr-1" />
-                      Add Interest
-                    </button>
+                    
+                    {/* Add Interest Input */}
+                    {isAddingInterest ? (
+                      <div className="inline-flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newInterest}
+                          onChange={(e) => setNewInterest(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Enter interest..."
+                          className="px-3 py-1 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleAddInterest}
+                          disabled={!newInterest.trim()}
+                          className="text-green-600 hover:text-green-700 disabled:text-gray-400"
+                        >
+                          <CheckCircle size={16} />
+                        </button>
+                        <button
+                          onClick={handleCancelAddInterest}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setIsAddingInterest(true)}
+                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <Plus size={14} className="mr-1" />
+                        Add Interest
+                      </button>
+                    )}
                   </div>
+                  {profileData.researchInterests.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-2">No research interests added yet. Click "Add Interest" to get started.</p>
+                  )}
                 </div>
 
                 {/* Save Button */}
