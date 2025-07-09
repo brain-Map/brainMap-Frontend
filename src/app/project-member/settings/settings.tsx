@@ -789,7 +789,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </div>
 
                   {/* Accessibility */}
-                  <div>
+                  {/* <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Accessibility</h3>
                     <div className="space-y-4">
                       {[
@@ -815,7 +815,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Save Button */}
