@@ -41,9 +41,8 @@ export default function ModeratorSidebar({ currentPage, onNavigate }: ModeratorS
 
   // Main Menu Items
   const menuItems: MenuItem[] = [
-    { title: "Overview", icon: LayoutDashboard, url: "/moderator/dashboard" },
+    { title: "Dashboard", icon: LayoutDashboard, url: "/moderator/dashboard" },
     { title: "Users", icon: Users, url: "/moderator/users" },
-    { title: "Analytics", icon: BarChart3, url: "/moderator/analytics" },
     { title: "Settings", icon: Settings, url: "/moderator/settings" },
   ];
 

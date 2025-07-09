@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,8 @@ interface WithdrawalRequest {
 }
 
 export default function ModeratorDashboard() {
+  const router = useRouter();
+  
   // Sample data
   const stats: DashboardStats = {
     totalUsers: 2847,
@@ -143,95 +146,86 @@ export default function ModeratorDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm font-semibold text-blue-800 block mb-1">Total Users</span>
-                  <p className="text-2xl font-bold text-blue-900 mb-1">{stats.totalUsers.toLocaleString()}</p>
-                  <div className="flex items-center justify-center text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +12% growth
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 rounded-full bg-blue-500 text-white">
+                <Users className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm font-medium text-green-600">+12%</span>
+              <span className="text-sm text-gray-600"> from last month</span>
+            </div>
+          </div>
 
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300 relative">
-                  <AlertTriangle className="w-8 h-8 text-white" />
-                  {stats.pendingReports > 20 && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center">
-                      <span className="text-xs text-white font-bold">!</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm font-semibold text-red-800 block mb-1">Pending Reports</span>
-                  <p className="text-2xl font-bold text-red-900 mb-1">{stats.pendingReports}</p>
-                  <div className="flex items-center justify-center text-xs text-red-700 bg-red-50 px-2 py-1 rounded-full">
-                    <AlertTriangle className="w-3 h-3 mr-1" />
-                    3 urgent
-                  </div>
-                </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Reports</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingReports}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 rounded-full bg-red-500 text-white">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm font-medium text-red-600">3 urgent</span>
+              <span className="text-sm text-gray-600"> require attention</span>
+            </div>
+          </div>
 
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-yellow-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Award className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm font-semibold text-yellow-800 block mb-1">Expert Approvals</span>
-                  <p className="text-2xl font-bold text-yellow-900 mb-1">{stats.expertApprovals}</p>
-                  <div className="flex items-center justify-center text-xs text-yellow-700 bg-yellow-50 px-2 py-1 rounded-full">
-                    <Clock className="w-3 h-3 mr-1" />
-                    Awaiting review
-                  </div>
-                </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Expert Approvals</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.expertApprovals}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 rounded-full bg-yellow-500 text-white">
+                <Award className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm font-medium text-yellow-600">Awaiting review</span>
+              <span className="text-sm text-gray-600"> pending</span>
+            </div>
+          </div>
 
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <DollarSign className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-sm font-semibold text-green-800 block mb-1">Withdrawal Requests</span>
-                  <p className="text-2xl font-bold text-green-900 mb-1">{stats.withdrawalRequests}</p>
-                  <div className="flex items-center justify-center text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full">
-                    <DollarSign className="w-3 h-3 mr-1" />
-                    $8,450 pending
-                  </div>
-                </div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Withdrawal Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.withdrawalRequests}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-3 rounded-full bg-green-500 text-white">
+                <DollarSign className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-sm font-medium text-green-600">$8,450 pending</span>
+              <span className="text-sm text-gray-600"> total amount</span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Reports */}
-          <Card className="lg:col-span-2 bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="lg:col-span-2 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Recent Reports
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/reports')}
+                >
                   View All Reports
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
@@ -315,47 +309,143 @@ export default function ModeratorDashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="bg-white border-0 shadow-sm">
-            <CardHeader className="pb-4 border-b border-gray-100">
+          {/* User Analytics & Distribution */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <UserCheck className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                Quick Actions
+                <Users className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                User Analytics & Distribution
               </h3>
-            </CardHeader>
-            <CardContent className="p-4">
+              <TrendingUp className="h-5 w-5 text-gray-400" />
+            </div>
+            
+            {/* User Distribution Chart */}
+            <div className="space-y-4 mb-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Project Members</span>
+                  <span className="text-sm text-gray-500">2,124</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="h-3 rounded-full"
+                    style={{ 
+                      width: `${(2124 / 2847) * 100}%`,
+                      backgroundColor: '#3D52A0'
+                    }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Domain Experts</span>
+                  <span className="text-sm text-gray-500">723</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="h-3 rounded-full bg-green-500"
+                    style={{ width: `${(723 / 2847) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: '#3D52A0' }}></div>
+                  <span className="text-xs font-medium text-gray-600">Project Members</span>
+                </div>
+                <span className="text-lg font-bold text-gray-900">74.6%</span>
+              </div>
+              
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                  <span className="text-xs font-medium text-gray-600">Domain Experts</span>
+                </div>
+                <span className="text-lg font-bold text-gray-900">25.4%</span>
+              </div>
+            </div>
+
+            {/* User Activity Metrics */}
+            <div className="border-t border-gray-100 pt-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Recent Activity</h4>
               <div className="space-y-3">
-                <Button className="w-full justify-start text-sm py-3 bg-blue-500 hover:bg-blue-600 text-white" size="sm">
-                  <UserCheck className="w-4 h-4 mr-2" />
-                  Approve Experts
-                </Button>
-                <Button className="w-full justify-start text-sm py-3 bg-green-500 hover:bg-green-600 text-white" size="sm">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Review Whitelist
-                </Button>
-                <Button className="w-full justify-start text-sm py-3 bg-red-500 hover:bg-red-600 text-white" size="sm">
-                  <UserX className="w-4 h-4 mr-2" />
-                  Suspend User
-                </Button>
-                <Button className="w-full justify-start text-sm py-3 bg-purple-500 hover:bg-purple-600 text-white" size="sm">
-                  <Bell className="w-4 h-4 mr-2" />
-                  Send Notification
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-gray-600">Active Today</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">1,247 users</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                    <span className="text-xs text-gray-600">New This Week</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">89 users</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span className="text-xs text-gray-600">Inactive (30+ days)</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">342 users</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="border-t border-gray-100 pt-4 mt-4">
+              <div className="flex justify-center">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="text-xs py-2 px-6 font-medium transition-all duration-200"
+                  style={{ borderColor: '#3D52A0', color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/users')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3D52A0';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#3D52A0';
+                  }}
+                >
+                  <UserCheck className="w-3 h-3 mr-1" />
+                  View All Users
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                Total Active Users: <span className="text-gray-900 font-medium">2,847</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Growth: <span className="text-green-600 font-medium">+12% this month</span>
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Expert Approval Queue */}
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Expert Approval Queue
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/expert-approval')}
+                >
                   View All Experts
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
@@ -437,14 +527,18 @@ export default function ModeratorDashboard() {
           </Card>
 
           {/* Pending Withdrawal Requests */}
-          <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
                   Pending Withdrawal Requests
                 </h3>
-                <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                <button 
+                  className="hover:opacity-80 text-sm font-medium flex items-center" 
+                  style={{ color: '#3D52A0' }}
+                  onClick={() => router.push('/moderator/withdrawals')}
+                >
                   View All Requests
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
