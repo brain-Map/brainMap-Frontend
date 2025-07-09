@@ -1,62 +1,27 @@
 'use client';
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
+import {useRouter} from 'next/navigation';
 import { Search, ChevronDown, Star, MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import TodoNotesSidebar from '@/components/TodoNotesSidebar';
+import projects from '@/data/projects/projects';
 
 
-interface Project {
-  id: string;
-  name: string;
-  key: string;
-  type: string;
-  lead: {
-    name: string;
-    initials: string;
-    avatar?: string;
-  };
-  projectUrl?: string;
-  starred: boolean;
-  icon: string;
-  iconBg: string;
-}
 
 const ProjectsTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterProduct, setFilterProduct] = useState('Filter by product');
+  const router = useRouter();
   
-  const projects: Project[] = [
-    {
-      id: '1',
-      name: 'Project 1',
-      key: 'A123',
-      type: 'Product Discovery',
-      lead: {
-        name: 'Nadun Madusanka',
-        initials: 'NM'
-      },
-      starred: true,
-      icon: '📊',
-      iconBg: 'bg-blue-500'
-    },
-    {
-      id: '2',
-      name: 'Project 2',
-      key: 'A124',
-      type: 'Team-managed software',
-      lead: {
-        name: 'Nadun Madusanka',
-        initials: 'NM'
-      },
-      starred: false,
-      icon: '📋',
-      iconBg: 'bg-cyan-500'
-    }
-  ];
 
   const toggleStar = (projectId: string) => {
     // In a real app, this would update the project's starred status
     console.log(`Toggle star for project ${projectId}`);
   };
+
+  const handleclick = (projectId: string) => {
+    // Navigate to the project details page
+    router.push(`/project-member/projects/${projectId}`);
+  }
 
   return (
     <div className="min-h-screen flex justify-between ">
@@ -135,7 +100,8 @@ const ProjectsTable: React.FC = () => {
                       <div className={`w-6 h-6 rounded ${project.iconBg} flex items-center justify-center text-white text-sm`}>
                         {project.icon}
                       </div>
-                      <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer transition-colors">
+                      
+                      <span onClick={() => handleclick(project.id)} className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer transition-colors">
                         {project.name}
                       </span>
                     </div>
