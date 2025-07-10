@@ -144,15 +144,18 @@ const AboutUs: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <CustomButton
+              
+
+              <Link href="/community" >
+                <CustomButton
                 text="Join Our Community"
                 backgroundColor="bg-white"
                 textColor="text-primary"
                 hoverBackgroundColor="hover:bg-value3"
                 icon={ArrowRight}
                 onClick={() => handleClick('Join Community')}
-              />
-              
+                />
+              </Link>
               <Link
                 href="/contact"
                 className="px-8 py-4 bg-white/15 backdrop-blur-xl hover:bg-white/25 text-white font-bold text-lg rounded-xl border-2 border-white/30 hover:border-accent/50 transition-all duration-500"
