@@ -111,30 +111,35 @@ const ContactUs: React.FC = () => {
   const categories = [
     { value: 'general', label: 'General Inquiry' },
     { value: 'support', label: 'Technical Support' },
-    { value: 'academic', label: 'Academic Partnership' },
+    { value: 'project', label: 'Project Management Help' },
     { value: 'mentor', label: 'Become a Mentor' },
-    { value: 'student', label: 'Student Support' },
+    { value: 'community', label: 'Community Support' },
+    { value: 'business', label: 'Business Partnership' },
     { value: 'billing', label: 'Billing & Payments' },
-    { value: 'partnership', label: 'University Partnership' },
+    { value: 'enterprise', label: 'Enterprise Solutions' },
     { value: 'press', label: 'Press & Media' }
   ];
 
   const faqs = [
     {
-      question: 'How do I get started as a student?',
-      answer: 'Simply create an account, complete your profile, and start browsing available domain experts in your field of study.'
+      question: 'How do I get started with project management on BrainMap?',
+      answer: 'Simply create an account, set up your first project with our Kanban boards and to-do lists, invite team members, and start collaborating. You can find domain experts anytime if you need guidance.'
     },
     {
-      question: 'What qualifications do mentors need?',
-      answer: 'Mentors must have advanced degrees in their field, relevant industry experience, and pass our verification process.'
+      question: 'What qualifications do domain experts need?',
+      answer: 'Domain experts must have proven expertise in their field, relevant professional experience, and pass our verification process. They come from various industries including business, technology, education, healthcare, and creative fields.'
     },
     {
-      question: 'Is BrainMap free to use?',
-      answer: 'Basic features are free for students. Premium features and mentor consultations may have associated costs.'
+      question: 'How does the community feature work?',
+      answer: 'Users can create posts about domain-specific issues or questions in our community section. Other platform members can like, comment, and engage in discussions to help solve problems collectively.'
     },
     {
-      question: 'How do you ensure academic integrity?',
-      answer: 'We have strict guidelines and monitoring systems to ensure all interactions maintain the highest academic standards.'
+      question: 'Is BrainMap suitable for all types of projects?',
+      answer: 'Absolutely! Whether you\'re a student working on assignments, an entrepreneur building a startup, a corporate team managing initiatives, or anyone with a project idea, BrainMap adapts to your needs.'
+    },
+    {
+      question: 'How do experts earn money through mentoring?',
+      answer: 'Domain experts can set their hourly rates and offer mentoring sessions. They get paid for consultations, project guidance, and ongoing mentorship arrangements through our secure payment system.'
     }
   ];
 
@@ -156,9 +161,9 @@ const ContactUs: React.FC = () => {
     {
       icon: Users,
       title: 'Community Forum',
-      description: 'Connect with other users and experts',
+      description: 'Ask questions and get help from other users and experts',
       availability: 'Always active',
-      action: 'Join Forum'
+      action: 'Join Community'
     }
   ];
 
@@ -183,8 +188,8 @@ const ContactUs: React.FC = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-value3 max-w-4xl mx-auto leading-relaxed font-light mb-12">
-              Have questions about BrainMap? Need academic support? Want to become a mentor? 
-              We're here to assist you every step of the way in your academic journey.
+              Have questions about BrainMap? Need project management support? Want to become a mentor? 
+              Looking for community guidance? We're here to assist you every step of the way in your project journey.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -494,8 +499,9 @@ const ContactUs: React.FC = () => {
           </h2>
           
           <p className="text-xl text-value3 mb-12 leading-relaxed">
-            Our team is standing by to help you succeed. Don't hesitate to reach out – 
-            we're here to support your academic journey every step of the way.
+            Our team is standing by to help you succeed. Whether you need project management guidance, 
+            expert mentorship, community support, or technical assistance – we're here to support your 
+            journey every step of the way.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
