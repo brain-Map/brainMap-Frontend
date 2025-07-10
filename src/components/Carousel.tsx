@@ -27,17 +27,17 @@ const PopularServices: React.FC<PopularServicesProps> = ({
 
   // Default placeholder services if none provided
   const defaultServices: Service[] = [
-    { id: '1', title: 'Academic Writing', link: '/services/academic-writing' },
-    { id: '2', title: 'Research Assistance', link: '/services/research' },
+    { id: '1', title: 'Project Management', link: '/services/project-management' },
+    { id: '2', title: 'Business Strategy', link: '/services/business-strategy' },
     { id: '3', title: 'Data Analysis', link: '/services/data-analysis' },
-    { id: '4', title: 'Thesis Support', link: '/services/thesis' },
-    { id: '5', title: 'Literature Review', link: '/services/literature-review' },
-    { id: '6', title: 'Statistical Analysis', link: '/services/statistics' },
-    { id: '7', title: 'Presentation Design', link: '/services/presentations' },
-    { id: '8', title: 'Proofreading', link: '/services/proofreading' },
-    { id: '9', title: 'Proofreading', link: '/services/proofreading' },
-    { id: '10', title: 'Proofreading', link: '/services/proofreading' },
-    { id: '11', title: 'Proofreading', link: '/services/proofreading' }
+    { id: '4', title: 'Software Development', link: '/services/software-development' },
+    { id: '5', title: 'Marketing & Design', link: '/services/marketing-design' },
+    { id: '6', title: 'Financial Planning', link: '/services/financial-planning' },
+    { id: '7', title: 'Technical Writing', link: '/services/technical-writing' },
+    { id: '8', title: 'Product Development', link: '/services/product-development' },
+    { id: '9', title: 'Legal Consulting', link: '/services/legal-consulting' },
+    { id: '10', title: 'Quality Assurance', link: '/services/quality-assurance' },
+    { id: '11', title: 'Research & Analysis', link: '/services/research-analysis' }
   ];
 
   const displayServices = services || defaultServices;

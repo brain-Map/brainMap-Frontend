@@ -51,24 +51,24 @@ const Home: React.FC = () => {
 const successStories: SuccessStory[] = [
   {
     id: '1',
-    title: 'Mastering Research Methodologies with Mentor Support',
+    title: 'Streamlining Product Development with Expert Mentorship',
     image: '/image/research-mentor.jpeg',
-    alt: 'Student working on laptop with mentor support',
-    readMoreLink: '/success-stories/research-methodologies'
+    alt: 'Team collaborating on project with mentor support',
+    readMoreLink: '/success-stories/product-development'
   },
   {
     id: '2',
-    title: 'Tracking Academic Progress in Group Projects',
+    title: 'Managing Complex Projects with Kanban Boards',
     image: '/image/group-progress.jpg',
-    alt: 'Student tracking academic progress on laptop',
-    readMoreLink: '/success-stories/group-projects'
+    alt: 'Team tracking project progress with kanban boards',
+    readMoreLink: '/success-stories/project-management'
   },
   {
     id: '3',
-    title: 'Enhancing Thesis Writing with Real-Time Expert Feedback',
+    title: 'Accelerating Startup Growth with Domain Expert Guidance',
     image: '/image/thesis-writing.jpg',
-    alt: 'Student writing thesis with expert feedback',
-    readMoreLink: '/success-stories/thesis-writing'
+    alt: 'Entrepreneurs receiving expert feedback on business strategy',
+    readMoreLink: '/success-stories/startup-growth'
   }
 ];
 
@@ -92,21 +92,21 @@ const successStories: SuccessStory[] = [
           <div className="mb-12">
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/20">
               <Star className="w-5 h-5 text-accent mr-2" />
-              <span className="text-value3 font-medium">Trusted by 10,000+ researchers worldwide</span>
+              <span className="text-value3 font-medium">Trusted by 10,000+ project teams worldwide</span>
             </div>
             
             <h1 className="text-5xl md:text-5xl font-extrabold text-white mb-8 leading-tight">
-              Connect, collaborate, and track{' '}
+              Manage, collaborate, and track{' '}
               <span className="bg-gradient-to-r from-accent via-info to-accent bg-clip-text text-transparent animate-gradient-x">
-              <br />  academic work
+              <br />  any project
               </span>{' '}
               
-              with trusted domain experts
+              with expert mentorship
             </h1>
             
             <p className="text-xl md:text-xl text-value3 max-w-5xl mx-auto leading-relaxed font-light">
-              Deupload is an innovative online file manager built on decentralized cloud storage and IPFS technology, 
-              enabling secure storage, seamless sharing, and private collaboration without subscription fees.
+              BrainMap is the universal project management platform that connects any project team with verified domain experts. 
+              Organize your work with kanban boards, track milestones, collaborate seamlessly, and get expert guidance whenever you need it.
             </p>
           </div>
 
@@ -119,7 +119,7 @@ const successStories: SuccessStory[] = [
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search for files, people, or projects..."
+                          placeholder="Search for projects, experts, or resources..."
                           className="flex-1 text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none text-base"
                         />
                         {/* <button
@@ -191,7 +191,7 @@ const successStories: SuccessStory[] = [
 {/* metor Join */}
 
 <div className="py-16 min-h-screen bg-gray-50">
-      {/* Top Section - Academic Growth Partner */}
+      {/* Top Section - Project Success Partner */}
       <div className="bg-white ">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center gap-8">
@@ -215,14 +215,14 @@ const successStories: SuccessStory[] = [
             <div className="lg:w-1/2 space-y-6">
               <div className="border-2 border-dashed border-gray-300 p-6 rounded-lg">
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-                  Your academic growth partner — anytime, anywhere.
+                  Your project success partner — anytime, anywhere.
                 </h1>
                 
                 <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                  Connect with trusted domain experts for personalized academic guidance, 
-                  collaborate seamlessly in real time on assignments and research, and monitor 
-                  your academic progress — all within a simple, secure, and ethically-driven 
-                  platform designed to support your learning journey.
+                  Connect with verified domain experts for personalized project guidance, 
+                  collaborate seamlessly in real-time with your team, and track your progress 
+                  with powerful kanban boards and milestone tracking — all within a secure, 
+                  intuitive platform designed to help any project succeed.
                 </p>
 
                 <CustomButton
@@ -249,13 +249,13 @@ const successStories: SuccessStory[] = [
             {/* Left side - Content */}
             <div className="lg:w-1/2 space-y-6">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight">
-                Want to Become a Mentor on brainMap?
+                Want to Become an Expert on brainMap?
               </h2>
               
               <p className="text-gray-600 text-lg leading-relaxed">
-                Share your expertise, guide students ethically, and contribute to academic 
-                success — all while growing your reputation and earning income on BrainMap's 
-                trusted platform.
+                Share your expertise across any domain, guide teams and individuals 
+                on their projects, and build your reputation while earning income on 
+                BrainMap's trusted platform for project mentorship.
               </p>
 
               <CustomButton
@@ -280,7 +280,7 @@ const successStories: SuccessStory[] = [
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      <p className="text-gray-600 font-medium">Professional Mentor</p>
+                      <p className="text-gray-600 font-medium">Domain Expert</p>
                     </div>
                   </div>
                 </div>
@@ -305,8 +305,8 @@ const successStories: SuccessStory[] = [
             What success on brainMap looks like
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Real connections with trusted mentors, smarter project collaboration, 
-            and a clear path toward your academic goals — all within BrainMap.
+            Real connections with verified experts, smarter project collaboration, 
+            and a clear path toward your project goals — all within BrainMap.
           </p>
         </div>
 
