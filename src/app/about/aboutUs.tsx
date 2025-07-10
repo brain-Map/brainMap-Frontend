@@ -29,31 +29,31 @@ const AboutUs: React.FC = () => {
   };
 
   const stats = [
-    { number: '10,000+', label: 'Active Project Members', icon: GraduationCap },
-    { number: '2,500+', label: 'Domain Experts', icon: Users },
-    { number: '50,000+', label: 'Managed Projects', icon: Award }
+    { number: '25,000+', label: 'Active Project Members', icon: GraduationCap },
+    { number: '5,500+', label: 'Domain Experts', icon: Users },
+    { number: '120,000+', label: 'Managed Projects', icon: Award }
   ];
 
   const values = [
     {
       icon: Shield,
-      title: 'Ethical Collaboration',
-      description: 'We maintain the highest standards of academic integrity while fostering meaningful connections between students and experts.'
+      title: 'Universal Project Management',
+      description: 'From school projects to corporate initiatives, our platform adapts to any project type, scale, or industry with flexible tools and workflows.'
     },
     {
       icon: Brain,
-      title: 'Knowledge Excellence',
-      description: 'Our platform connects students with top-tier domain experts to ensure high-quality academic guidance and mentorship.'
+      title: 'Expert Guidance On-Demand',
+      description: 'Connect with verified domain experts across all fields who provide personalized mentorship and guidance to overcome project challenges.'
     },
     {
       icon: Heart,
-      title: 'Student-Centric',
-      description: 'Every feature is designed with students in mind, creating an environment that supports their academic growth and success.'
+      title: 'Community-Driven',
+      description: 'Built for collaboration, our platform brings together project teams, individuals, and experts in a supportive ecosystem for success.'
     },
     {
       icon: Zap,
-      title: 'Innovation',
-      description: 'We leverage cutting-edge technology to create seamless collaboration experiences for modern academic needs.'
+      title: 'Smart Project Tools',
+      description: 'Advanced Kanban boards, milestone tracking, team collaboration features, and AI-powered insights to keep your projects on track.'
     }
   ];
 
@@ -61,32 +61,32 @@ const AboutUs: React.FC = () => {
     {
       year: '2020',
       title: 'The Vision',
-      description: 'Founded with the mission to bridge the gap between students and domain experts in academic research.'
+      description: 'Founded with the mission to democratize project management and expert mentorship for everyone, regardless of project type or scale.'
     },
     {
       year: '2021',
       title: 'First Launch',
-      description: 'Launched beta version with 100 students and 25 domain experts across 5 universities.'
+      description: 'Launched beta with 500 project members and 50 domain experts across business, technology, education, and creative industries.'
     },
     {
       year: '2022',
-      title: 'Rapid Growth',
-      description: 'Expanded to 50+ universities with over 1,000 successful project collaborations.'
+      title: 'Rapid Expansion',
+      description: 'Grew to 15,000+ users managing projects in 100+ categories, from startups to Fortune 500 companies and individual creators.'
     },
     {
       year: '2023',
-      title: 'Global Reach',
-      description: 'Reached 100+ universities worldwide and introduced advanced collaboration tools.'
+      title: 'Global Platform',
+      description: 'Reached 50,000+ projects across 150+ countries with advanced collaboration tools and multi-language support.'
     },
     {
       year: '2024',
-      title: 'Innovation Hub',
-      description: 'Launched AI-powered matching system and real-time collaboration features.'
+      title: 'AI-Powered Features',
+      description: 'Introduced smart project insights, automated milestone tracking, and AI-powered expert matching for optimal guidance.'
     },
     {
       year: '2025',
-      title: 'Academic Excellence',
-      description: 'Leading platform with 10,000+ students and comprehensive academic support ecosystem.'
+      title: 'Project Excellence Hub',
+      description: 'Leading platform with 120,000+ managed projects and the world\'s largest network of domain experts across all industries.'
     }
   ];
 
@@ -95,25 +95,25 @@ const AboutUs: React.FC = () => {
       name: 'Dr. Sarah Chen',
       role: 'Co-Founder & CEO',
       image: '/image/user.jpg',
-      description: 'Former Stanford professor with 15+ years in educational technology.'
+      description: 'Former project management consultant with 15+ years helping organizations across all industries achieve project success.'
     },
     {
       name: 'Michael Rodriguez',
       role: 'Co-Founder & CTO',
       image: '/image/user.jpg',
-      description: 'Ex-Google engineer passionate about academic collaboration platforms.'
+      description: 'Ex-Google engineer passionate about building scalable platforms that connect people and accelerate project outcomes.'
     },
     {
       name: 'Dr. Emily Watson',
-      role: 'Head of Academic Relations',
+      role: 'Head of Expert Relations',
       image: '/image/user.jpg',
-      description: 'Harvard PhD with expertise in student mentorship and academic integrity.'
+      description: 'Harvard MBA with expertise in building expert networks across business, technology, healthcare, and creative industries.'
     },
     {
       name: 'James Kim',
       role: 'Head of Product',
       image: '/image/user.jpg',
-      description: 'Former Microsoft PM focused on educational user experience design.'
+      description: 'Former Microsoft PM focused on project management tools and collaborative user experiences for diverse industries.'
     }
   ];
 
@@ -127,7 +127,7 @@ const AboutUs: React.FC = () => {
           <div className="text-center">
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/20">
               <Heart className="w-5 h-5 text-accent mr-2" />
-              <span className="text-value3 font-medium">Empowering Academic Excellence Since 2020</span>
+              <span className="text-value3 font-medium">Empowering Project Success Since 2020</span>
             </div>
             
             <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-8 leading-tight">
@@ -138,8 +138,9 @@ const AboutUs: React.FC = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-value3 max-w-4xl mx-auto leading-relaxed font-light mb-12">
-              We're revolutionizing academic collaboration by connecting students with trusted domain experts, 
-              fostering ethical learning environments, and empowering the next generation of researchers and scholars.
+              We're revolutionizing how people manage projects and access expert guidance. From individual creators 
+              to enterprise teams, BrainMap connects project members with domain experts across all industries 
+              to turn ideas into successful outcomes.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -195,22 +196,23 @@ const AboutUs: React.FC = () => {
               
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
                 Bridging the gap between 
-                <span className="text-primary"> students</span> and 
-                <span className="text-secondary"> experts</span>
+                <span className="text-primary"> project ambitions</span> and 
+                <span className="text-secondary"> expert guidance</span>
               </h2>
               
               <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                BrainMap was born from a simple yet powerful idea: every student deserves access to expert guidance 
-                in their academic journey. We create meaningful connections that foster learning, maintain academic 
-                integrity, and drive innovation in education.
+                BrainMap was born from a simple yet powerful idea: anyone or any team doing a project in any domain 
+                should be able to collaboratively manage their project and access expert guidance when needed. 
+                We create meaningful connections that foster learning and drive project success.
               </p>
 
               <div className="space-y-4">
                 {[
-                  'Connect students with verified domain experts',
-                  'Maintain highest standards of academic integrity',
-                  'Provide tools for seamless collaboration',
-                  'Track academic progress and achievements'
+                  'Track project progress and achievements with smart tools',
+                  'Receive timely alerts on project milestones and deadlines',
+                  'Connect project members with verified domain experts',
+                  'Enable experts to monetize their knowledge through mentoring',
+                  'Provide advanced tools for seamless team collaboration'
                 ].map((item, index) => (
                   <div key={index} className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-success mr-3 flex-shrink-0" />
@@ -225,7 +227,7 @@ const AboutUs: React.FC = () => {
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
                     <BookOpen className="w-24 h-24 text-primary mx-auto mb-4" />
-                    <p className="text-gray-600 font-medium">Academic Collaboration</p>
+                    <p className="text-gray-600 font-medium">Project Management & Mentorship</p>
                   </div>
                 </div>
               </div>
@@ -249,7 +251,7 @@ const AboutUs: React.FC = () => {
             
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Our core values shape every decision we make and every feature we build, 
-              ensuring BrainMap remains a trusted platform for academic excellence.
+              ensuring BrainMap remains a trusted platform for project excellence across all industries.
             </p>
           </div>
 
@@ -283,7 +285,7 @@ const AboutUs: React.FC = () => {
             
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               From a small idea to a global platform, here's how BrainMap has evolved 
-              to serve the academic community better.
+              to serve project teams and individuals across all industries and scales.
             </p>
           </div>
 
@@ -325,8 +327,8 @@ const AboutUs: React.FC = () => {
             </h2>
             
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Our diverse team brings together expertise in education, technology, and academic research 
-              to create the best possible experience for our community.
+              Our diverse team brings together expertise in project management, technology, and domain expertise 
+              to create the best possible experience for our global community of project members and experts.
             </p>
           </div>
 
@@ -359,18 +361,19 @@ const AboutUs: React.FC = () => {
           </h2>
           
           <p className="text-xl text-value3 mb-12 leading-relaxed">
-            Whether you're a student seeking expert guidance or a domain expert wanting to share your knowledge, 
-            BrainMap is the perfect platform to connect, collaborate, and achieve academic excellence.
+            Whether you're a student working on projects, an entrepreneur building a startup, a corporate team 
+            tackling complex initiatives, or anyone with a project vision, BrainMap is the perfect platform to 
+            manage, collaborate, and succeed with expert guidance when you need it.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <CustomButton
-              text="Get Started as Student"
+              text="Start Your Project"
               backgroundColor="bg-white"
               textColor="text-primary"
               hoverBackgroundColor="hover:bg-value3"
               icon={GraduationCap}
-              onClick={() => handleClick('Student Signup')}
+              onClick={() => handleClick('Start Project')}
             />
             
             <CustomButton
