@@ -62,7 +62,7 @@ const Navbar: React.FC = () => {
     ...(pathname !== '/login' && pathname !== '/register'
       ? [
         { label: 'Become a Mentor', href: '/becomementor' },
-        { label: 'Hire a Mentor', href: '/hirementor' }
+        { label: 'Hire a Mentor', href: '/search-experts' }
       ]
       : []),
     { label: 'About Us', href: '/about' },
