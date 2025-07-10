@@ -11,11 +11,15 @@ const Page = () => {
   return (
     <>
       
-      <KanbanBoard />
+      {/* <KanbanBoard /> */}
 
-      {/* <ProjectOverview params={{ id: projectId }} /> */}
+      <ProjectOverview params={{ id: projectId }} />
     </>
   );
 };
 
 export default Page;
+
+
+
+

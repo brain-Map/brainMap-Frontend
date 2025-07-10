@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Calendar, List, Video , Plus, Edit, MessageSquare, File, Clock, CheckCircle, SquareKanban  } from 'lucide-react';
 import projects from '@/data/projects/projects';
+import KanbanBoard from './Kanban';
 
 
 interface Supervisor {
@@ -110,16 +111,15 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
     { name: 'Notes', icon: Edit },
     { name: 'Calendar', icon: Calendar },
     { name: 'Kanban', icon: SquareKanban  },
-    { name: 'List View', icon: List },
     { name: 'Message', icon: MessageSquare },
     { name: 'Video', icon: Video  },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-full mx-auto">
         {/* Header Tabs */}
-        <div className="flex space-x-6 mb-8 border-b border-gray-200">
+        <div className="flex space-x-2 border-b border-gray-200 bg-white pt-4 pl-5">
           {tabs.map((tab) => (
             <button
               key={tab.name}
@@ -136,7 +136,12 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+
+
+
+        {activeTab === 'Overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Overview */}
@@ -332,7 +337,53 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
             </div> */}
           </div>
         </div>
+          
+        )}
+
+        {activeTab === 'Notes' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Project Notes</h2>
+            <p className="text-gray-700">This is the Notes tab content. You can render notes list, rich editor, etc.</p>
+          </div>
+        )}
+
+        {activeTab === 'Calendar' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
+            <p className="text-gray-700">Calendar events or date pickers go here.</p>
+          </div>
+        )}
+
+        {activeTab === 'Kanban' &&  <KanbanBoard />}
+
+
+      
+
+        {activeTab === 'Message' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Messages</h2>
+            <p className="text-gray-700">Team chat or message threads.</p>
+          </div>
+        )}
+
+
+        {activeTab === 'Video' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Video Meetings</h2>
+            <p className="text-gray-700">Video embed or meeting info.</p>
+          </div>
+        )}
+
+
+
+
+
+        
       </div>
     </div>
+
+
+
+
   );
 }
