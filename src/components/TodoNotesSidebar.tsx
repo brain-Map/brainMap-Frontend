@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CheckSquare, Square, MoreHorizontal, FileText, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface TodoItem {
   id: string;
@@ -23,7 +24,9 @@ interface Note {
   }>;
 }
 
+
 const TodoNotesSidebar: React.FC = () => {
+  const router = useRouter();
   const [todos, setTodos] = useState<TodoItem[]>([
     {
       id: '1',
@@ -85,11 +88,20 @@ const TodoNotesSidebar: React.FC = () => {
     }
   ];
 
+
   const toggleTodo = (id: string) => {
     setTodos(todos.map(todo => 
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
   };
+
+  const handlenavtodo = () =>{
+    router.push('/project-member/todo');
+  }
+
+  const handlenavnote = () =>{
+    router.push('/project-member/notes');
+  }
 
   return (
     <div className="w-100  bg-white border-l border-gray-200 min-h-screen">
@@ -100,7 +112,7 @@ const TodoNotesSidebar: React.FC = () => {
             <CheckSquare className="w-4 h-4 text-gray-600" />
             <h2 className="font-semibold text-gray-800">Todos</h2>
           </div>
-          <button className="text-blue-500 hover:text-blue-600 text-sm font-medium">
+          <button onClick={() => handlenavtodo()} className="text-blue-500 hover:text-blue-600 text-sm font-medium">
             View all
           </button>
         </div>
@@ -160,7 +172,7 @@ const TodoNotesSidebar: React.FC = () => {
             <FileText className="w-4 h-4 text-gray-600" />
             <h2 className="font-semibold text-gray-800">Notes</h2>
           </div>
-          <button className="text-blue-500 hover:text-blue-600 text-sm font-medium">
+          <button onClick={() =>handlenavnote()} className="text-blue-500 hover:text-blue-600 text-sm font-medium">
             View all
           </button>
         </div>

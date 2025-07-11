@@ -60,7 +60,7 @@ const visibleProjects = showAll
 
 
   return (
-    <div className="sticky top-0 left-0 h-screen w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col z-50">
+    <div className="sticky top-0 left-0 h-screen w-64 bg-white  border-r border-gray-200 flex flex-col z-50">
       <div className="flex-1">
         <div className="p-4 space-y-6">
           {/* Main Menu */}
@@ -85,7 +85,7 @@ const visibleProjects = showAll
           </div>
 
 
-          {/* Moderation */}
+          {/* Projects */}
           <div>
       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
         PROJECTS
