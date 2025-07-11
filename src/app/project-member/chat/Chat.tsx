@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { MessageSquare, Send, Search, MoreVertical, Paperclip, Smile, Phone, Video } from "lucide-react"
-import JiraNavbar from "@/components/DashboardNavBar"
 
 interface ChatMessage {
   id: string

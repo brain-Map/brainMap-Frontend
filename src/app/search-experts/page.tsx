@@ -9,7 +9,6 @@ import {
   Clock,
   ChevronDown
 } from 'lucide-react';
-import Navbar from '@/components/NavBarModel';
 
 const Page = () => {
   const router = useRouter();
@@ -220,7 +219,6 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-value3/20 font-sans">
       <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
-        <Navbar />
       </div>
       <div className="bg-gradient-to-r from-primary to-secondary shadow-sm border-b border-gray-200 px-6 py-6 mt-16">
         <div className="max-w-7xl mx-auto">

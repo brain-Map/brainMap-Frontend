@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import NavBar from '../../components/NavBarModel';
 import CustomButton from '../../components/CustomButtonModel';
 import { 
   Mail, 
@@ -169,8 +168,6 @@ const ContactUs: React.FC = () => {
 
   return (
     <>
-      <NavBar />
-
       {/* Hero Section */}
       <div className="pt-20 min-h-screen flex items-center bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-20">

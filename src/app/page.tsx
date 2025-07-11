@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import NavBar from '../components/NavBarModel'
 import CustomButton from '../components/CustomButtonModel';
 import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';
@@ -78,9 +77,6 @@ const successStories: SuccessStory[] = [
   return (
 
     <>
-    <NavBar/>
-
-
 {/* Hero section */}
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
       

@@ -3,7 +3,6 @@
 import React, { ReactNode, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import ModeratorSidebar from '@/components/moderator-sidebar';
-import DashboardNavBar from '@/components/DashboardNavBar';
 
 export default function ModeratorLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -17,7 +16,6 @@ export default function ModeratorLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <DashboardNavBar />
       <div className="flex">
         <ModeratorSidebar currentPage={currentPage} onNavigate={handleNavigate} />
         <main className="flex-1 bg-gray-50 min-h-[calc(100vh-64px)]">{children}</main>
