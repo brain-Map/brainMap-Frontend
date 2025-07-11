@@ -56,7 +56,7 @@ export default function ModeratorSidebar({ currentPage, onNavigate }: ModeratorS
       color: "bg-red-500",
     },
     {
-      title: "Expert Approval",
+      title: "Expert Approvals",
       icon: UserCheck,
       url: "/moderator/expert-approval",
       count: "8",
@@ -68,13 +68,6 @@ export default function ModeratorSidebar({ currentPage, onNavigate }: ModeratorS
       url: "/moderator/withdrawals",
       count: "15",
       color: "bg-green-500",
-    },
-    {
-      title: "Activity Log",
-      icon: Clock,
-      url: "/moderator/activity",
-      count: "42",
-      color: "bg-blue-500",
     },
   ];
 
