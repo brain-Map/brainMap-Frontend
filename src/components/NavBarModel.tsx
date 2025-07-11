@@ -61,7 +61,7 @@ const Navbar: React.FC = () => {
     { label: 'Community', href: '/community', hasDropdown: false },
     ...(pathname !== '/login' && pathname !== '/register'
       ? [
-        { label: 'Become a Mentor', href: '/becomementor' },
+        { label: 'Become a Mentor', href: '/becomeamentor' },
         { label: 'Hire a Mentor', href: '/search-experts' }
       ]
       : []),

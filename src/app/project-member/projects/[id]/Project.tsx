@@ -141,20 +141,20 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
 
 
         {activeTab === 'Overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5 ">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-5">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Overview */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 ">Project Overview</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Project Overview</h1>
                 <button className="bg-primary hover:bg-secondary hover:text-black text-white px-4 py-2 rounded-md flex items-center space-x-2">
                   <Plus className="w-4 h-4" />
                   <span>Add Property</span>
                 </button>
               </div>
 
-              <div className="mb-6 border-b border-gray-200 pb-4">
+              <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-xl font-semibold text-gray-900">{project ? project.name : 'Project Not Found'}</h2>
                   <div className="flex items-center space-x-2">
@@ -179,42 +179,41 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
               </div>
 
               {/* Custom Properties */}
-              <div className="mb-6 w-[60%]">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Properties</h3>
-
-                
-                <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-                <div className="text-sm font-medium text-gray-700">Priority</div>
-                <div className="text-red-600 font-medium">High</div>
-
-                <div className="text-sm font-medium text-gray-700">Client</div>
-                <div className="text-gray-900">TechCorp Inc.</div>
-
-                <div className="text-sm font-medium text-gray-700">Budget</div>
-                <div className="text-gray-900 font-medium">$50,000</div>
-
-                <div className="text-sm font-medium text-gray-700 whitespace-nowrap">Progress</div>
-                <div className="flex items-center gap-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '65%' }}></div>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Custom Properties</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                      <span className="text-red-600 font-medium">High</span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                      <span className="text-gray-900">TechCorp Inc.</span>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-600 whitespace-nowrap">65%</span>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+                      <span className="text-gray-900 font-medium">$50,000</span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Progress</label>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '65%' }}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">65%</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-
-
-
-              </div>
-
-
-
-            </div>
-            
               {/* Team Members */}
-              <div className='bg-white rounded-lg border border-gray-200 p-6'>
-                <div className="flex items-center justify-between mb-4 ">
-                  <h3 className="text-lg font-medium text-gray-900 ">Team Members</h3>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Team Members</h3>
                   <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1">
                     <Plus className="w-4 h-4" />
                     <span>Add Member</span>
@@ -245,19 +244,19 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
                   ))}
                 </div>
               </div>
-
+            </div>
           </div>
 
           {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Supervisors */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 border-b border-gray-200 pb-4">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Supervisor{supervisors.length > 1 ? 's' : ''}
               </h3>
               <div className="space-y-4">
                 {supervisors.map((supervisor) => (
-                  <div key={supervisor.id} className="flex items-start space-x-3 hover:bg-gray-100 transition-colors p-3 rounded-lg cursor-pointer">
+                  <div key={supervisor.id} className="flex items-start space-x-3">
                     <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-medium text-gray-700">
                         {supervisor.name.split(' ').map(n => n[0]).join('')}
@@ -284,8 +283,8 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
             </div>
 
             {/* Project Stats */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4  border-b border-gray-200 pb-4">Project Stats</h3>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Project Stats</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
