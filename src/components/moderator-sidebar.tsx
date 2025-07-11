@@ -56,7 +56,7 @@ export default function ModeratorSidebar({ currentPage, onNavigate }: ModeratorS
       color: "bg-red-500",
     },
     {
-      title: "Expert Approval",
+      title: "Expert Approvals",
       icon: UserCheck,
       url: "/moderator/expert-approval",
       count: "8",

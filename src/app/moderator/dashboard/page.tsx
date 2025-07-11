@@ -16,7 +16,9 @@ import {
   Award,
   UserCheck,
   UserX,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  X
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -63,24 +65,24 @@ export default function ModeratorDashboard() {
   const recentReports: RecentReport[] = [
     {
       id: '1',
-      type: 'Inappropriate Content',
-      description: 'Offensive language used in community post',
+      type: 'Community Post Violation',
+      description: 'User shared inappropriate content in research discussion forum',
       status: 'urgent',
       date: '2 hours ago',
       priority: 'high'
     },
     {
       id: '2',
-      type: 'Plagiarism Report',
-      description: 'Research content copied by another user',
+      type: 'Expert Misconduct',
+      description: 'Domain expert accused of providing false credentials',
       status: 'pending',
       date: '4 hours ago',
       priority: 'medium'
     },
     {
       id: '3',
-      type: 'Technical Issue',
-      description: 'Video call platform showing glitches',
+      type: 'Spam Activity',
+      description: 'Multiple users reported fake project proposals from same IP',
       status: 'pending',
       date: '1 day ago',
       priority: 'low'
@@ -113,21 +115,21 @@ export default function ModeratorDashboard() {
   const withdrawalRequests: WithdrawalRequest[] = [
     {
       id: '1',
-      name: 'Emily Rodriguez',
+      name: 'Dr. Emily Rodriguez',
       amount: '$1,250.00',
       method: 'Bank Transfer',
       requestDate: '3 hours ago'
     },
     {
       id: '2',
-      name: 'David Thompson',
+      name: 'Prof. David Thompson',
       amount: '$850.50',
       method: 'PayPal',
       requestDate: '1 day ago'
     },
     {
       id: '3',
-      name: 'Sarah Mitchell',
+      name: 'Dr. Sarah Mitchell',
       amount: '$2,100.75',
       method: 'Wire Transfer',
       requestDate: '6 hours ago'
@@ -141,7 +143,7 @@ export default function ModeratorDashboard() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Moderator Dashboard</h1>
-            <p className="text-gray-600 mt-1">Manage platform content and user activities</p>
+            <p className="text-gray-600 mt-1">Monitor user activity, review reports, and manage user accounts</p>
           </div>
         </div>
 
@@ -166,7 +168,7 @@ export default function ModeratorDashboard() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Reports</p>
+                <p className="text-sm font-medium text-gray-600">User Reports</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.pendingReports}</p>
               </div>
               <div className="p-3 rounded-full bg-red-500 text-white">
@@ -175,14 +177,14 @@ export default function ModeratorDashboard() {
             </div>
             <div className="mt-4">
               <span className="text-sm font-medium text-red-600">3 urgent</span>
-              <span className="text-sm text-gray-600"> require attention</span>
+              <span className="text-sm text-gray-600"> need immediate action</span>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Expert Approvals</p>
+                <p className="text-sm font-medium text-gray-600">Expert Applications</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.expertApprovals}</p>
               </div>
               <div className="p-3 rounded-full bg-yellow-500 text-white">
@@ -190,8 +192,8 @@ export default function ModeratorDashboard() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-yellow-600">Awaiting review</span>
-              <span className="text-sm text-gray-600"> pending</span>
+              <span className="text-sm font-medium text-yellow-600">Pending verification</span>
+              <span className="text-sm text-gray-600"> & approval</span>
             </div>
           </div>
 
@@ -207,7 +209,7 @@ export default function ModeratorDashboard() {
             </div>
             <div className="mt-4">
               <span className="text-sm font-medium text-green-600">$8,450 pending</span>
-              <span className="text-sm text-gray-600"> total amount</span>
+              <span className="text-sm text-gray-600"> expert earnings</span>
             </div>
           </div>
         </div>
@@ -219,14 +221,14 @@ export default function ModeratorDashboard() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                  Recent Reports
+                  User Reports & Issues
                 </h3>
                 <button 
                   className="hover:opacity-80 text-sm font-medium flex items-center" 
                   style={{ color: '#3D52A0' }}
                   onClick={() => router.push('/moderator/reports')}
                 >
-                  View All Reports
+                  Manage All Reports
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
               </div>
@@ -283,22 +285,24 @@ export default function ModeratorDashboard() {
                             e.currentTarget.style.backgroundColor = '#3D52A0';
                           }}
                         >
+                          <Eye className="w-3 h-3 mr-1" />
                           Review
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
                           className="text-xs px-6 py-2 font-medium transition-all duration-200"
-                          style={{ borderColor: '#3D52A0', color: '#3D52A0' }}
+                          style={{ borderColor: '#EF4444', color: '#EF4444' }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3D52A0';
+                            e.currentTarget.style.backgroundColor = '#EF4444';
                             e.currentTarget.style.color = 'white';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#3D52A0';
+                            e.currentTarget.style.color = '#EF4444';
                           }}
                         >
+                          <X className="w-3 h-3 mr-1" />
                           Dismiss
                         </Button>
                       </div>
@@ -314,7 +318,7 @@ export default function ModeratorDashboard() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                 <Users className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                User Analytics & Distribution
+                User Analytics
               </h3>
               <TrendingUp className="h-5 w-5 text-gray-400" />
             </div>
@@ -371,28 +375,35 @@ export default function ModeratorDashboard() {
 
             {/* User Activity Metrics */}
             <div className="border-t border-gray-100 pt-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">Recent Activity</h4>
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">User Activity Status</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-xs text-gray-600">Active Today</span>
+                    <span className="text-xs text-gray-600">Active Users</span>
                   </div>
-                  <span className="text-xs font-medium text-gray-900">1,247 users</span>
+                  <span className="text-xs font-medium text-gray-900">2,124 users</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    <span className="text-xs text-gray-600">New This Week</span>
+                    <span className="text-xs text-gray-600">Pending Users</span>
                   </div>
-                  <span className="text-xs font-medium text-gray-900">89 users</span>
+                  <span className="text-xs font-medium text-gray-900">45 users</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                    <span className="text-xs text-gray-600">Inactive Users</span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900">655 users</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span className="text-xs text-gray-600">Inactive (30+ days)</span>
+                    <span className="text-xs text-gray-600">Banned Users</span>
                   </div>
-                  <span className="text-xs font-medium text-gray-900">342 users</span>
+                  <span className="text-xs font-medium text-gray-900">23 users</span>
                 </div>
               </div>
             </div>
@@ -416,17 +427,17 @@ export default function ModeratorDashboard() {
                   }}
                 >
                   <UserCheck className="w-3 h-3 mr-1" />
-                  View All Users
+                  Manage All Users
                 </Button>
               </div>
             </div>
             
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
-                Total Active Users: <span className="text-gray-900 font-medium">2,847</span>
+                Total Users: <span className="text-gray-900 font-medium">2,847</span>
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Growth: <span className="text-green-600 font-medium">+12% this month</span>
+                Community Growth: <span className="text-green-600 font-medium">+12% this month</span>
               </p>
             </div>
           </div>
@@ -439,14 +450,14 @@ export default function ModeratorDashboard() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                  Expert Approval Queue
+                  Domain Expert Applications
                 </h3>
                 <button 
                   className="hover:opacity-80 text-sm font-medium flex items-center" 
                   style={{ color: '#3D52A0' }}
                   onClick={() => router.push('/moderator/expert-approval')}
                 >
-                  View All Experts
+                  Review All Applications
                   <ExternalLink className="w-4 h-4 ml-1" />
                 </button>
               </div>
@@ -475,32 +486,17 @@ export default function ModeratorDashboard() {
                       <div className="flex items-center gap-2 ml-8">
                         <Button 
                           size="sm" 
-                          variant="outline"
-                          className="text-xs px-4 py-2 font-medium transition-all duration-200"
-                          style={{ borderColor: '#3D52A0', color: '#3D52A0' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3D52A0';
-                            e.currentTarget.style.color = 'white';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#3D52A0';
-                          }}
-                        >
-                          View
-                        </Button>
-                        <Button 
-                          size="sm" 
                           className="text-white text-xs px-6 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200"
-                          style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
+                          style={{ backgroundColor: '#3D52A0', borderColor: '#3D52A0' }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#059669';
+                            e.currentTarget.style.backgroundColor = '#2A3F7A';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#10B981';
+                            e.currentTarget.style.backgroundColor = '#3D52A0';
                           }}
                         >
-                          Approve
+                          <Eye className="w-3 h-3 mr-1" />
+                          Review
                         </Button>
                         <Button 
                           size="sm" 
@@ -516,7 +512,8 @@ export default function ModeratorDashboard() {
                             e.currentTarget.style.color = '#EF4444';
                           }}
                         >
-                          Decline
+                          <X className="w-3 h-3 mr-1" />
+                          Dismiss
                         </Button>
                       </div>
                     </div>
@@ -532,7 +529,7 @@ export default function ModeratorDashboard() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                  Pending Withdrawal Requests
+                  Expert Withdrawal Requests
                 </h3>
                 <button 
                   className="hover:opacity-80 text-sm font-medium flex items-center" 
@@ -556,9 +553,8 @@ export default function ModeratorDashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-semibold text-gray-900 text-base group-hover:text-gray-700 transition-colors">{request.name}</h4>
-                            <span className="text-lg font-bold text-green-600">{request.amount}</span>
                           </div>
-                          <p className="text-sm font-medium mb-1" style={{ color: '#3D52A0' }}>{request.method}</p>
+                          <p className="text-lg font-bold text-green-600 mb-1">{request.amount}</p>
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1 text-xs text-gray-500">
                               <Clock className="w-3 h-3" />
@@ -567,54 +563,38 @@ export default function ModeratorDashboard() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2 ml-8">
+                      <div className="flex items-center gap-2 ml-8">
+                        <Button 
+                          size="sm" 
+                          className="text-white text-xs px-6 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                          style={{ backgroundColor: '#3D52A0', borderColor: '#3D52A0' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#2A3F7A';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#3D52A0';
+                          }}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Review
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="text-xs px-4 py-2 font-medium transition-all duration-200 w-full"
-                          style={{ borderColor: '#3D52A0', color: '#3D52A0' }}
+                          className="text-xs px-6 py-2 font-medium transition-all duration-200"
+                          style={{ borderColor: '#EF4444', color: '#EF4444' }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3D52A0';
+                            e.currentTarget.style.backgroundColor = '#EF4444';
                             e.currentTarget.style.color = 'white';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#3D52A0';
+                            e.currentTarget.style.color = '#EF4444';
                           }}
                         >
-                          Review
+                          <X className="w-3 h-3 mr-1" />
+                          Dismiss
                         </Button>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200"
-                            style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#059669';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#10B981';
-                            }}
-                          >
-                            Approve
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="text-xs px-4 py-2 font-medium transition-all duration-200"
-                            style={{ borderColor: '#EF4444', color: '#EF4444' }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#EF4444';
-                              e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.color = '#EF4444';
-                            }}
-                          >
-                            Reject
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </div>
