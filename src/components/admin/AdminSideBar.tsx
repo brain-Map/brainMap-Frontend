@@ -20,6 +20,7 @@ import {
   GraduationCap,
   Award,
 } from "lucide-react";
+import { Router } from "next/router";
 
 interface MenuItem {
   title: string;
@@ -65,7 +66,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const userManagement: UserManagementItem[] = [
     {
       title: "Users",
-      url: "users",
+      url: "/admin/userManagement",
       icon: Users,
       count: "1847",
       color: "bg-blue-500",
@@ -73,14 +74,14 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       children: [
         {
           title: "All Users",
-          url: "users",
+          url: "/admin/userManagement",
           icon: Users,
           count: "1847",
           color: "bg-blue-500",
         },
         {
-          title: "Students",
-          url: "students",
+          title: "Members",
+          url: "members",
           icon: GraduationCap,
           count: "1534",
           color: "bg-green-500",
@@ -124,7 +125,6 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     },
   ];
 
-
   // Moderation Items
   const moderationItems: ModerationItem[] = [
     {
@@ -158,15 +158,18 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
             <Shield className="h-5 w-5" />
           </div>
+          <div className="flex flex-col items-center">
             <div className="flex flex-col items-center">
-              <img src="/image/BrainMap.png" alt="BrainMap Logo" className="h-10 -mb-3" />
-              <div className="flex flex-col items-center">
-                <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
-                <p className="text-xs text-gray-500 font-medium">Management System</p>
+              <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-500">
+                  {currentPage}
+                </p>
               </div>
             </div>
+          </div>
         </div>
-        
+
         <div className="p-4 space-y-6">
           {/* Main Menu */}
           <div>
@@ -198,8 +201,10 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 <React.Fragment key={item.title}>
                   <button
                     onClick={() => {
+                      
                       if (item.children) {
                         if (item.title === "Users") {
+                          console.log(item.url)
                           setIsUsersDropdownOpen(!isUsersDropdownOpen);
                         } else {
                           onNavigate?.(item.url);
