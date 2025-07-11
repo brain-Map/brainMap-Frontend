@@ -37,11 +37,11 @@ const JoinCommunity: React.FC<JoinCommunityProps> = ({
             </h2>
             
             <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
-              Be part of a growing academic community —
+              Be part of a thriving project community —
               <br />
-              post your questions, collaborate on solutions,
+              post your challenges, collaborate on solutions,
               <br />
-              and learn together with mentors and peers.
+              and learn together with experts and peers.
             </p>
             
             {/* CTA Button */}

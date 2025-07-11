@@ -135,7 +135,7 @@ export default function ModeratorDashboard() {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen max-w-7xl m-auto">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
