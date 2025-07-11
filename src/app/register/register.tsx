@@ -1,137 +1,139 @@
 'use client';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Users, UserCheck, ArrowRight } from 'lucide-react';
 
-import React, { useState } from 'react';
-import NavBar from '../../components/NavBarModel';
-import CustomButton from '../../components/CustomButtonModel';
-import { Mail, Lock, User, UploadCloud, FileText } from 'lucide-react';
-import Link from 'next/link';
 
-const Register: React.FC = () => {
-  const [role, setRole] = useState<'student' | 'mentor' | ''>('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [files, setFiles] = useState<FileList | null>(null);
+const RoleSelectionPage = () => {
+  const router = useRouter();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(e.target.files);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Registration logic here
-    if (role === 'mentor') {
-      console.log('Registering mentor:', { name, email, password, files });
-    } else {
-      console.log('Registering student:', { name, email, password });
-    }
+  const handleRoleSelection = (role: string) => {
+    // Navigate to registration page with role parameter
+    router.push(`/register?role=${encodeURIComponent(role)}`);
+    
   };
 
   return (
-    <>
-      <NavBar />
-      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-primary via-secondary to-primary">
-        <div className="w-full max-w-md p-8 space-y-8 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white">Register</h1>
-            <p className="text-value3 mt-2">Create your brainMap account</p>
-          </div>
-          <div className="flex justify-center gap-4 mb-4">
-            <button
-              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 border-2 focus:outline-none ${role === 'student' ? 'bg-accent text-white border-accent' : 'bg-white/20 text-white border-white/30 hover:bg-accent/80 hover:text-white'}`}
-              onClick={() => setRole('student')}
-              type="button"
-            >
-              Register as Student
-            </button>
-            <button
-              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 border-2 focus:outline-none ${role === 'mentor' ? 'bg-accent text-white border-accent' : 'bg-white/20 text-white border-white/30 hover:bg-accent/80 hover:text-white'}`}
-              onClick={() => setRole('mentor')}
-              type="button"
-            >
-              Register as Mentor
-            </button>
-          </div>
-          {role && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="relative">
-                <User className="w-5 h-5 text-accent absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Full Name"
-                  required
-                  className="w-full pl-12 pr-4 py-3 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-accent"
-                />
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Welcome to Our Platform
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Choose your role to get started. Whether you're looking to learn or teach, 
+            we have the perfect path for you.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Project Member Card */}
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-primary p-6">
+              <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mx-auto mb-4">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <div className="relative">
-                <Mail className="w-5 h-5 text-accent absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  required
-                  className="w-full pl-12 pr-4 py-3 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-accent absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  required
-                  className="w-full pl-12 pr-4 py-3 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
-              {role === 'mentor' && (
-                <div>
-                  <label className="block text-white mb-2 font-semibold">Upload Certifications / Proof / Experience</label>
-                  <div className="flex items-center gap-2 bg-white/20 rounded-lg border border-white/30 px-4 py-3">
-                    <UploadCloud className="w-5 h-5 text-accent" />
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      className="flex-1 text-white bg-transparent focus:outline-none"
-                    />
-                  </div>
-                  {files && files.length > 0 && (
-                    <ul className="mt-2 text-white text-sm">
-                      {Array.from(files).map((file, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-accent" /> {file.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+              <h2 className="text-2xl font-bold text-white text-center mb-2">
+                Project Member
+              </h2>
+              <p className="text-blue-100 text-center">
+                Join projects, learn from mentors, and build your skills
+              </p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="text-gray-600">Access to learning projects</span>
                 </div>
-              )}
-              <CustomButton
-                text="Register"
-                type="submit"
-                backgroundColor="bg-gradient-to-r from-accent to-info"
-                textColor="text-white"
-                hoverBackgroundColor="hover:opacity-90"
-                width="w-full"
-              />
-            </form>
-          )}
-          <div className="text-center text-value3">
-            <p>
-              Already have an account?{' '}
-              <Link href="/login" className="font-semibold text-accent hover:underline">
-                Login
-              </Link>
-            </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="text-gray-600">Connect with experienced mentors</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="text-gray-600">Build your portfolio</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="text-gray-600">Gain practical experience</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => handleRoleSelection('Project Member')}
+                className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-secondary hover:text-black transition-colors flex items-center justify-center gap-2 group"
+              >
+                Get Started as Project Member
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mentor Card */}
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-green-600 p-6">
+              <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mx-auto mb-4">
+                <UserCheck className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white text-center mb-2">
+                Mentor
+              </h2>
+              <p className="text-green-100 text-center">
+                Share your expertise, guide others, and make an impact
+              </p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">Guide aspiring professionals</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">Share your knowledge and skills</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">Build your professional network</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">Flexible mentoring schedule</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => handleRoleSelection('Mentor')}
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 group"
+              >
+                Get Started as Mentor
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
+
+        <div className="text-center mt-8">
+          <p className="text-gray-600">
+            Already have an account?{' '}
+            <button
+              onClick={() => router.push('/login')}
+              className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+            >
+              Sign in here
+            </button>
+          </p>
+        </div>
       </div>
-    </>
+    </div>
   );
+
+
+
+  
 };
 
-export default Register; 
+export default RoleSelectionPage;

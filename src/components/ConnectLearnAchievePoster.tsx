@@ -46,7 +46,7 @@ const ConnectLearnAchieveHero: React.FC<HeroSectionProps> = ({
               </h1>
               
               <p className="text-lg lg:text-xl mb-8 opacity-90 leading-relaxed">
-                Hire domain experts, manage your academic
+                Hire domain experts, manage your project
                 <br />
                 tasks, and track your progress — from start to
                 <br />
