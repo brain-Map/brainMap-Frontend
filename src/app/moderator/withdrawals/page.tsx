@@ -25,7 +25,6 @@ import {
   Banknote,
   Wallet,
   Download,
-  RefreshCw,
   ExternalLink,
   UserCheck,
   Lock,
@@ -66,7 +65,7 @@ interface WithdrawalRequest {
     address: string;
     currency: string;
   };
-  status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'processing' | 'completed';
+  status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'completed';
   reason?: string;
   requestedAt: string;
   reviewedAt?: string;
@@ -232,156 +231,7 @@ export default function WithdrawalsPage() {
         verificationChecked: '2025-01-10T08:30:00Z'
       }
     },
-    {
-      id: 'WDR-003',
-      expertId: 'EXP-003',
-      expertName: 'Dr. Sarah Williams',
-      expertEmail: 'sarah.williams@medschool.edu',
-      amount: 2100.00,
-      currency: 'USD',
-      paymentMethod: 'payhere',
-      payhereDetails: {
-        merchantId: 'PAYHERE_MERCHANT_003',
-        phoneNumber: '+94777654321'
-      },
-      status: 'approved',
-      requestedAt: '2025-01-08T14:45:00Z',
-      reviewedAt: '2025-01-09T10:30:00Z',
-      reviewedBy: 'MOD-001',
-      totalEarnings: 6300.00,
-      withdrawableAmount: 2100.00,
-      minimumThreshold: 100.00,
-      taxInfo: {
-        hasW9: true,
-        taxId: '***-**-9012'
-      },
-      verificationStatus: 'verified',
-      sessionLogs: {
-        totalSessions: 67,
-        completedSessions: 65,
-        pendingSessions: 2,
-        lastSessionDate: '2025-01-08T18:00:00Z'
-      },
-      pendingReports: 0,
-      disputeCount: 0,
-      lastWithdrawalDate: '2024-11-20T15:30:00Z',
-      withdrawalFrequency: 'regular',
-      earnings: {
-        sessionEarnings: 1800.00,
-        packageEarnings: 300.00,
-        bonusEarnings: 0.00,
-        totalEarnings: 2100.00
-      },
-      auditTrail: {
-        requestSubmitted: '2025-01-08T14:45:00Z',
-        moderatorAssigned: '2025-01-08T15:00:00Z',
-        reviewStarted: '2025-01-09T09:00:00Z',
-        verificationChecked: '2025-01-09T09:30:00Z',
-        decisionMade: '2025-01-09T10:30:00Z'
-      }
-    },
-    {
-      id: 'WDR-004',
-      expertId: 'EXP-004',
-      expertName: 'Dr. James Rodriguez',
-      expertEmail: 'james.rodriguez@university.edu',
-      amount: 560.25,
-      currency: 'USD',
-      paymentMethod: 'bank_transfer',
-      bankDetails: {
-        accountNumber: '****5678',
-        routingNumber: '111000025',
-        bankName: 'People\'s Bank',
-        accountHolderName: 'James Rodriguez'
-      },
-      status: 'rejected',
-      reason: 'Pending misconduct report requires investigation before withdrawal approval',
-      requestedAt: '2025-01-07T11:20:00Z',
-      reviewedAt: '2025-01-08T09:45:00Z',
-      reviewedBy: 'MOD-003',
-      totalEarnings: 1680.75,
-      withdrawableAmount: 560.25,
-      minimumThreshold: 100.00,
-      taxInfo: {
-        hasW9: false,
-        taxId: ''
-      },
-      verificationStatus: 'failed',
-      notes: 'Expert has unresolved misconduct report - withdrawal blocked until investigation complete',
-      sessionLogs: {
-        totalSessions: 22,
-        completedSessions: 18,
-        pendingSessions: 4,
-        lastSessionDate: '2025-01-06T11:00:00Z'
-      },
-      pendingReports: 2,
-      disputeCount: 3,
-      lastWithdrawalDate: '2024-10-05T12:00:00Z',
-      withdrawalFrequency: 'regular',
-      earnings: {
-        sessionEarnings: 450.25,
-        packageEarnings: 110.00,
-        bonusEarnings: 0.00,
-        totalEarnings: 560.25
-      },
-      auditTrail: {
-        requestSubmitted: '2025-01-07T11:20:00Z',
-        moderatorAssigned: '2025-01-07T12:00:00Z',
-        reviewStarted: '2025-01-08T09:00:00Z',
-        verificationChecked: '2025-01-08T09:30:00Z',
-        decisionMade: '2025-01-08T09:45:00Z'
-      }
-    },
-    {
-      id: 'WDR-005',
-      expertId: 'EXP-005',
-      expertName: 'Dr. Lisa Thompson',
-      expertEmail: 'lisa.thompson@engineering.edu',
-      amount: 1575.00,
-      currency: 'USD',
-      paymentMethod: 'payhere',
-      payhereDetails: {
-        merchantId: 'PAYHERE_MERCHANT_005',
-        phoneNumber: '+94781234567'
-      },
-      status: 'processing',
-      requestedAt: '2025-01-06T13:15:00Z',
-      reviewedAt: '2025-01-07T14:20:00Z',
-      processedAt: '2025-01-09T11:30:00Z',
-      reviewedBy: 'MOD-001',
-      totalEarnings: 4725.00,
-      withdrawableAmount: 1575.00,
-      minimumThreshold: 100.00,
-      taxInfo: {
-        hasW9: true,
-        taxId: '***-**-3456'
-      },
-      verificationStatus: 'verified',
-      sessionLogs: {
-        totalSessions: 52,
-        completedSessions: 50,
-        pendingSessions: 2,
-        lastSessionDate: '2025-01-06T17:00:00Z'
-      },
-      pendingReports: 0,
-      disputeCount: 0,
-      lastWithdrawalDate: '2024-12-01T09:00:00Z',
-      withdrawalFrequency: 'regular',
-      earnings: {
-        sessionEarnings: 1200.00,
-        packageEarnings: 375.00,
-        bonusEarnings: 0.00,
-        totalEarnings: 1575.00
-      },
-      auditTrail: {
-        requestSubmitted: '2025-01-06T13:15:00Z',
-        moderatorAssigned: '2025-01-06T14:00:00Z',
-        reviewStarted: '2025-01-07T10:00:00Z',
-        verificationChecked: '2025-01-07T14:00:00Z',
-        decisionMade: '2025-01-07T14:20:00Z',
-        paymentProcessed: '2025-01-09T11:30:00Z'
-      }
-    },
+
     {
       id: 'WDR-006',
       expertId: 'EXP-006',
@@ -427,9 +277,7 @@ export default function WithdrawalsPage() {
   ]);
 
   const [filter, setFilter] = useState({
-    status: 'all',
-    paymentMethod: 'all',
-    verificationStatus: 'all'
+    status: 'all'
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -440,53 +288,12 @@ export default function WithdrawalsPage() {
       reviewing: 'bg-blue-100 text-blue-800 border-blue-200',
       approved: 'bg-green-100 text-green-800 border-green-200',
       rejected: 'bg-red-100 text-red-800 border-red-200',
-      processing: 'bg-purple-100 text-purple-800 border-purple-200',
       completed: 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return variants[status];
   };
 
-  const getPaymentMethodIcon = (method: WithdrawalRequest['paymentMethod']) => {
-    const icons = {
-      bank_transfer: Banknote,
-      paypal: Wallet,
-      payhere: CreditCard,
-      stripe: CreditCard,
-      crypto: DollarSign,
-      check: FileText
-    };
-    return icons[method] || DollarSign;
-  };
 
-  const getPaymentMethodName = (method: WithdrawalRequest['paymentMethod']) => {
-    const names = {
-      bank_transfer: 'Bank Transfer',
-      paypal: 'PayPal',
-      payhere: 'PayHere',
-      stripe: 'Stripe',
-      crypto: 'Cryptocurrency',
-      check: 'Check'
-    };
-    return names[method] || 'Unknown';
-  };
-
-  const getVerificationIcon = (status: WithdrawalRequest['verificationStatus']) => {
-    const icons = {
-      verified: CheckCircle,
-      pending: Clock,
-      failed: XCircle
-    };
-    return icons[status];
-  };
-
-  const getVerificationColor = (status: WithdrawalRequest['verificationStatus']) => {
-    const colors = {
-      verified: 'text-green-600',
-      pending: 'text-yellow-600',
-      failed: 'text-red-600'
-    };
-    return colors[status];
-  };
 
   const getActivityIcon = (type: RecentActivity['type']) => {
     const icons = {
@@ -526,21 +333,19 @@ export default function WithdrawalsPage() {
 
   const filteredRequests = withdrawalRequests.filter(request => {
     const matchesSearch = request.expertName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.expertEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.id.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filter.status === 'all' || request.status === filter.status;
-    const matchesPaymentMethod = filter.paymentMethod === 'all' || request.paymentMethod === filter.paymentMethod;
-    const matchesVerification = filter.verificationStatus === 'all' || request.verificationStatus === filter.verificationStatus;
 
-    return matchesSearch && matchesStatus && matchesPaymentMethod && matchesVerification;
+    return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: withdrawalRequests.length,
     pending: withdrawalRequests.filter(r => r.status === 'pending').length,
+    reviewing: withdrawalRequests.filter(r => r.status === 'reviewing').length,
     approved: withdrawalRequests.filter(r => r.status === 'approved').length,
-    processing: withdrawalRequests.filter(r => r.status === 'processing').length,
+    rejected: withdrawalRequests.filter(r => r.status === 'rejected').length,
     totalAmount: withdrawalRequests.reduce((sum, r) => sum + r.amount, 0),
     pendingAmount: withdrawalRequests.filter(r => r.status === 'pending').reduce((sum, r) => sum + r.amount, 0)
   };
@@ -556,26 +361,11 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Requests</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <div className="p-3 rounded-full bg-blue-500 text-white">
-              <FileText className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm font-medium text-blue-600">All withdrawal requests</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Review</p>
+              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
               <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
             </div>
             <div className="p-3 rounded-full bg-yellow-500 text-white">
@@ -583,7 +373,22 @@ export default function WithdrawalsPage() {
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-sm font-medium text-yellow-600">Awaiting approval</span>
+            <span className="text-sm font-medium text-yellow-600">Awaiting review</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Reviewing Requests</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.reviewing}</p>
+            </div>
+            <div className="p-3 rounded-full bg-blue-500 text-white">
+              <Eye className="h-6 w-6" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="text-sm font-medium text-blue-600">Under review</span>
           </div>
         </div>
 
@@ -605,45 +410,15 @@ export default function WithdrawalsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Processing</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.processing}</p>
+              <p className="text-sm font-medium text-gray-600">Rejected</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.rejected}</p>
             </div>
-            <div className="p-3 rounded-full bg-purple-500 text-white">
-              <RefreshCw className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm font-medium text-purple-600">Payment in progress</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Amount</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalAmount)}</p>
-            </div>
-            <div className="p-3 rounded-full bg-indigo-500 text-white">
-              <DollarSign className="h-6 w-6" />
+            <div className="p-3 rounded-full bg-red-500 text-white">
+              <XCircle className="h-6 w-6" />
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-sm font-medium text-indigo-600">All requests</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Amount</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.pendingAmount)}</p>
-            </div>
-            <div className="p-3 rounded-full bg-orange-500 text-white">
-              <Wallet className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-sm font-medium text-orange-600">Awaiting review</span>
+            <span className="text-sm font-medium text-red-600">Declined requests</span>
           </div>
         </div>
       </div>
@@ -658,7 +433,7 @@ export default function WithdrawalsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by expert name, email, or request ID..."
+                  placeholder="Search by expert name or request ID..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -675,35 +450,6 @@ export default function WithdrawalsPage() {
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="reviewing">Reviewing</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-              </select>
-
-              <select
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm min-w-[140px]"
-                value={filter.paymentMethod}
-                onChange={(e) => setFilter({...filter, paymentMethod: e.target.value})}
-              >
-                <option value="all">All Payment Methods</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="paypal">PayPal</option>
-                <option value="payhere">PayHere</option>
-                <option value="stripe">Stripe</option>
-                <option value="crypto">Cryptocurrency</option>
-                <option value="check">Check</option>
-              </select>
-
-              <select
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm min-w-[140px]"
-                value={filter.verificationStatus}
-                onChange={(e) => setFilter({...filter, verificationStatus: e.target.value})}
-              >
-                <option value="all">All Verification</option>
-                <option value="verified">Verified</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
               </select>
             </div>
           </div>
@@ -713,21 +459,18 @@ export default function WithdrawalsPage() {
         <div className="p-0">
           <div className="space-y-0">
             {filteredRequests.map((request, index) => {
-              const PaymentIcon = getPaymentMethodIcon(request.paymentMethod);
-              const VerificationIcon = getVerificationIcon(request.verificationStatus);
               return (
                 <div key={request.id} className={`p-5 ${index !== filteredRequests.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-all duration-200 group`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm bg-blue-100">
-                        <PaymentIcon className="w-5 h-5 text-blue-600" />
+                        <User className="w-5 h-5 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h4 className="font-semibold text-gray-900 text-base group-hover:text-gray-700 transition-colors">{request.expertName}</h4>
-                              <VerificationIcon className={`w-4 h-4 ${getVerificationColor(request.verificationStatus)}`} />
                             </div>
                             <div className="flex items-center gap-2 mb-3 flex-wrap">
                               <Badge 
@@ -737,7 +480,6 @@ export default function WithdrawalsPage() {
                                 {request.status === 'reviewing' && <Eye className="w-3 h-3 mr-1" />}
                                 {request.status === 'approved' && <CheckCircle className="w-3 h-3 mr-1" />}
                                 {request.status === 'rejected' && <XCircle className="w-3 h-3 mr-1" />}
-                                {request.status === 'processing' && <RefreshCw className="w-3 h-3 mr-1" />}
                                 {request.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
                                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                               </Badge>
@@ -748,69 +490,80 @@ export default function WithdrawalsPage() {
                         </div>
                         <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
                           <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            <span>Expert: <strong className="text-gray-700">{request.expertEmail}</strong></span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <PaymentIcon className="w-3 h-3" />
-                            <span>Method: <strong className="text-gray-700">{getPaymentMethodName(request.paymentMethod)}</strong></span>
-                          </div>
-                          <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>Requested: {formatDate(request.requestedAt)}</span>
+                          </div>
+                          {request.status === 'reviewing' && request.reviewedAt && (
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
+                              <span>Review started: {formatDate(request.reviewedAt)}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Earnings Summary */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="text-xs">
+                            <span className="text-gray-600">Total Earned Amount (lifetime):</span>
+                            <div className="font-bold text-green-700 text-sm">
+                              {formatCurrency(request.totalEarnings)}
+                            </div>
+                          </div>
+                          <div className="text-xs">
+                            <span className="text-gray-600">Current Available Balance:</span>
+                            <div className="font-bold text-blue-700 text-sm">
+                              {formatCurrency(request.withdrawableAmount)}
+                            </div>
+                          </div>
+                          <div className="text-xs">
+                            <span className="text-gray-600">Amount Requested for Withdrawal:</span>
+                            <div className="font-bold text-purple-700 text-sm">
+                              {formatCurrency(request.amount)}
+                            </div>
                           </div>
                         </div>
 
                         {/* BrainMap Supervision Info */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
                           <div className="text-xs">
-                            <span className="text-gray-500">Sessions:</span>
-                            <div className="font-semibold text-gray-900">
-                              {request.sessionLogs.completedSessions}/{request.sessionLogs.totalSessions} completed
+                            <span className="text-gray-500">Expert Rating:</span>
+                            <div className="font-semibold text-amber-600">
+                              ⭐ 4.8/5.0 (127 reviews)
                             </div>
                           </div>
                           <div className="text-xs">
-                            <span className="text-gray-500">Reports:</span>
+                            <span className="text-gray-500">Misconduct Reports:</span>
                             <div className={`font-semibold ${request.pendingReports > 0 ? 'text-red-600' : 'text-green-600'}`}>
                               {request.pendingReports} pending
                             </div>
                           </div>
                           <div className="text-xs">
-                            <span className="text-gray-500">Disputes:</span>
-                            <div className={`font-semibold ${request.disputeCount > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                              {request.disputeCount} total
-                            </div>
-                          </div>
-                          <div className="text-xs">
-                            <span className="text-gray-500">Frequency:</span>
-                            <div className={`font-semibold ${
-                              request.withdrawalFrequency === 'suspicious' ? 'text-red-600' : 
-                              request.withdrawalFrequency === 'frequent' ? 'text-orange-600' : 'text-green-600'
-                            }`}>
-                              {request.withdrawalFrequency.charAt(0).toUpperCase() + request.withdrawalFrequency.slice(1)}
+                            <span className="text-gray-500">Time with BrainMap:</span>
+                            <div className="font-semibold text-purple-600">
+                              2 years, 4 months
                             </div>
                           </div>
                         </div>
 
-                        {/* Earnings Breakdown */}
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                          <span>Sessions: <strong className="text-gray-700">{formatCurrency(request.earnings.sessionEarnings)}</strong></span>
-                          <span>Packages: <strong className="text-gray-700">{formatCurrency(request.earnings.packageEarnings)}</strong></span>
-                          <span>Threshold: <strong className="text-gray-700">{formatCurrency(request.minimumThreshold)}</strong></span>
-                        </div>
+                        {/* Expert Notes */}
+                        {request.notes && (
+                          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileText className="w-4 h-4 text-amber-600" />
+                              <strong className="text-amber-800 text-sm">Expert's Note</strong>
+                            </div>
+                            <div className="text-xs text-amber-700">
+                              {request.notes}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>Total Earnings: <strong className="text-gray-700">{formatCurrency(request.totalEarnings)}</strong></span>
-                          <span>Withdrawable: <strong className="text-gray-700">{formatCurrency(request.withdrawableAmount)}</strong></span>
                           <span>Tax Info: <strong className={`${request.taxInfo?.hasW9 ? 'text-green-700' : 'text-red-700'}`}>
                             {request.taxInfo?.hasW9 ? 'W9 Complete' : 'W9 Required'}
                           </strong></span>
+                          <span>Threshold: <strong className="text-gray-700">{formatCurrency(request.minimumThreshold)}</strong></span>
                         </div>
-                        {request.notes && (
-                          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                            <strong>Note:</strong> {request.notes}
-                          </div>
-                        )}
                         {request.reason && (
                           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
                             <strong>Rejection Reason:</strong> {request.reason}
@@ -837,60 +590,20 @@ export default function WithdrawalsPage() {
                             </div>
                           </div>
                         )}
-
-                        {/* Audit Trail */}
-                        {request.status !== 'pending' && (
-                          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Shield className="w-4 h-4 text-blue-600" />
-                              <strong className="text-blue-800 text-sm">Audit Trail</strong>
-                            </div>
-                            <div className="space-y-1 text-xs text-blue-700">
-                              <div>• Request submitted: {formatDate(request.auditTrail.requestSubmitted)}</div>
-                              {request.auditTrail.moderatorAssigned && (
-                                <div>• Moderator assigned: {formatDate(request.auditTrail.moderatorAssigned)}</div>
-                              )}
-                              {request.auditTrail.reviewStarted && (
-                                <div>• Review started: {formatDate(request.auditTrail.reviewStarted)}</div>
-                              )}
-                              {request.auditTrail.verificationChecked && (
-                                <div>• Verification checked: {formatDate(request.auditTrail.verificationChecked)}</div>
-                              )}
-                              {request.auditTrail.decisionMade && (
-                                <div>• Decision made: {formatDate(request.auditTrail.decisionMade)}</div>
-                              )}
-                              {request.auditTrail.paymentProcessed && (
-                                <div>• Payment processed: {formatDate(request.auditTrail.paymentProcessed)}</div>
-                              )}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                     
                     <div className="flex items-start gap-2 ml-6">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="text-xs px-4 py-2 font-medium transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        View Details
-                      </Button>
-                      
                       {request.status === 'pending' && (
                         <>
-                          {/* Show verification check button for suspicious or flagged cases */}
-                          {(request.pendingReports > 0 || request.disputeCount > 2 || request.withdrawalFrequency === 'suspicious') && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="text-xs px-4 py-2 font-medium transition-all duration-200 text-orange-600 border-orange-300 hover:bg-orange-50 hover:border-orange-400"
-                            >
-                              <Shield className="w-3 h-3 mr-1" />
-                              Verify
-                            </Button>
-                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-xs px-4 py-2 font-medium transition-all duration-200 text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            Review
+                          </Button>
                           
                           <Button 
                             size="sm" 
@@ -912,25 +625,26 @@ export default function WithdrawalsPage() {
                         </>
                       )}
                       
-                      {request.status === 'approved' && (
-                        <Button 
-                          size="sm" 
-                          className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200 bg-purple-600 hover:bg-purple-700 border-purple-600"
-                        >
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          Process via PayHere
-                        </Button>
-                      )}
-                      
                       {request.status === 'reviewing' && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="text-xs px-4 py-2 font-medium transition-all duration-200 text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
-                        >
-                          <Activity className="w-3 h-3 mr-1" />
-                          Complete Review
-                        </Button>
+                        <>
+                          <Button 
+                            size="sm" 
+                            className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200 bg-green-600 hover:bg-green-700 border-green-600"
+                            disabled={request.pendingReports > 0}
+                          >
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Approve
+                          </Button>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-xs px-4 py-2 font-medium transition-all duration-200 text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+                          >
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Reject
+                          </Button>
+                        </>
                       )}
                       
                       <Button 
