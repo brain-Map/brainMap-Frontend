@@ -69,13 +69,6 @@ export default function ModeratorSidebar({ currentPage, onNavigate }: ModeratorS
       count: "15",
       color: "bg-green-500",
     },
-    {
-      title: "Activity Log",
-      icon: Clock,
-      url: "/moderator/activity",
-      count: "42",
-      color: "bg-blue-500",
-    },
   ];
 
   const handleNavigate = (url: string) => {
