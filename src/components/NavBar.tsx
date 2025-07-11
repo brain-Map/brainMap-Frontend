@@ -41,7 +41,6 @@ const NavBar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const { user, signOut } = useAuth();
 
   // Determine if we're in dashboard mode
@@ -53,15 +52,14 @@ const NavBar: React.FC = () => {
       if (!target.closest('.auth-dropdown')) {
         setIsAuthDropdownOpen(false);
       }
-      if (!target.closest('.nav-dropdown') && activeDropdown !== null) {
+      // Updated condition to exclude the dropdown button
+      if (!target.closest('.nav-dropdown') && !target.closest('[data-mobile-dropdown-button]') && activeDropdown !== null) {
         setActiveDropdown(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeDropdown]);
-  console.log("User: ", user);
-  
 
   const publicNavItems: NavItem[] = [
     {
@@ -117,6 +115,9 @@ const NavBar: React.FC = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    if(!isMobileMenuOpen){
+      setSearchQuery('');
+    }
   };
 
   const handleAuthDropdownToggle = () => {
@@ -128,12 +129,8 @@ const NavBar: React.FC = () => {
     signOut();
   };
 
-  const toggleSearch = () => {
-    setShowSearch(!showSearch);
-    if (showSearch) {
-      setSearchQuery('');
-    }
-  };
+  console.log("isMobileMenuOpen: ", isMobileMenuOpen);
+  
 
   return (
     <>
@@ -380,29 +377,7 @@ const NavBar: React.FC = () => {
           </div>
 
           {/* Mobile Search Bar */}
-          {showSearch && !isDashboard && (
-            <div className="md:hidden pb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
-                  autoFocus
-                />
-              </div>
-            </div>
-          )}
-        </nav>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200">
-            <div className="px-4 py-6 space-y-2">
-              {/* Dashboard Mobile Search */}
-              {isDashboard && (
+          {isMobileMenuOpen && (
                 <div className="mb-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -415,7 +390,13 @@ const NavBar: React.FC = () => {
                     />
                   </div>
                 </div>
-              )}
+          )}
+        </nav>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200">
+            <div className="px-4 py-6 space-y-2">
 
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
@@ -425,6 +406,7 @@ const NavBar: React.FC = () => {
                     {item.hasDropdown ? (
                       <>
                         <button
+                        data-mobile-dropdown-button
                           onClick={() => handleDropdownToggle(item.label)}
                           className={`flex items-center justify-between w-full px-4 py-3 text-left rounded-xl transition-all duration-200 ${
                             isActive ? 'text-primary bg-primary/10' : 'text-gray-700 hover:text-primary hover:bg-gray-100'
