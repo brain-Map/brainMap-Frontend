@@ -159,7 +159,7 @@ const Notes: React.FC = () => {
 		setShowNoteModal(true);
 	};
 
-	// Function to close the large note modal
+	//close the large note modal
 	const closeNoteModal = () => {
 		setShowNoteModal(false);
 		setSelectedNote(null);

@@ -51,7 +51,7 @@ export default function BecomeAMentor() {
           {/* Image Placeholder */}
           <div className="w-full md:w-1/2 flex justify-center">
             <div className="w-full h-auto max-w-2xl bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center border border-gray-200 overflow-hidden">
-              <img src="/image/mentorimage.jpg" alt="Mentor" className="object-contain w-full h-auto rounded-2xl" />
+              <img src="/image/mentor.jpg" alt="Mentor" className="object-contain w-full h-auto rounded-2xl" />
             </div>
           </div>
           {/* Text Section */}
@@ -80,7 +80,7 @@ export default function BecomeAMentor() {
         <div className="mt-10 w-full max-w-4xl bg-blue-50 border border-blue-100 rounded-xl p-8 text-center">
           <span className="font-semibold text-gray-800">Transform lives while growing your career.</span> <span className="text-gray-600">As a mentor on BrainMap, you'll join industry professionals passionate about education. Set your own rates, build your personal brand, and make lasting impact on the next generation of professionals.</span>
         </div>
-
+        {/* buttons */}
         {/* Buttons */}
         <div className="mt-8 flex gap-4">
           <Link href="/" className="px-10 py-4 rounded-2xl border border-gray-300 bg-white text-gray-700 font-bold text-xl hover:bg-gray-100 transition">&larr; Go Back</Link>
