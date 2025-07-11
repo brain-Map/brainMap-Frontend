@@ -176,7 +176,7 @@ export default function ModeratorDashboard() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-red-600">3 urgent</span>
+              <span className="text-sm font-medium text-red-600">3 </span>
               <span className="text-sm text-gray-600"> need immediate action</span>
             </div>
           </div>
@@ -192,8 +192,8 @@ export default function ModeratorDashboard() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-yellow-600">Pending verification</span>
-              <span className="text-sm text-gray-600"> & approval</span>
+              <span className="text-sm font-medium text-yellow-600">Pending </span>
+              <span className="text-sm text-gray-600">approval</span>
             </div>
           </div>
 
@@ -209,7 +209,7 @@ export default function ModeratorDashboard() {
             </div>
             <div className="mt-4">
               <span className="text-sm font-medium text-green-600">$8,450 pending</span>
-              <span className="text-sm text-gray-600"> expert earnings</span>
+              <span className="text-sm text-gray-600"> withdrawals</span>
             </div>
           </div>
         </div>
