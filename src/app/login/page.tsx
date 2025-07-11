@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import NavBar from '../../components/NavBarModel'
 import CustomButton from '../../components/CustomButtonModel'
 import { Mail, Lock } from 'lucide-react'
 import Link from 'next/link'
@@ -38,7 +37,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <NavBar />
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-(--my-shadow)">
           <div className="text-center">

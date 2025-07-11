@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { MessageSquare, Send, Search, MoreVertical, Paperclip, Smile, Phone, Video } from "lucide-react"
-import JiraNavbar from "@/components/DashboardNavBar"
 
 interface ChatMessage {
   id: string
@@ -255,7 +254,6 @@ export default function ChatPage() {
 
   return (
     <>
-    <JiraNavbar/>
     <div className="flex-1 bg-gray-50 h-[calc(100vh-4rem)] overflow-hidden">
       <div className="mx-auto h-full overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-4 h-full overflow-hidden">

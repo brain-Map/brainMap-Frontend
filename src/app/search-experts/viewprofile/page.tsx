@@ -21,7 +21,6 @@ import {
   DollarSign,
   ExternalLink
 } from 'lucide-react';
-import Navbar from '@/components/NavBarModel';
 
 const ExpertProfilePage = () => {
   const [activeTab, setActiveTab] = useState('about');
@@ -178,8 +177,6 @@ Her research focuses on deep learning, natural language processing, and ethical 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8 pt-24">
         {/* Back Button */}

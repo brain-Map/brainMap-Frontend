@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import NavBar from '../../components/NavBarModel';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 
 const initialNotes = [
@@ -120,7 +119,6 @@ const Notes: React.FC = () => {
 
   return (
     <>
-      <NavBar />
       <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-primary flex flex-col">
         <div className="relative flex-1 max-w-7xl mx-auto w-full px-6 py-12">
           {/* Heading and Add Button */}
