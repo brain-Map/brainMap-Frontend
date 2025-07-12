@@ -113,14 +113,14 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       ],
     },
     {
-      title: "New Users",
+      title: "add Users",
       icon: UserPlus,
       url: "/admin/new-users",
       count: "12",
       color: "bg-green-500",
     },
     {
-      title: "Active Users",
+      title: "remove Users",
       icon: UserCheck,
       url: "/admin/active-users",
       count: "1,284",
@@ -138,7 +138,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   // Moderation Items
   const moderationItems: ModerationItem[] = [
     {
-      title: "Reported Posts",
+      title: "Reportes",
       icon: Flag,
       url: "/admin/reported-posts",
       count: "8",
@@ -190,7 +190,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                   onClick={() => onNavigate?.(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     currentPage === item.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -222,7 +222,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                       currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
-                        ? "bg-blue-500 text-white"
+                        ? "bg-primary text-white"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
@@ -267,7 +267,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                           onClick={() => onNavigate?.(child.url)}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                             currentPage === child.url
-                              ? "bg-blue-500 text-white"
+                              ? "bg-primary text-white"
                               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           }`}
                         >
@@ -302,7 +302,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                   onClick={() => onNavigate?.(item.url)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     currentPage === item.url
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -325,7 +325,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 onClick={() => onNavigate?.("/admin/compliance")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   currentPage === "/admin/compliance"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
@@ -336,7 +336,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 onClick={() => onNavigate?.("/admin/security")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   currentPage === "/admin/security"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
@@ -347,7 +347,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 onClick={() => onNavigate?.("/admin/analytics")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   currentPage === "/admin/analytics"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >

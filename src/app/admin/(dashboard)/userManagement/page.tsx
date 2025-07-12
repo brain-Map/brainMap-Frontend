@@ -403,7 +403,7 @@ export default function AllUsersPage() {
                     <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                       <SelectValue placeholder="All Roles" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="Member">Member</SelectItem>
                       <SelectItem value="Domain Expert">
@@ -421,7 +421,7 @@ export default function AllUsersPage() {
                     <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
@@ -436,10 +436,10 @@ export default function AllUsersPage() {
                     value={subjectFilter}
                     onValueChange={setSubjectFilter}
                   >
-                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                       <SelectValue placeholder="All Subjects" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white">
                       <SelectItem value="all">All Subjects</SelectItem>
                       {subjects.map((subj) => (
                         <SelectItem key={subj} value={subj}>

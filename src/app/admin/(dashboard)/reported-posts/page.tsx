@@ -387,7 +387,7 @@ export default function ReportManagement() {
                   {reports.length}
                 </p>
               </div>
-              <div className="p-3 bg-blue-500 rounded-lg">
+              <div className="p-3 bg-secondary rounded-lg">
                 <FileText className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -415,7 +415,7 @@ export default function ReportManagement() {
                   {reports.filter((r) => r.status === "reviewed").length}
                 </p>
               </div>
-              <div className="p-3 bg-blue-500 rounded-lg">
+              <div className="p-3 bg-secondary rounded-lg">
                 <Eye className="w-6 h-6 text-white" />
               </div>
             </div>
