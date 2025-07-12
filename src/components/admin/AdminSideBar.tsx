@@ -53,13 +53,23 @@ interface AdminSideBarProps {
 
 function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const [isUsersDropdownOpen, setIsUsersDropdownOpen] = React.useState(false);
+  
+  // Check if current page is a user management child to keep dropdown open
+  React.useEffect(() => {
+    if (currentPage === "/admin/userManagement" || 
+        currentPage === "/admin/members" || 
+        currentPage === "/admin/experts" || 
+        currentPage === "/admin/moderators") {
+      setIsUsersDropdownOpen(true);
+    }
+  }, [currentPage]);
   // Admin Menu Items
   const menuItems: MenuItem[] = [
-    { title: "Dashboard", icon: Home, url: "dashboard" },
-    { title: "Content", icon: FileText, url: "content" },
-    { title: "Messages", icon: MessageSquare, url: "messages" },
-    { title: "Calendar", icon: Calendar, url: "calendar" },
-    { title: "Settings", icon: Settings, url: "settings" },
+    { title: "Dashboard", icon: Home, url: "/admin" },
+    { title: "Content", icon: FileText, url: "/admin/content" },
+    { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
+    { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
+    { title: "Settings", icon: Settings, url: "/admin/settings" },
   ];
 
   // User Management Items
@@ -81,21 +91,21 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
         },
         {
           title: "Members",
-          url: "members",
+          url: "/admin/members",
           icon: GraduationCap,
           count: "1534",
           color: "bg-green-500",
         },
         {
           title: "Domain Experts",
-          url: "experts",
+          url: "/admin/experts",
           icon: Award,
           count: "156",
           color: "bg-orange-500",
         },
         {
           title: "Moderators",
-          url: "moderators",
+          url: "/admin/moderators",
           icon: Shield,
           count: "12",
           color: "bg-purple-500",
@@ -105,21 +115,21 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "New Users",
       icon: UserPlus,
-      url: "new-users",
+      url: "/admin/new-users",
       count: "12",
       color: "bg-green-500",
     },
     {
       title: "Active Users",
       icon: UserCheck,
-      url: "active-users",
+      url: "/admin/active-users",
       count: "1,284",
       color: "bg-blue-500",
     },
     {
       title: "Banned Users",
       icon: UserX,
-      url: "banned-users",
+      url: "/admin/banned-users",
       count: "3",
       color: "bg-red-500",
     },
@@ -130,21 +140,21 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Reported Posts",
       icon: Flag,
-      url: "reported-posts",
+      url: "/admin/reported-posts",
       count: "8",
       color: "bg-orange-500",
     },
     {
       title: "Pending Reviews",
       icon: Bell,
-      url: "pending-reviews",
+      url: "/admin/pending-reviews",
       count: "15",
       color: "bg-yellow-500",
     },
     {
       title: "Security Alerts",
       icon: Shield,
-      url: "security-alerts",
+      url: "/admin/security-alerts",
       count: "2",
       color: "bg-red-500",
     },
@@ -201,32 +211,39 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 <React.Fragment key={item.title}>
                   <button
                     onClick={() => {
-                      
-                      if (item.children) {
-                        if (item.title === "Users") {
-                          console.log(item.url)
-                          setIsUsersDropdownOpen(!isUsersDropdownOpen);
-                        } else {
-                          onNavigate?.(item.url);
-                        }
+                      if (item.children && item.title === "Users") {
+                        // Toggle dropdown
+                        setIsUsersDropdownOpen(!isUsersDropdownOpen);
+                        // Navigate to main Users page
+                        onNavigate?.(item.url);
                       } else {
                         onNavigate?.(item.url);
                       }
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      currentPage === item.url
+                      currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
                         ? "bg-blue-500 text-white"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
                     <span className="flex-1 text-left">{item.title}</span>
-                    <span className="text-xs text-gray-500">{item.count}</span>
+                    <span className={`text-xs ${
+                      currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
+                        ? "text-blue-200" 
+                        : "text-gray-500"
+                    }`}>
+                      {item.count}
+                    </span>
                     {item.children && (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className={`h-4 w-4 transition-transform ${
                           item.isOpen ? "transform rotate-180" : ""
+                        } ${
+                          currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
+                            ? "text-white" 
+                            : "text-gray-500"
                         }`}
                         fill="none"
                         viewBox="0 0 24 24"
@@ -305,9 +322,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
             </h3>
             <div className="space-y-1">
               <button
-                onClick={() => onNavigate?.("compliance")}
+                onClick={() => onNavigate?.("/admin/compliance")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  currentPage === "compliance"
+                  currentPage === "/admin/compliance"
                     ? "bg-blue-500 text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
@@ -316,9 +333,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 <span>Compliance Monitor</span>
               </button>
               <button
-                onClick={() => onNavigate?.("security")}
+                onClick={() => onNavigate?.("/admin/security")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  currentPage === "security"
+                  currentPage === "/admin/security"
                     ? "bg-blue-500 text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}
@@ -327,9 +344,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 <span>Security Center</span>
               </button>
               <button
-                onClick={() => onNavigate?.("analytics")}
+                onClick={() => onNavigate?.("/admin/analytics")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  currentPage === "analytics"
+                  currentPage === "/admin/analytics"
                     ? "bg-blue-500 text-white"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}

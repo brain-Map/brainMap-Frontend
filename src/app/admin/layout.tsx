@@ -1,17 +1,22 @@
 "use client";
 
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import AdminSideBar from "@/components/admin/AdminSideBar";
 import AdminNavbar from "@/components/admin/AdminNavbar";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<string>("dashboard");
-  const router = useRouter()
+  const router = useRouter();
+  const pathname = usePathname();
+  const [currentPage, setCurrentPage] = useState<string>(pathname || "/admin");
+  
+  useEffect(() => {
+    setCurrentPage(pathname);
+  }, [pathname]);
   
   const handleNavigate = (url: string) => {
     setCurrentPage(url);
-    router.push(url)
+    router.push(url);
   };
 
   return (
