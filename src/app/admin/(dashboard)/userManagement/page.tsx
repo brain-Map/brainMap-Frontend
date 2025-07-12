@@ -38,6 +38,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  UsersRound,
+  UserRound,
 } from "lucide-react";
 
 // Extended user data for demonstration
@@ -264,12 +266,21 @@ export default function AllUsersPage() {
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid gap-3">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              User Management
-            </h1>
-            <p className="text-gray-600 mt-1">Manage all users in the system</p>
+        <div className="flex justify-between">
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <UserPlus className="w-10 h-10 text-blue-600" />
+              </div>
+              <div className="flex-1 grid gap-1">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Report Management
+                </h1>
+                <p className="text-gray-600">
+                  Review and manage user-submitted reports across the platform
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex gap-3">
             <Button className="bg-[#3D52A0] hover:bg-[#2A3B7D] text-white shadow-sm">
