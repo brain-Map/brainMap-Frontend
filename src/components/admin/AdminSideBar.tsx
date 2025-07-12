@@ -53,13 +53,15 @@ interface AdminSideBarProps {
 
 function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const [isUsersDropdownOpen, setIsUsersDropdownOpen] = React.useState(false);
-  
+
   // Check if current page is a user management child to keep dropdown open
   React.useEffect(() => {
-    if (currentPage === "/admin/userManagement" || 
-        currentPage === "/admin/members" || 
-        currentPage === "/admin/experts" || 
-        currentPage === "/admin/moderators") {
+    if (
+      currentPage === "/admin/userManagement" ||
+      currentPage === "/admin/members" ||
+      currentPage === "/admin/experts" ||
+      currentPage === "/admin/moderators"
+    ) {
       setIsUsersDropdownOpen(true);
     }
   }, [currentPage]);
@@ -115,7 +117,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Add New User",
       icon: UserPlus,
-      url: "/admin/add-new-users",
+      url: "/admin/",
       count: "12",
       color: "bg-green-500",
     },
@@ -168,16 +170,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
             <Shield className="h-5 w-5" />
           </div>
-          <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center">
-              <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-gray-500">
-                  {currentPage}
-                </p>
-              </div>
-            </div>
-          </div>
+          <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
         </div>
 
         <div className="p-4 space-y-6">
@@ -221,18 +214,28 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                       }
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
+                      currentPage === item.url ||
+                      (item.children &&
+                        item.children.some(
+                          (child) => currentPage === child.url
+                        ))
                         ? "bg-primary text-white"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
                     <span className="flex-1 text-left">{item.title}</span>
-                    <span className={`text-xs ${
-                      currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
-                        ? "text-blue-200" 
-                        : "text-gray-500"
-                    }`}>
+                    <span
+                      className={`text-xs ${
+                        currentPage === item.url ||
+                        (item.children &&
+                          item.children.some(
+                            (child) => currentPage === child.url
+                          ))
+                          ? "text-blue-200"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {item.count}
                     </span>
                     {item.children && (
@@ -241,8 +244,12 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                         className={`h-4 w-4 transition-transform ${
                           item.isOpen ? "transform rotate-180" : ""
                         } ${
-                          currentPage === item.url || (item.children && item.children.some(child => currentPage === child.url))
-                            ? "text-white" 
+                          currentPage === item.url ||
+                          (item.children &&
+                            item.children.some(
+                              (child) => currentPage === child.url
+                            ))
+                            ? "text-white"
                             : "text-gray-500"
                         }`}
                         fill="none"

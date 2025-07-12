@@ -79,7 +79,7 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <MessageSquare className="w-5 h-5 text-blue-600" />
+                <MessageSquare className="w-10 h-10 text-primary" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -362,11 +362,11 @@ export default function ReportManagement() {
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <AlertTriangle className="w-10 h-10 text-blue-600" />
+              <AlertTriangle className="w-10 h-10 text-primary" />
             </div>
             <div className="flex-1 grid gap-1">
               <h1 className="text-3xl font-bold text-gray-900">
-                Report Management
+                Report Managements
               </h1>
               <p className="text-gray-600">
                 Review and manage user-submitted reports across the platform

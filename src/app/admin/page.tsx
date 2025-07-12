@@ -138,7 +138,7 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Shield className="w-10 h-10 text-blue-600" />
+              <Shield className="w-10 h-10 text-primary" />
             </div>
             <div className="flex-1 grid gap-1">
               <h1 className="text-3xl font-bold text-gray-900">
