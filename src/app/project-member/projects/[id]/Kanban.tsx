@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, MoreHorizontal, User } from 'lucide-react';
+import { Plus, MoreHorizontal, User, X } from 'lucide-react';
 
 const KanbanBoard: React.FC = () => {
+    const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  
+
   type Task = {
     id: number;
     title: string;
@@ -147,6 +150,14 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  const handleDeleteCol = (projectId:any) =>{
+
+    // Implement your delete logic here
+    alert(`Delete project ${projectId}`);
+    setDropdownOpenId(null);
+
+  }
+
   const addTask = (columnId: string, taskData: Omit<Task, 'id' | 'progress'>) => {
     const newTask: Task = {
       id: Date.now(),
@@ -175,15 +186,102 @@ const KanbanBoard: React.FC = () => {
     setColumns([...columns, newColumn]);
   };
 
-  const TaskCard: React.FC<{ task: Task }> = ({ task }) => (
-    <div className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+  const getColumnTitle = (columnId: string) => {
+    const column = columns.find(col => col.id === columnId);
+    return column ? column.title : '';
+  };
+
+  const moveTask = (taskId: number, fromColumnId: string, toColumnId: string) => {
+    let movedTask: Task | null = null;
+
+    const updatedColumns = columns.map((col) => {
+      if (col.id === fromColumnId) {
+        const taskIndex = col.tasks.findIndex((task) => task.id === taskId);
+        if (taskIndex !== -1) {
+          movedTask = col.tasks[taskIndex];
+          const updatedTasks = [...col.tasks];
+          updatedTasks.splice(taskIndex, 1);
+          return { ...col, tasks: updatedTasks, count: updatedTasks.length };
+        }
+      }
+      return col;
+    });
+
+    if (movedTask) {
+      const finalColumns = updatedColumns.map((col) => {
+        if (col.id === toColumnId) {
+          return { ...col, tasks: [...col.tasks, movedTask!], count: col.tasks.length + 1 };
+        }
+        return col;
+      });
+      setColumns(finalColumns);
+    }
+  };
+
+  const deleteTask = (taskId: number) => {
+
+  };
+
+const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, currentColumnId }) => {
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleMove = (targetColumnId: string) => {
+    if (targetColumnId !== currentColumnId) {
+      moveTask(task.id, currentColumnId, targetColumnId);
+    }
+    setShowMenu(false);
+  };
+
+  const handleDelete = () => {
+    deleteTask(task.id);
+    setShowMenu(false);
+  };
+
+  
+
+  return (
+    <div className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative">
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 text-sm">{task.title}</h3>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
-          {task.priority}
-        </span>
+
+        <div className="relative">
+          <button onClick={() => setShowMenu(!showMenu)} className="text-gray-500 hover:text-gray-700">
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in">
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500">Move to</div>
+              <div className="py-1">
+                {columns
+                  .filter((col) => col.id !== currentColumnId)
+                  .map((col) => (
+                    <button
+                      key={col.id}
+                      onClick={() => handleMove(col.id)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors duration-150"
+                    >
+                      {col.title}
+                    </button>
+                  ))}
+              </div>
+              <div className="border-t border-gray-200">
+                <button
+                  onClick={handleDelete}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
+                >
+                  Delete Task
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+
+      <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
+        {task.priority}
+      </span>
+
+      <p className="text-gray-600 text-sm mb-3 mt-2">{task.description}</p>
 
       {task.progress > 0 && (
         <div className="mb-3">
@@ -209,12 +307,18 @@ const KanbanBoard: React.FC = () => {
       </div>
     </div>
   );
+};
 
-  const TaskForm: React.FC<{
+
+
+
+
+  const TaskModalForm: React.FC<{
     columnId: string;
+    columnTitle: string;
     onSubmit: (columnId: string, task: Omit<Task, 'id' | 'progress'>) => void;
     onCancel: () => void;
-  }> = ({ columnId, onSubmit, onCancel }) => {
+  }> = ({ columnId, columnTitle, onSubmit, onCancel }) => {
     const [formData, setFormData] = useState<Omit<Task, 'id' | 'progress'>>({
       title: '',
       description: '',
@@ -238,117 +342,173 @@ const KanbanBoard: React.FC = () => {
       }
     };
 
+    const handleBackdropClick = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onCancel();
+      }
+    };
+
     return (
-      <div className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 ">
-        <input
-          type="text"
-          placeholder="Task title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          onKeyPress={handleKeyPress}
-          className="w-full mb-2 p-2 border border-gray-300 rounded text-sm"
-        />
-        <textarea
-          placeholder="Task description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full mb-2 p-2 border border-gray-300 rounded text-sm h-16 resize-none"
-        />
-        <div className="flex gap-2 mb-2">
-          <select
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
-            className="flex-1 p-2 border border-gray-300 rounded text-sm"
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Assignee"
-            value={formData.assignee}
-            onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-            className="flex-1 p-2 border border-gray-300 rounded text-sm"
-          />
-        </div>
-        <input
-          type="text"
-          placeholder="Due date"
-          value={formData.dueDate}
-          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-          className="w-full mb-3 p-2 border border-gray-300 rounded text-sm"
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={handleSubmit}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded text-sm hover:bg-blue-700 transition-colors"
-          >
-            Add Task
-          </button>
-          <button
-            onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded text-sm hover:bg-gray-400 transition-colors"
-          >
-            Cancel
-          </button>
+      <div 
+        className="fixed inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={handleBackdropClick}
+      >
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Add Task to {columnTitle}
+            </h2>
+            <button
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+              <input
+                type="text"
+                placeholder="Enter task title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onKeyPress={handleKeyPress}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                autoFocus
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                placeholder="Enter task description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-24 resize-none"
+              />
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
+                <input
+                  type="text"
+                  placeholder="Enter assignee name"
+                  value={formData.assignee}
+                  onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+              <input
+                type="text"
+                placeholder="Enter due date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={handleSubmit}
+              className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-secondary hover:text-black transition-colors font-medium"
+            >
+              Add Task
+            </button>
+            <button
+              onClick={onCancel}
+              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="max-h-screen w-full p-6 ">
+    <div className="max-h-screen w-full p-6">
       <div className="min-w-full rounded-lg">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
           <button
             onClick={() => setNewColumnForm({ isOpen: true, title: '' })}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Column
           </button>
         </div>
 
-        <div className="overflow-x-auto w-full ">
+        <div className="overflow-x-auto w-full">
           <div className="flex gap-4 pb-6 w-full">
             {columns.map((column) => (
-              <div key={column.id} className="flex-shrink-0 w-80 bg-value3 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-gray-900">{column.title}</h2>
-                    <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-sm">
-                      {column.count}
-                    </span>
-                  </div>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-                </div>
+              <div key={column.id} className="flex-shrink-0 w-80 bg-value3 rounded-lg p-4 relative">
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+      <h2 className="font-semibold text-gray-900">{column.title}</h2>
+      <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-sm">
+        {column.count}
+      </span>
+    </div>
+    <div className="relative">
+      <button
+        onClick={() =>
+          setDropdownOpenId(dropdownOpenId === column.id ? null : column.id)
+        }
+        className="text-gray-500 hover:text-gray-700"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
 
-                <div className="space-y-3">
-                  {column.tasks.map((task) => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
+      {dropdownOpenId === column.id && (
+        <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+          <button
+            className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 text-left rounded-md transition duration-150 ease-in-out"
+            onClick={() => handleDeleteCol(column.id)}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
 
-                  {newTaskForm.isOpen && newTaskForm.columnId === column.id ? (
-                    <TaskForm
-                      columnId={column.id}
-                      onSubmit={addTask}
-                      onCancel={() => setNewTaskForm({ columnId: null, isOpen: false })}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setNewTaskForm({ columnId: column.id, isOpen: true })}
-                      className="w-full bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Task
-                    </button>
-                  )}
-                </div>
-              </div>
+  <div className="space-y-3">
+    {column.tasks.map((task) => (
+      <TaskCard key={task.id} task={task} currentColumnId={column.id} />
+    ))}
+
+    <button
+      onClick={() => setNewTaskForm({ columnId: column.id, isOpen: true })}
+      className="w-full bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
+    >
+      <Plus className="w-4 h-4" />
+      Add Task
+    </button>
+  </div>
+</div>
             ))}
 
             {newColumnForm.isOpen && (
@@ -369,7 +529,7 @@ const KanbanBoard: React.FC = () => {
                         setNewColumnForm({ isOpen: false, title: '' });
                       }
                     }}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary hover:text-black transition-colors"
                   >
                     Add Column
                   </button>
@@ -385,6 +545,16 @@ const KanbanBoard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Task Modal */}
+      {newTaskForm.isOpen && newTaskForm.columnId && (
+        <TaskModalForm
+          columnId={newTaskForm.columnId}
+          columnTitle={getColumnTitle(newTaskForm.columnId)}
+          onSubmit={addTask}
+          onCancel={() => setNewTaskForm({ columnId: null, isOpen: false })}
+        />
+      )}
     </div>
   );
 };
