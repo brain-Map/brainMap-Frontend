@@ -117,7 +117,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Add New User",
       icon: UserPlus,
-      url: "/admin/",
+      url: "/admin/userManagement/addNewUser",
       count: "12",
       color: "bg-green-500",
     },

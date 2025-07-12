@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Lock, Shield, GraduationCap, Briefcase, Users, Clock, BookOpen, Heart } from "lucide-react";
+import { User, Mail, Lock, Shield, GraduationCap, Briefcase, Users, Clock, BookOpen, Heart, UserRoundPlus } from "lucide-react";
 
 type UserRole = "domain-expert" | "moderator" | "member" | "";
 
@@ -335,9 +335,20 @@ export default function AddNewUser() {
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Add New User</h1>
-          <p className="text-gray-600 mt-2">Create a new user account for the platform</p>
-        </div>
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <UserRoundPlus className="w-10 h-10 text-primary" />
+              </div>
+              <div className="flex-1 grid gap-1">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Add New User
+                </h1>
+                <p className="text-gray-600">
+                  Create a new user account for the platform.
+                </p>
+              </div>
+            </div>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information Card */}
