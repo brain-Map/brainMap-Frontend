@@ -91,7 +91,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
         },
         {
           title: "Members",
-          url: "/admin/members",
+          url: "/admin/userManagement?role=members",
           icon: GraduationCap,
           count: "1534",
           color: "bg-green-500",
@@ -113,9 +113,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       ],
     },
     {
-      title: "add Users",
+      title: "Add New User",
       icon: UserPlus,
-      url: "/admin/new-users",
+      url: "/admin/add-new-users",
       count: "12",
       color: "bg-green-500",
     },
@@ -138,9 +138,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   // Moderation Items
   const moderationItems: ModerationItem[] = [
     {
-      title: "Reportes",
+      title: "Reports",
       icon: Flag,
-      url: "/admin/reported-posts",
+      url: "/admin/reports",
       count: "8",
       color: "bg-orange-500",
     },
