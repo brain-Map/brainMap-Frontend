@@ -213,6 +213,34 @@ const allUsers = [
     university: "MIT",
     year: "4th Year",
   },
+  {
+    id: 13,
+    name: "Jessica Smith",
+    email: "jessica.s@banned.edu",
+    role: "Member",
+    status: "Banned",
+    activities: 0,
+    lastActive: "1 month ago",
+    avatar: "/placeholder.svg?height=32&width=32",
+    joinDate: "Jun 2024",
+    subject: "Computer Science",
+    university: "Local College",
+    year: "2nd Year",
+  },
+  {
+    id: 14,
+    name: "Robert Johnson",
+    email: "robert.j@banned.com",
+    role: "Domain Expert",
+    status: "Banned",
+    activities: 0,
+    lastActive: "3 weeks ago",
+    avatar: "/placeholder.svg?height=32&width=32",
+    joinDate: "May 2024",
+    subject: "Physics",
+    university: "Banned Institution",
+    experience: "5+ years",
+  },
 ];
 
 export default function AllUsersPage() {
@@ -258,11 +286,11 @@ export default function AllUsersPage() {
 
   //TO FILTER USER FROM PARAMS
   const allParams = params?.params as string[] | undefined;
-  const role = allParams?.[0];
+  const param = allParams?.[0];
 
   // useEffect to filter users based on URL params
   useEffect(() => {
-    if (role) {
+    if (param) {
       // Map URL params to actual role names
       const roleMapping: Record<string, string> = {
         members: "Member",
@@ -273,16 +301,41 @@ export default function AllUsersPage() {
         moderator: "Moderator",
       };
 
-      const mappedRole = roleMapping[role.toLowerCase()];
-      if (mappedRole) {
+      // Map URL params to actual status names
+      const statusMapping: Record<string, string> = {
+        "active-users": "Active",
+        "inactive-users": "Inactive",
+        "banned-users": "Banned",
+        "all-users": "all"
+      };
+
+      // Check if the param is for status filtering
+      if (statusMapping[param.toLowerCase()]) {
+        const mappedStatus = statusMapping[param.toLowerCase()];
+        setStatusFilter(mappedStatus);
+        setRoleFilter("all"); // Reset role filter when filtering by status
+        setCurrentPage(1);
+      }
+      // Check if the param is for role filtering
+      else if (roleMapping[param.toLowerCase()]) {
+        const mappedRole = roleMapping[param.toLowerCase()];
         setRoleFilter(mappedRole);
-        setCurrentPage(1); // Reset to first page when filtering
+        setStatusFilter("all"); // Reset status filter when filtering by role
+        setCurrentPage(1);
+      }
+      // If param doesn't match any mapping, reset filters
+      else {
+        setRoleFilter("all");
+        setStatusFilter("all");
+        setCurrentPage(1);
       }
     } else {
-      // If no role param, show all users
+      // If no param, show all users
       setRoleFilter("all");
+      setStatusFilter("all");
+      setCurrentPage(1);
     }
-  }, [role]);
+  }, [param]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -455,6 +508,7 @@ export default function AllUsersPage() {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="Banned">Banned</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -598,6 +652,8 @@ export default function AllUsersPage() {
                         className={
                           user.status === "Active"
                             ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
+                            : user.status === "Banned"
+                            ? "bg-red-100 text-red-800 hover:bg-red-200 border-red-200"
                             : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200"
                         }
                       >
