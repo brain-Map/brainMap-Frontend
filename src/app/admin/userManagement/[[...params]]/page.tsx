@@ -489,9 +489,7 @@ export default function AllUsersPage() {
                     <SelectContent className="bg-white">
                       <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="Member">Member</SelectItem>
-                      <SelectItem value="Domain Expert">
-                        Domain Expert
-                      </SelectItem>
+                      <SelectItem value="Domain Expert">Domain Expert</SelectItem>
                       <SelectItem value="Moderator">Moderator</SelectItem>
                     </SelectContent>
                   </Select>
