@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ import {
   UsersRound,
   UserRound,
 } from "lucide-react";
+import { useParams } from "next/navigation";
 
 // Extended user data for demonstration
 const allUsers = [
@@ -221,6 +222,7 @@ export default function AllUsersPage() {
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const params = useParams();
 
   // Get unique departments for filter
   const subjects = useMemo(() => {
@@ -253,6 +255,34 @@ export default function AllUsersPage() {
     startIndex,
     startIndex + itemsPerPage
   );
+
+  //TO FILTER USER FROM PARAMS
+  const allParams = params?.params as string[] | undefined;
+  const role = allParams?.[0];
+
+  // useEffect to filter users based on URL params
+  useEffect(() => {
+    if (role) {
+      // Map URL params to actual role names
+      const roleMapping: Record<string, string> = {
+        members: "Member",
+        "domain-experts": "Domain Expert",
+        moderators: "Moderator",
+        member: "Member",
+        "domain-expert": "Domain Expert",
+        moderator: "Moderator",
+      };
+
+      const mappedRole = roleMapping[role.toLowerCase()];
+      if (mappedRole) {
+        setRoleFilter(mappedRole);
+        setCurrentPage(1); // Reset to first page when filtering
+      }
+    } else {
+      // If no role param, show all users
+      setRoleFilter("all");
+    }
+  }, [role]);
 
   const clearFilters = () => {
     setSearchTerm("");
