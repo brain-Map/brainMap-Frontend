@@ -51,7 +51,7 @@ const ProjectsTable: React.FC = () => {
 
   return (
     <div className="min-h-screen flex justify-between">
-      <div className="w-full p-6">
+      <div className="w-full pl-6 pt-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Projects</h1>
@@ -102,7 +102,7 @@ const ProjectsTable: React.FC = () => {
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Description</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Type</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Lead</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Project Acrion</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Project Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

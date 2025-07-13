@@ -44,7 +44,7 @@ const NavBar: React.FC = () => {
   const { user, signOut } = useAuth();
 
   // Determine if we're in dashboard mode
-  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
+  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/project-member') || pathname.startsWith('/moderator');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -134,7 +134,7 @@ const NavBar: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-white backdrop-blur-md border-b border-gray-200/50 shadow-sm`}>
+      <header className={`z-50 bg-white backdrop-blur-md  ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
         <nav className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -478,7 +478,7 @@ const NavBar: React.FC = () => {
         )}
       </header>
 
-      <div className="h-16"></div>
+      {/* <div className="h-16"></div> */}
     </>
   );
 };
