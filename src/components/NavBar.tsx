@@ -44,7 +44,7 @@ const NavBar: React.FC = () => {
   const { user, signOut } = useAuth();
 
   // Determine if we're in dashboard mode
-  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/project-member') || pathname.startsWith('/moderator');
+  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/project-member') || pathname.startsWith('/moderator')|| pathname.startsWith('/domain-expert');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -478,7 +478,7 @@ const NavBar: React.FC = () => {
         )}
       </header>
 
-      {/* <div className="h-16"></div> */}
+    {pathname.startsWith('/community')? <div className="h-16"></div>: null}
     </>
   );
 };
