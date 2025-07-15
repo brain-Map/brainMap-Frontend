@@ -8,6 +8,7 @@ import {
   Search,
   Grid3X3,
   User,
+  Users,
   ChevronDown,
   Menu,
   X,
@@ -44,7 +45,7 @@ const NavBar: React.FC = () => {
   const { user, signOut } = useAuth();
 
   // Determine if we're in dashboard mode
-  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/project-member') || pathname.startsWith('/moderator');
+  const isDashboard = pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/project-member') || pathname.startsWith('/moderator')|| pathname.startsWith('/domain-expert');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,9 +68,9 @@ const NavBar: React.FC = () => {
       href: '/why-brainMap',
       hasDropdown: true,
       dropdownItems: [
-        { label: 'Decentralized Storage', href: '/features/decentralized', description: 'IPFS-powered security', icon: <Upload className="w-4 h-4" /> },
-        { label: 'Academic Focus', href: '/features/academic', description: 'Built for researchers', icon: <Search className="w-4 h-4" /> },
-        { label: 'No Subscriptions', href: '/features/free', description: 'Always free to use', icon: <Grid3X3 className="w-4 h-4" /> },
+        { label: 'Project Management', href: '/about', description: 'Smart tools & collaboration', icon: <Grid3X3 className="w-4 h-4" /> },
+        { label: 'Expert Guidance', href: '/about', description: 'Connect with domain experts', icon: <User className="w-4 h-4" /> },
+        { label: 'Community Network', href: '/about', description: 'Join 25,000+ project members', icon: <Users className="w-4 h-4" /> },
       ]
     },
     { label: 'Community', href: '/community' },
@@ -478,7 +479,7 @@ const NavBar: React.FC = () => {
         )}
       </header>
 
-      {/* <div className="h-16"></div> */}
+    {pathname.startsWith('/community')? <div className="h-16"></div>: null}
     </>
   );
 };

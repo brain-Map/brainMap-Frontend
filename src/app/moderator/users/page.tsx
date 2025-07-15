@@ -8,20 +8,12 @@ import { Input } from '@/components/ui/input';
 import { 
   Users, 
   UserCheck, 
-  UserX,
   Clock,
   Search,
-  Filter,
-  Download,
-  MoreHorizontal,
   Eye,
   Ban,
-  Mail,
-  Calendar,
   TrendingUp,
-  TrendingDown,
-  Activity,
-  Settings
+  Activity
 } from 'lucide-react';
 
 interface UserStats {

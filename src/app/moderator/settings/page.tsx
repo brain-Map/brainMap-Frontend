@@ -2,36 +2,21 @@
 
 import React, { useState } from 'react';
 import { 
-  User, 
   Bell, 
-  Lock, 
-  Shield, 
-  Eye,
-  Globe,
-  Calendar,
-  MessageCircle,
   Save,
-  Upload,
   Camera,
   Mail,
   Phone,
   MapPin,
-  Building,
-  GraduationCap,
-  BookOpen,
   Users,
-  Settings,
-  Trash2,
-  Edit3,
-  CheckCircle,
-  AlertCircle,
-  Moon,
-  Sun,
-  Monitor,
-  Clock,
   Volume2,
-  VolumeX,
-  Plus
+  User,
+  Shield,
+  Settings,
+  Eye,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 
 interface SettingsProps {}
