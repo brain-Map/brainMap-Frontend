@@ -611,14 +611,11 @@ const Page = () => {
 
                           {/* Action Buttons */}
                           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start mt-4 pt-4 border-t border-gray-100 space-y-2 sm:space-y-0 sm:space-x-4">
-                            <button className="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">
-                              Contact Expert
-                            </button>
                             <button 
                               onClick={() => handleViewProfile(expert.id)}
-                              className="w-full sm:w-auto text-gray-500 text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="w-full sm:w-auto bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors"
                             >
-                              View Profile
+                              View Expert Profile
                             </button>
                           </div>
                         </div>

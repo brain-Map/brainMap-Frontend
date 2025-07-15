@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,41 +11,16 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Filter,
   Search,
-  Calendar,
-  MoreVertical,
   FileText,
-  TrendingUp,
-  Users,
-  Bell,
-  Activity,
-  AlertTriangle,
-  CreditCard,
-  Banknote,
-  Wallet,
-  Download,
-  ExternalLink,
-  UserCheck,
-  Lock,
-  HelpCircle,
-  Shield
+  AlertTriangle
 } from 'lucide-react';
-
-interface RecentActivity {
-  id: string;
-  type: 'withdrawal_approved' | 'withdrawal_rejected' | 'payment_processed' | 'verification_required';
-  description: string;
-  timestamp: string;
-  moderator: string;
-}
 
 interface WithdrawalRequest {
   id: string;
   expertId: string;
   expertName: string;
   expertEmail: string;
-  expertAvatar?: string;
   amount: number;
   currency: string;
   paymentMethod: 'bank_transfer' | 'paypal' | 'payhere' | 'stripe' | 'crypto' | 'check';
@@ -65,7 +40,7 @@ interface WithdrawalRequest {
     address: string;
     currency: string;
   };
-  status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'dismissed';
   reason?: string;
   requestedAt: string;
   reviewedAt?: string;
@@ -108,37 +83,6 @@ interface WithdrawalRequest {
 }
 
 export default function WithdrawalsPage() {
-  const [recentActivity] = useState<RecentActivity[]>([
-    {
-      id: 'ACT-001',
-      type: 'withdrawal_approved',
-      description: 'Withdrawal request WDR-001 for $1,250 approved',
-      timestamp: '2025-01-10T14:30:00Z',
-      moderator: 'Admin Sarah'
-    },
-    {
-      id: 'ACT-002',
-      type: 'payment_processed',
-      description: 'Payment of $890 processed to Dr. Smith',
-      timestamp: '2025-01-10T13:15:00Z',
-      moderator: 'Finance Team'
-    },
-    {
-      id: 'ACT-003',
-      type: 'withdrawal_rejected',
-      description: 'Withdrawal request WDR-005 rejected - incomplete documentation',
-      timestamp: '2025-01-10T11:45:00Z',
-      moderator: 'Mod Alex'
-    },
-    {
-      id: 'ACT-004',
-      type: 'verification_required',
-      description: 'Additional verification required for WDR-007',
-      timestamp: '2025-01-10T10:20:00Z',
-      moderator: 'Compliance Team'
-    }
-  ]);
-
   const [withdrawalRequests] = useState<WithdrawalRequest[]>([
     {
       id: 'WDR-001',
@@ -273,6 +217,258 @@ export default function WithdrawalsPage() {
       auditTrail: {
         requestSubmitted: '2025-01-10T15:30:00Z'
       }
+    },
+    // Approved withdrawal requests
+    {
+      id: 'WDR-003',
+      expertId: 'EXP-003',
+      expertName: 'Dr. Sarah Williams',
+      expertEmail: 'sarah.williams@medschool.edu',
+      amount: 1150.75,
+      currency: 'USD',
+      paymentMethod: 'bank_transfer',
+      bankDetails: {
+        accountNumber: '****5678',
+        routingNumber: '021000021',
+        bankName: 'National Bank',
+        accountHolderName: 'Sarah Williams'
+      },
+      status: 'approved',
+      requestedAt: '2025-01-08T10:15:00Z',
+      reviewedAt: '2025-01-08T14:30:00Z',
+      processedAt: '2025-01-09T09:00:00Z',
+      reviewedBy: 'MOD-001',
+      totalEarnings: 4520.75,
+      withdrawableAmount: 1150.75,
+      minimumThreshold: 100.00,
+      taxInfo: {
+        hasW9: true,
+        taxId: '***-**-9012'
+      },
+      verificationStatus: 'verified',
+      sessionLogs: {
+        totalSessions: 52,
+        completedSessions: 50,
+        pendingSessions: 2,
+        lastSessionDate: '2025-01-08T16:30:00Z'
+      },
+      pendingReports: 0,
+      disputeCount: 0,
+      lastWithdrawalDate: '2024-11-20T10:00:00Z',
+      withdrawalFrequency: 'regular',
+      earnings: {
+        sessionEarnings: 980.75,
+        packageEarnings: 170.00,
+        bonusEarnings: 0.00,
+        totalEarnings: 1150.75
+      },
+      auditTrail: {
+        requestSubmitted: '2025-01-08T10:15:00Z',
+        moderatorAssigned: '2025-01-08T11:00:00Z',
+        reviewStarted: '2025-01-08T14:30:00Z',
+        verificationChecked: '2025-01-08T14:45:00Z',
+        decisionMade: '2025-01-08T15:00:00Z',
+        paymentProcessed: '2025-01-09T09:00:00Z'
+      }
+    },
+    {
+      id: 'WDR-004',
+      expertId: 'EXP-004',
+      expertName: 'Prof. James Anderson',
+      expertEmail: 'james.anderson@engineering.edu',
+      amount: 2100.00,
+      currency: 'USD',
+      paymentMethod: 'paypal',
+      paypalEmail: 'james.anderson.payments@gmail.com',
+      status: 'approved',
+      requestedAt: '2025-01-07T13:45:00Z',
+      reviewedAt: '2025-01-07T16:20:00Z',
+      processedAt: '2025-01-08T11:30:00Z',
+      reviewedBy: 'MOD-003',
+      totalEarnings: 8750.00,
+      withdrawableAmount: 2100.00,
+      minimumThreshold: 100.00,
+      taxInfo: {
+        hasW9: true,
+        taxId: '***-**-3456'
+      },
+      verificationStatus: 'verified',
+      notes: 'Large withdrawal approved after thorough verification',
+      sessionLogs: {
+        totalSessions: 78,
+        completedSessions: 75,
+        pendingSessions: 3,
+        lastSessionDate: '2025-01-07T18:00:00Z'
+      },
+      pendingReports: 0,
+      disputeCount: 0,
+      lastWithdrawalDate: '2024-12-01T10:00:00Z',
+      withdrawalFrequency: 'regular',
+      earnings: {
+        sessionEarnings: 1850.00,
+        packageEarnings: 200.00,
+        bonusEarnings: 50.00,
+        totalEarnings: 2100.00
+      },
+      auditTrail: {
+        requestSubmitted: '2025-01-07T13:45:00Z',
+        moderatorAssigned: '2025-01-07T14:00:00Z',
+        reviewStarted: '2025-01-07T16:20:00Z',
+        verificationChecked: '2025-01-07T16:35:00Z',
+        decisionMade: '2025-01-07T17:00:00Z',
+        paymentProcessed: '2025-01-08T11:30:00Z'
+      }
+    },
+    // Rejected withdrawal requests
+    {
+      id: 'WDR-005',
+      expertId: 'EXP-005',
+      expertName: 'Dr. Maria Rodriguez',
+      expertEmail: 'maria.rodriguez@university.edu',
+      amount: 450.25,
+      currency: 'USD',
+      paymentMethod: 'bank_transfer',
+      bankDetails: {
+        accountNumber: '****9876',
+        routingNumber: '021000021',
+        bankName: 'City Bank',
+        accountHolderName: 'Maria Rodriguez'
+      },
+      status: 'rejected',
+      reason: 'Insufficient documentation - W9 form required before processing withdrawal',
+      requestedAt: '2025-01-09T08:20:00Z',
+      reviewedAt: '2025-01-09T12:45:00Z',
+      reviewedBy: 'MOD-002',
+      totalEarnings: 1350.25,
+      withdrawableAmount: 450.25,
+      minimumThreshold: 100.00,
+      taxInfo: {
+        hasW9: false,
+        taxId: ''
+      },
+      verificationStatus: 'failed',
+      sessionLogs: {
+        totalSessions: 18,
+        completedSessions: 16,
+        pendingSessions: 2,
+        lastSessionDate: '2025-01-09T15:30:00Z'
+      },
+      pendingReports: 0,
+      disputeCount: 0,
+      withdrawalFrequency: 'first_time',
+      earnings: {
+        sessionEarnings: 380.25,
+        packageEarnings: 70.00,
+        bonusEarnings: 0.00,
+        totalEarnings: 450.25
+      },
+      auditTrail: {
+        requestSubmitted: '2025-01-09T08:20:00Z',
+        moderatorAssigned: '2025-01-09T09:00:00Z',
+        reviewStarted: '2025-01-09T12:45:00Z',
+        verificationChecked: '2025-01-09T12:50:00Z',
+        decisionMade: '2025-01-09T13:00:00Z'
+      }
+    },
+    {
+      id: 'WDR-007',
+      expertId: 'EXP-007',
+      expertName: 'Dr. Robert Lee',
+      expertEmail: 'robert.lee@techcollege.edu',
+      amount: 980.50,
+      currency: 'USD',
+      paymentMethod: 'payhere',
+      payhereDetails: {
+        merchantId: 'PAYHERE_MERCHANT_007',
+        phoneNumber: '+94773456789'
+      },
+      status: 'rejected',
+      reason: 'Multiple pending misconduct reports require investigation before withdrawal approval',
+      requestedAt: '2025-01-09T14:10:00Z',
+      reviewedAt: '2025-01-09T17:30:00Z',
+      reviewedBy: 'MOD-001',
+      totalEarnings: 2940.50,
+      withdrawableAmount: 980.50,
+      minimumThreshold: 100.00,
+      taxInfo: {
+        hasW9: true,
+        taxId: '***-**-6789'
+      },
+      verificationStatus: 'verified',
+      sessionLogs: {
+        totalSessions: 41,
+        completedSessions: 38,
+        pendingSessions: 3,
+        lastSessionDate: '2025-01-09T13:00:00Z'
+      },
+      pendingReports: 3,
+      disputeCount: 5,
+      lastWithdrawalDate: '2024-10-15T10:00:00Z',
+      withdrawalFrequency: 'regular',
+      earnings: {
+        sessionEarnings: 780.50,
+        packageEarnings: 150.00,
+        bonusEarnings: 50.00,
+        totalEarnings: 980.50
+      },
+      auditTrail: {
+        requestSubmitted: '2025-01-09T14:10:00Z',
+        moderatorAssigned: '2025-01-09T14:30:00Z',
+        reviewStarted: '2025-01-09T17:30:00Z',
+        verificationChecked: '2025-01-09T17:35:00Z',
+        decisionMade: '2025-01-09T17:45:00Z'
+      }
+    },
+    // Dismissed withdrawal request
+    {
+      id: 'WDR-008',
+      expertId: 'EXP-008',
+      expertName: 'Dr. Amanda Wilson',
+      expertEmail: 'amanda.wilson@college.edu',
+      amount: 325.75,
+      currency: 'USD',
+      paymentMethod: 'bank_transfer',
+      bankDetails: {
+        accountNumber: '****5432',
+        routingNumber: '021000021',
+        bankName: 'Regional Bank',
+        accountHolderName: 'Amanda Wilson'
+      },
+      status: 'dismissed',
+      reason: 'Duplicate withdrawal request - expert submitted same request twice within 24 hours',
+      requestedAt: '2025-01-10T11:30:00Z',
+      reviewedAt: '2025-01-10T13:15:00Z',
+      reviewedBy: 'MOD-001',
+      totalEarnings: 975.75,
+      withdrawableAmount: 325.75,
+      minimumThreshold: 100.00,
+      taxInfo: {
+        hasW9: true,
+        taxId: '***-**-4567'
+      },
+      verificationStatus: 'verified',
+      sessionLogs: {
+        totalSessions: 22,
+        completedSessions: 21,
+        pendingSessions: 1,
+        lastSessionDate: '2025-01-10T10:00:00Z'
+      },
+      pendingReports: 0,
+      disputeCount: 0,
+      withdrawalFrequency: 'regular',
+      earnings: {
+        sessionEarnings: 275.75,
+        packageEarnings: 50.00,
+        bonusEarnings: 0.00,
+        totalEarnings: 325.75
+      },
+      auditTrail: {
+        requestSubmitted: '2025-01-10T11:30:00Z',
+        moderatorAssigned: '2025-01-10T12:00:00Z',
+        reviewStarted: '2025-01-10T13:15:00Z',
+        verificationChecked: '2025-01-10T13:20:00Z',
+        decisionMade: '2025-01-10T13:25:00Z'
+      }
     }
   ]);
 
@@ -288,31 +484,9 @@ export default function WithdrawalsPage() {
       reviewing: 'bg-blue-100 text-blue-800 border-blue-200',
       approved: 'bg-green-100 text-green-800 border-green-200',
       rejected: 'bg-red-100 text-red-800 border-red-200',
-      completed: 'bg-gray-100 text-gray-800 border-gray-200'
+      dismissed: 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return variants[status];
-  };
-
-
-
-  const getActivityIcon = (type: RecentActivity['type']) => {
-    const icons = {
-      withdrawal_approved: CheckCircle,
-      withdrawal_rejected: XCircle,
-      payment_processed: DollarSign,
-      verification_required: AlertTriangle
-    };
-    return icons[type];
-  };
-
-  const getActivityColor = (type: RecentActivity['type']) => {
-    const colors = {
-      withdrawal_approved: 'text-green-600',
-      withdrawal_rejected: 'text-red-600',
-      payment_processed: 'text-blue-600',
-      verification_required: 'text-yellow-600'
-    };
-    return colors[type];
   };
 
   const formatDate = (dateString: string) => {
@@ -341,13 +515,10 @@ export default function WithdrawalsPage() {
   });
 
   const stats = {
-    total: withdrawalRequests.length,
     pending: withdrawalRequests.filter(r => r.status === 'pending').length,
     reviewing: withdrawalRequests.filter(r => r.status === 'reviewing').length,
     approved: withdrawalRequests.filter(r => r.status === 'approved').length,
-    rejected: withdrawalRequests.filter(r => r.status === 'rejected').length,
-    totalAmount: withdrawalRequests.reduce((sum, r) => sum + r.amount, 0),
-    pendingAmount: withdrawalRequests.filter(r => r.status === 'pending').reduce((sum, r) => sum + r.amount, 0)
+    rejected: withdrawalRequests.filter(r => r.status === 'rejected').length
   };
 
   return (
@@ -450,6 +621,9 @@ export default function WithdrawalsPage() {
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="reviewing">Reviewing</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="dismissed">Dismissed</option>
               </select>
             </div>
           </div>
@@ -480,7 +654,7 @@ export default function WithdrawalsPage() {
                                 {request.status === 'reviewing' && <Eye className="w-3 h-3 mr-1" />}
                                 {request.status === 'approved' && <CheckCircle className="w-3 h-3 mr-1" />}
                                 {request.status === 'rejected' && <XCircle className="w-3 h-3 mr-1" />}
-                                {request.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                {request.status === 'dismissed' && <XCircle className="w-3 h-3 mr-1" />}
                                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                               </Badge>
                               <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full font-mono">#{request.id}</span>
@@ -497,6 +671,30 @@ export default function WithdrawalsPage() {
                             <div className="flex items-center gap-1">
                               <Eye className="w-3 h-3" />
                               <span>Review started: {formatDate(request.reviewedAt)}</span>
+                            </div>
+                          )}
+                          {request.status === 'approved' && request.processedAt && (
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              <span>Approved & processed: {formatDate(request.processedAt)}</span>
+                            </div>
+                          )}
+                          {request.status === 'rejected' && request.reviewedAt && (
+                            <div className="flex items-center gap-1">
+                              <XCircle className="w-3 h-3" />
+                              <span>Rejected: {formatDate(request.reviewedAt)}</span>
+                            </div>
+                          )}
+                          {request.status === 'dismissed' && request.reviewedAt && (
+                            <div className="flex items-center gap-1">
+                              <XCircle className="w-3 h-3" />
+                              <span>Dismissed: {formatDate(request.reviewedAt)}</span>
+                            </div>
+                          )}
+                          {request.reviewedBy && (
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>By: {request.reviewedBy}</span>
                             </div>
                           )}
                         </div>
@@ -545,8 +743,22 @@ export default function WithdrawalsPage() {
                           </div>
                         </div>
 
+                        {/* Approval/Success Message */}
+                        {request.status === 'approved' && (
+                          <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              <strong className="text-green-800 text-sm">Withdrawal Approved</strong>
+                            </div>
+                            <div className="text-xs text-green-700">
+                              Payment of {formatCurrency(request.amount)} has been processed successfully.
+                              {request.notes && <div className="mt-1 font-medium">Note: {request.notes}</div>}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Expert Notes */}
-                        {request.notes && (
+                        {request.notes && request.status !== 'approved' && (
                           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <FileText className="w-4 h-4 text-amber-600" />
@@ -622,6 +834,15 @@ export default function WithdrawalsPage() {
                             <XCircle className="w-3 h-3 mr-1" />
                             Reject
                           </Button>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-xs px-4 py-2 font-medium transition-all duration-200 text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                          >
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Dismiss
+                          </Button>
                         </>
                       )}
                       
@@ -644,16 +865,17 @@ export default function WithdrawalsPage() {
                             <XCircle className="w-3 h-3 mr-1" />
                             Reject
                           </Button>
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-xs px-4 py-2 font-medium transition-all duration-200 text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                          >
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Dismiss
+                          </Button>
                         </>
                       )}
-                      
-                      <Button 
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs px-2 py-2 hover:bg-gray-100"
-                      >
-                        <MoreVertical className="w-3 h-3" />
-                      </Button>
                     </div>
                   </div>
                 </div>

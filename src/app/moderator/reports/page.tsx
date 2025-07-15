@@ -1,62 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertTriangle,
   User,
-  MessageSquare,
   Eye,
   CheckCircle,
   XCircle,
-  Filter,
   Search,
-  Calendar,
   Clock,
-  MoreVertical,
-  FileText,
   Flag,
-  Shield,
-  TrendingUp,
-  Users,
-  Bell,
-  Activity,
-  Zap,
-  UserX,
-  MessageCircle,
-  ChevronRight,
-  Trash2,
-  Ban,
-  AlertCircle,
-  Settings,
-  Download,
-  RefreshCw,
-  Archive,
-  ExternalLink,
-  UserCheck,
-  DollarSign,
-  Lock,
-  HelpCircle
+  UserX
 } from 'lucide-react';
-
-interface RecentActivity {
-  id: string;
-  type: 'user_banned' | 'report_resolved' | 'content_removed' | 'warning_issued';
-  description: string;
-  timestamp: string;
-  moderator: string;
-}
-
-interface PendingAction {
-  id: string;
-  type: 'expert_approval' | 'withdrawal' | 'account_verification';
-  title: string;
-  description: string;
-  count: number;
-  urgency: 'low' | 'medium' | 'high';
-}
 
 interface Report {
   id: string;
@@ -78,7 +37,7 @@ interface Report {
     content: string;
     id: string;
   };
-  status: 'pending' | 'investigating' | 'dismissed';
+  status: 'pending' | 'investigating' | 'dismissed' | 'resolved';
   priority: 'low' | 'medium' | 'high' | 'critical';
   createdAt: string;
   updatedAt: string;
@@ -86,63 +45,14 @@ interface Report {
 }
 
 export default function ReportsPage() {
-  const [recentActivity] = useState<RecentActivity[]>([
-    {
-      id: 'ACT-001',
-      type: 'user_banned',
-      description: 'User @johndoe456 was banned for harassment',
-      timestamp: '2025-01-08T12:30:00Z',
-      moderator: 'Admin Sarah'
-    },
-    {
-      id: 'ACT-002',
-      type: 'report_resolved',
-      description: 'Spam report #RPT-002 was resolved',
-      timestamp: '2025-01-08T11:45:00Z',
-      moderator: 'Mod Alex'
-    },
-    {
-      id: 'ACT-003',
-      type: 'content_removed',
-      description: 'Inappropriate post removed from community',
-      timestamp: '2025-01-08T10:15:00Z',
-      moderator: 'Mod Jessica'
-    },
-    {
-      id: 'ACT-004',
-      type: 'warning_issued',
-      description: 'Warning issued to @student123 for spam',
-      timestamp: '2025-01-08T09:30:00Z',
-      moderator: 'Admin Sarah'
-    }
-  ]);
+  const router = useRouter();
+  const [filter, setFilter] = useState({
+    status: 'all',
+    priority: 'all',
+    type: 'all'
+  });
 
-  const [pendingActions] = useState<PendingAction[]>([
-    {
-      id: 'PA-001',
-      type: 'expert_approval',
-      title: 'Expert Applications',
-      description: 'New domain expert applications awaiting approval',
-      count: 8,
-      urgency: 'medium'
-    },
-    {
-      id: 'PA-002',
-      type: 'withdrawal',
-      title: 'Withdrawal Requests',
-      description: 'Expert withdrawal requests pending review',
-      count: 15,
-      urgency: 'high'
-    },
-    {
-      id: 'PA-003',
-      type: 'account_verification',
-      title: 'Account Verifications',
-      description: 'User accounts pending verification',
-      count: 23,
-      urgency: 'low'
-    }
-  ]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [reports] = useState<Report[]>([
     {
@@ -275,22 +185,90 @@ export default function ReportsPage() {
       createdAt: '2025-01-08T07:00:00Z',
       updatedAt: '2025-01-08T10:30:00Z',
       assignedTo: 'MOD-003'
+    },
+    {
+      id: 'RPT-011',
+      type: 'spam',
+      title: 'Promotional content in project discussion',
+      description: 'User posted multiple promotional links for unrelated courses in project discussion threads.',
+      reportedBy: { name: 'Student Leader', id: 'USR-445' },
+      reportedUser: { name: 'Course Promoter', id: 'USR-556' },
+      reportedContent: {
+        type: 'post',
+        content: 'Check out this amazing discount on programming courses! 70% off today only! Link: example.com/courses',
+        id: 'POST-445'
+      },
+      status: 'resolved',
+      priority: 'medium',
+      createdAt: '2025-01-07T13:20:00Z',
+      updatedAt: '2025-01-08T09:15:00Z',
+      assignedTo: 'MOD-001'
+    },
+    {
+      id: 'RPT-012',
+      type: 'inappropriate',
+      title: 'Inappropriate language in group chat',
+      description: 'User used offensive language and inappropriate jokes in a project group chat.',
+      reportedBy: { name: 'Project Member', id: 'USR-667' },
+      reportedUser: { name: 'Inappropriate User', id: 'USR-778' },
+      status: 'resolved',
+      priority: 'low',
+      createdAt: '2025-01-06T16:30:00Z',
+      updatedAt: '2025-01-07T14:20:00Z',
+      assignedTo: 'MOD-002'
+    },
+    {
+      id: 'RPT-013',
+      type: 'content_violation',
+      title: 'Sharing copyrighted material without permission',
+      description: 'User shared entire textbook chapters and copyrighted research papers in public forums.',
+      reportedBy: { name: 'Academic Integrity Officer', id: 'USR-889' },
+      reportedUser: { name: 'Material Sharer', id: 'USR-990' },
+      reportedContent: {
+        type: 'post',
+        content: 'Here are the complete chapters from Advanced Machine Learning textbook for free download...',
+        id: 'POST-667'
+      },
+      status: 'resolved',
+      priority: 'high',
+      createdAt: '2025-01-05T11:45:00Z',
+      updatedAt: '2025-01-06T16:30:00Z',
+      assignedTo: 'MOD-003'
+    },
+    {
+      id: 'RPT-014',
+      type: 'fake_profile',
+      title: 'Impersonating university professor',
+      description: 'User created a fake profile claiming to be Dr. Smith from Computer Science department.',
+      reportedBy: { name: 'Real Dr. Smith', id: 'USR-111' },
+      reportedUser: { name: 'Fake Dr. Smith', id: 'USR-222' },
+      status: 'resolved',
+      priority: 'critical',
+      createdAt: '2025-01-04T09:00:00Z',
+      updatedAt: '2025-01-05T12:30:00Z',
+      assignedTo: 'ADMIN-001'
+    },
+    {
+      id: 'RPT-015',
+      type: 'harassment',
+      title: 'Persistent unwanted contact',
+      description: 'User continues to send unwanted messages despite being asked to stop multiple times.',
+      reportedBy: { name: 'Student Victim', id: 'USR-333' },
+      reportedUser: { name: 'Persistent User', id: 'USR-444' },
+      status: 'resolved',
+      priority: 'high',
+      createdAt: '2025-01-03T14:15:00Z',
+      updatedAt: '2025-01-04T10:45:00Z',
+      assignedTo: 'MOD-001'
     }
   ]);
-
-  const [filter, setFilter] = useState({
-    status: 'all',
-    priority: 'all',
-    type: 'all'
-  });
-
-  const [searchTerm, setSearchTerm] = useState('');
 
   const getStatusBadge = (status: Report['status']) => {
     const variants = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       investigating: 'bg-blue-100 text-blue-800 border-blue-200',
-      dismissed: 'bg-gray-100 text-gray-800 border-gray-200'
+      dismissed: 'bg-gray-100 text-gray-800 border-gray-200',
+      resolved: 'bg-green-100 text-green-800 border-green-200'
     };
     return variants[status];
   };
@@ -308,19 +286,19 @@ export default function ReportsPage() {
   const getTypeIcon = (type: Report['type']) => {
     const icons = {
       harassment: AlertTriangle,
-      spam: MessageSquare,
+      spam: User,
       inappropriate: Flag,
-      content_violation: FileText,
+      content_violation: Flag,
       fake_profile: User,
-      scam: DollarSign,
-      bullying: Users,
-      hate_speech: MessageCircle,
-      privacy_violation: Lock,
-      copyright: FileText,
-      misinformation: AlertCircle,
-      other: HelpCircle
+      scam: User,
+      bullying: User,
+      hate_speech: User,
+      privacy_violation: User,
+      copyright: Flag,
+      misinformation: AlertTriangle,
+      other: AlertTriangle
     };
-    return icons[type] || HelpCircle;
+    return icons[type] || AlertTriangle;
   };
 
   const getTypeDisplayName = (type: Report['type']) => {
@@ -341,44 +319,6 @@ export default function ReportsPage() {
     return names[type] || 'Unknown';
   };
 
-  const getActivityIcon = (type: RecentActivity['type']) => {
-    const icons = {
-      user_banned: UserX,
-      report_resolved: CheckCircle,
-      content_removed: Trash2,
-      warning_issued: AlertCircle
-    };
-    return icons[type];
-  };
-
-  const getActivityColor = (type: RecentActivity['type']) => {
-    const colors = {
-      user_banned: 'text-red-600',
-      report_resolved: 'text-green-600',
-      content_removed: 'text-orange-600',
-      warning_issued: 'text-yellow-600'
-    };
-    return colors[type];
-  };
-
-  const getPendingActionIcon = (type: PendingAction['type']) => {
-    const icons = {
-      expert_approval: Shield,
-      withdrawal: MessageCircle,
-      account_verification: User
-    };
-    return icons[type];
-  };
-
-  const getUrgencyColor = (urgency: PendingAction['urgency']) => {
-    const colors = {
-      low: 'text-gray-500',
-      medium: 'text-yellow-500',
-      high: 'text-red-500'
-    };
-    return colors[urgency];
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -386,6 +326,30 @@ export default function ReportsPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleViewReport = (report: Report) => {
+    router.push(`/moderator/reports/${report.id}`);
+  };
+
+  const handleInvestigateReport = (reportId: string) => {
+    // Handle investigate action
+    console.log('Investigating report:', reportId);
+  };
+
+  const handleResolveReport = (reportId: string) => {
+    // Handle resolve action
+    console.log('Resolving report:', reportId);
+  };
+
+  const handleDismissReport = (reportId: string) => {
+    // Handle dismiss action
+    console.log('Dismissing report:', reportId);
+  };
+
+  const handleAssignReport = (reportId: string, moderatorId: string) => {
+    // Handle assign action
+    console.log('Assigning report:', reportId, 'to:', moderatorId);
   };
 
   const filteredReports = reports.filter(report => {
@@ -524,6 +488,7 @@ export default function ReportsPage() {
                 <option value="pending">Pending</option>
                 <option value="investigating">Investigating</option>
                 <option value="dismissed">Dismissed</option>
+                <option value="resolved">Resolved</option>
               </select>
 
               <select
@@ -567,7 +532,11 @@ export default function ReportsPage() {
             {filteredReports.map((report, index) => {
               const TypeIcon = getTypeIcon(report.type);
               return (
-                <div key={report.id} className={`p-5 ${index !== filteredReports.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-all duration-200 group`}>
+                <div 
+                  key={report.id} 
+                  className={`p-5 ${index !== filteredReports.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-all duration-200 group cursor-pointer`}
+                  onClick={() => handleViewReport(report)}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
@@ -584,7 +553,7 @@ export default function ReportsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 text-base group-hover:text-gray-700 transition-colors mb-2">{report.title}</h4>
+                            <h4 className="font-semibold text-gray-900 text-base group-hover:text-blue-600 transition-colors mb-2">{report.title}</h4>
                             <div className="flex items-center gap-2 mb-3">
                               <Badge 
                                 className={`text-xs font-medium px-3 py-1 rounded-full ${
@@ -606,6 +575,7 @@ export default function ReportsPage() {
                                 {report.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
                                 {report.status === 'investigating' && <Eye className="w-3 h-3 mr-1" />}
                                 {report.status === 'dismissed' && <XCircle className="w-3 h-3 mr-1" />}
+                                {report.status === 'resolved' && <CheckCircle className="w-3 h-3 mr-1" />}
                                 {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                               </Badge>
                               <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full font-mono">#{report.id}</span>
@@ -632,40 +602,64 @@ export default function ReportsPage() {
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-2 ml-6">
+                    <div className="flex items-start gap-2 ml-6" onClick={(e) => e.stopPropagation()}>
                       <Button 
                         size="sm" 
                         variant="outline"
+                        onClick={() => handleViewReport(report)}
                         className="text-xs px-4 py-2 font-medium transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>
                       
-                      <Button 
-                        size="sm" 
-                        className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200 bg-green-600 hover:bg-green-700 border-green-600"
-                      >
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Resolve
-                      </Button>
+                      {report.status === 'pending' ? (
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInvestigateReport(report.id);
+                          }}
+                          className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200 bg-blue-600 hover:bg-blue-700 border-blue-600"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Investigate
+                        </Button>
+                      ) : report.status === 'investigating' ? (
+                        <Button 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResolveReport(report.id);
+                          }}
+                          className="text-white text-xs px-4 py-2 font-medium shadow-sm hover:shadow-md transition-all duration-200 bg-green-600 hover:bg-green-700 border-green-600"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Resolve
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          disabled
+                          className="text-white text-xs px-4 py-2 font-medium bg-gray-400 border-gray-400 cursor-not-allowed"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          {report.status === 'resolved' ? 'Resolved' : 'Dismissed'}
+                        </Button>
+                      )}
                       
                       <Button 
                         size="sm" 
                         variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissReport(report.id);
+                        }}
                         className="text-xs px-4 py-2 font-medium transition-all duration-200 text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
-                        disabled={report.status === 'dismissed'}
+                        disabled={report.status === 'dismissed' || report.status === 'resolved'}
                       >
                         <XCircle className="w-3 h-3 mr-1" />
                         Dismiss
-                      </Button>
-                      
-                      <Button 
-                        size="sm"
-                        variant="ghost"
-                        className="text-xs px-2 py-2 hover:bg-gray-100"
-                      >
-                        <MoreVertical className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
