@@ -18,7 +18,9 @@ interface Project {
     status?: string;
   properies?: {
     [key: string]: any;
+  
   }
+  color?: string; // Optional property for color representation
 }
 
 export default Project;

@@ -169,27 +169,30 @@ const ContactUs: React.FC = () => {
   return (
     <>
       {/* Hero Section */}
-      <div className="pt-20 min-h-screen flex items-center bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
+  
+      <div className="pt-20 min-h-screen flex items-center bg-gradient-to-br from-secondary/50 via-value3/50 to-secondary/50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center">
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/20">
-              <Heart className="w-5 h-5 text-accent mr-2" />
-              <span className="text-value3 font-medium">We're here to help you succeed</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-8 leading-tight">
-              Get in{' '}
-              <span className="bg-gradient-to-r from-accent via-info to-accent bg-clip-text text-transparent">
-                Touch
-              </span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-value3 max-w-4xl mx-auto leading-relaxed font-light mb-12">
-              Have questions about BrainMap? Need project management support? Want to become a mentor? 
+          <div className="grid text-center items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="inline-flex items-center bg-blue-50 rounded-full px-6 py-3 mb-8 border border-blue-100">
+                <Heart className="w-5 h-5 text-blue-600 mr-2" />
+                <span className="text-slate-700 font-medium">We're here to help you succeed</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-8 leading-tight">
+                Get in{' '}
+                <span className="text-primary">
+                   Touch
+                </span>
+              </h1>
+              
+              <p className="text-xl text-slate-600 leading-relaxed font-normal mb-12">
+                Have questions about BrainMap? Need project management support? Want to become a mentor? 
               Looking for community guidance? We're here to assist you every step of the way in your project journey.
-            </p>
+              </p>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <CustomButton
                 text="Start Live Chat"
                 backgroundColor="bg-white"
@@ -201,14 +204,21 @@ const ContactUs: React.FC = () => {
               
               <a
                 href="#contact-form"
-                className="px-8 py-4 bg-white/15 backdrop-blur-xl hover:bg-white/25 text-white font-bold text-lg rounded-xl border-2 border-white/30 hover:border-accent/50 transition-all duration-500"
+                className="px-8 py-4 bg-white backdrop-blur-xl hover:bg-white/25 text-primary font-bold text-lg rounded-xl border-2 border-white/30 hover:border-secondary transition-all duration-500"
               >
                 Send Message
               </a>
             </div>
+
+            </div>
+
+
+
+
           </div>
         </div>
       </div>
+
 
       {/* Contact Info Cards */}
       <section className="py-20 bg-gray-50">

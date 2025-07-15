@@ -11,11 +11,8 @@ import {
   DollarSign,
   Clock,
   TrendingUp,
-  FileText,
-  Bell,
   Award,
   UserCheck,
-  UserX,
   ExternalLink,
   Eye,
   X

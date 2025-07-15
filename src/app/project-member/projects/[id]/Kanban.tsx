@@ -461,7 +461,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           </button>
         </div>
 
-        <div className="overflow-x-auto w-full">
+        <div className="overflow-x-auto max-w-screen-2xl">
           <div className="flex gap-4 pb-6 w-full">
             {columns.map((column) => (
               <div key={column.id} className="flex-shrink-0 w-80 bg-value3 rounded-lg p-4 relative">
