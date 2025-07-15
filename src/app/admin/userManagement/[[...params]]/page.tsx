@@ -38,7 +38,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-  UsersRound,
   UserRound,
 } from "lucide-react";
 import { useParams } from "next/navigation";

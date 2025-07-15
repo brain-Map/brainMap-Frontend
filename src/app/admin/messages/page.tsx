@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   MessageCircle, 
   AlertTriangle, 
   CheckCircle, 
   Clock, 
   Eye,
-  Ban,
   Flag,
   User,
   Calendar,
@@ -141,7 +139,7 @@ export default function MessagesPage() {
 
   // Filter messages based on search and filters
   useEffect(() => {
-    let filtered = messages.filter(message => {
+    const filtered = messages.filter(message => {
       const matchesSearch = 
         message.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||

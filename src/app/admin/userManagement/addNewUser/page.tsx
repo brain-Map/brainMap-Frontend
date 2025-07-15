@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Lock, Shield, GraduationCap, Briefcase, Users, Clock, BookOpen, Heart, UserRoundPlus } from "lucide-react";
+import { User, Shield, GraduationCap, Users, UserRoundPlus } from "lucide-react";
 
 type UserRole = "domain-expert" | "moderator" | "member" | "";
 

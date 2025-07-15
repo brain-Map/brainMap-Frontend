@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useState, useEffect } from "react";
 import AdminSideBar from "@/components/admin/AdminSideBar";
-import AdminNavbar from "@/components/admin/AdminNavbar";
+// import AdminNavbar from "@/components/admin/AdminNavbar";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
