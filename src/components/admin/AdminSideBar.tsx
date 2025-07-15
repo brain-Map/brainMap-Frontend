@@ -19,6 +19,7 @@ import {
   UserCheck,
   GraduationCap,
   Award,
+  Wallet,
 } from "lucide-react";
 import { Router } from "next/router";
 
@@ -72,6 +73,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
     { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
     { title: "Settings", icon: Settings, url: "/admin/settings" },
+    {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
   ];
 
   // User Management Items
