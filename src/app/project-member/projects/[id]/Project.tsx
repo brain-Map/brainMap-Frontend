@@ -317,25 +317,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
               </div>
             </div>
 
-            {/* Recent Activity */}
-            {/* <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
-              <div className="space-y-3">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      activity.color === 'blue' ? 'bg-blue-500' :
-                      activity.color === 'green' ? 'bg-green-500' :
-                      'bg-yellow-500'
-                    }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.title}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div> */}
+           
           </div>
         </div>
           

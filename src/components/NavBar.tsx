@@ -478,7 +478,7 @@ const NavBar: React.FC = () => {
         )}
       </header>
 
-      {/* <div className="h-16"></div> */}
+      {pathname.startsWith('/community')? <div className="h-16"></div>: null}
     </>
   );
 };
