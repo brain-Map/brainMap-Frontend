@@ -12,16 +12,12 @@ import {
   ChevronRight,
   Filter,
   Users,
-  Award,
-  TrendingUp,
-  Plus,
   CheckCircle
 } from 'lucide-react';
 
 const Page = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('Relevance');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFilters, setSelectedFilters] = useState({
     expertise: [] as string[],
@@ -683,18 +679,6 @@ const Page = () => {
                 <div className="text-sm text-gray-600 mt-4">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredExperts.length)} of {filteredExperts.length} experts
                 </div>
-              </div>
-            )}
-
-            {/* Load More Button (alternative to pagination) */}
-            {filteredExperts.length > paginatedExperts.length && currentPage * itemsPerPage < filteredExperts.length && (
-              <div className="text-center mt-8">
-                <button 
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  className="text-blue-600 hover:text-blue-700 border border-blue-200 px-6 py-2 rounded-lg"
-                >
-                  Load More Experts
-                </button>
               </div>
             )}
           </div>
