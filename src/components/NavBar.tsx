@@ -130,9 +130,6 @@ const NavBar: React.FC = () => {
     signOut();
   };
 
-  console.log("isMobileMenuOpen: ", isMobileMenuOpen);
-  
-
   return (
     <>
       <header className={`z-50 bg-white backdrop-blur-md  ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>

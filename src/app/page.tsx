@@ -71,9 +71,6 @@ const successStories: SuccessStory[] = [
   }
 ];
 
-
-
-
   return (
 
     <>

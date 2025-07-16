@@ -6,16 +6,20 @@ import { useRouter, useSearchParams } from 'next/navigation';
 type User = {
   id: string;
   email?: string;
+  name?: string;
+  user_role?: string;
 } | null;
 
 const AuthContext = createContext<{
   user: User;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
+  updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<any>;
 }>({
   user: null,
   signIn: () => Promise.resolve(null),
   signOut: () => Promise.resolve(),
+  updateUserMetadata: () => Promise.resolve(null),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -24,10 +28,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const mapSupabaseUser = (supabaseUser: any): User => {
+    if (!supabaseUser) return null;
+    
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email,
+      name: supabaseUser.user_metadata?.name,
+      user_role: supabaseUser.user_metadata?.user_role,
+    };
+  };
+
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      localStorage.setItem('accessToken', session?.access_token || '');
+      console.log(session?.access_token);
+      setUser(mapSupabaseUser(session?.user));
       setLoading(false);
     };
 
@@ -35,10 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setUser(session?.user ?? null);
-        // Don't auto-redirect here — handled in signIn instead
+      if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('accessToken');
+        setUser(null);
+      } else {
+        localStorage.setItem('accessToken', session?.access_token || '');
+        setUser(mapSupabaseUser(session?.user));
       }
-    );
+  }
+);
 
     return () => authListener.subscription.unsubscribe();
   }, []);
@@ -50,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!error) {
-      // Look for redirectTo param in URL
       const redirectTo = searchParams.get('redirectTo') || '/';
       router.push(redirectTo);
     }
@@ -59,14 +80,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    localStorage.removeItem('accessToken');
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const updateUserMetadata = async (metadata: { name?: string; user_role?: string }) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: metadata
+    });
+
+    if (!error && data.user) {
+      setUser(mapSupabaseUser(data.user));
+    }
+
+    return { data, error };
   };
 
   const value = {
     user,
     signIn,
     signOut,
+    updateUserMetadata,
   };
 
   return (
