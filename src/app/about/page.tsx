@@ -118,48 +118,52 @@ const AboutUs: React.FC = () => {
 
   return (
     <>
-      {/* Hero Section */}
-      <div className="pt-20 min-h-screen flex items-center bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
+      <div className="pt-20 min-h-screen flex items-center bg-gradient-to-br from-secondary/50 via-value3/50 to-secondary/50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center">
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/20">
-              <Heart className="w-5 h-5 text-accent mr-2" />
-              <span className="text-value3 font-medium">Empowering Project Success Since 2020</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-8 leading-tight">
-              About{' '}
-              <span className="bg-gradient-to-r from-accent via-info to-accent bg-clip-text text-transparent">
-                BrainMap
-              </span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-value3 max-w-4xl mx-auto leading-relaxed font-light mb-12">
-              We're revolutionizing how people manage projects and access expert guidance. From individual creators 
-              to enterprise teams, BrainMap connects project members with domain experts across all industries 
-              to turn ideas into successful outcomes.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <div className="grid text-center items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="inline-flex items-center bg-blue-50 rounded-full px-6 py-3 mb-8 border border-blue-100">
+                <Heart className="w-5 h-5 text-blue-600 mr-2" />
+                <span className="text-slate-700 font-medium">Empowering Project Success Since 2020</span>
+              </div>
               
+              <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-8 leading-tight">
+                About{' '}
+                <span className="text-primary">
+                   brainMap
+                </span>
+              </h1>
+              
+              <p className="text-xl text-slate-600 leading-relaxed font-normal mb-12">
+                We're revolutionizing how people manage projects and access expert guidance. From individual creators 
+                to enterprise teams, BrainMap connects project members with domain experts across all industries 
+                to turn ideas into successful outcomes.
+              </p>
 
-              <Link href="/community" >
-                <CustomButton
-                text="Join Our Community"
-                backgroundColor="bg-white"
-                textColor="text-primary"
-                hoverBackgroundColor="hover:bg-value3"
-                icon={ArrowRight}
-                onClick={() => handleClick('Join Community')}
-                />
-              </Link>
-              <Link
-                href="/contact"
-                className="px-8 py-4 bg-white/15 backdrop-blur-xl hover:bg-white/25 text-white font-bold text-lg rounded-xl border-2 border-white/30 hover:border-accent/50 transition-all duration-500"
-              >
-                Contact Us
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Link href="/community" >
+                  <CustomButton
+                  text="Let's Start with BrainMap"
+                  backgroundColor="bg-primary"
+                  textColor="text-white"
+                  hoverBackgroundColor="hover:bg-secondary hover:text-black"
+                  icon={ArrowRight}
+                  onClick={() => handleClick('Join Community')}
+                  />
+                </Link>
+                <Link
+                  href="/contact"
+                  className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-lg rounded-xl border-2 border-slate-200 hover:border-blue-300 transition-all duration-300"
+                >
+                  Contact Us
+                </Link>
+              </div>
             </div>
+
+
+
+
           </div>
         </div>
       </div>

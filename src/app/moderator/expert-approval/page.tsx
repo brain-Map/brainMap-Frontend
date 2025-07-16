@@ -17,8 +17,6 @@ import {
   GraduationCap, 
   Briefcase,
   FileText,
-  Download,
-  ExternalLink,
   Calendar,
   Mail,
   Phone,

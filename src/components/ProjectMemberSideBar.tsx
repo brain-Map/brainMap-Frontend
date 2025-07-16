@@ -102,7 +102,7 @@ const visibleProjects = showAll
                 : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             }`}
           >
-            <div className={`w-2 h-2 rounded-full ${item.key}`}></div>
+            <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
             <span className="flex-1 text-left">{item.name}</span>
             <span
               className={`text-xs ${
