@@ -21,7 +21,7 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    })
+    })  
 
     if (error) {
       setError(error.message)
@@ -34,7 +34,6 @@ export default function LoginPage() {
       router.push('/')
     }
   }
-
   return (
     <>
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
