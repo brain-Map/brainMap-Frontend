@@ -202,7 +202,7 @@ export default function CommunityPage() {
               </div>
               <Button
                 className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black font-medium"
-                onClick={() => router.push("/community/new")}
+                onClick={() => router.push("/community/create")}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Ask Question
