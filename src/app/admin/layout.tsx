@@ -1,24 +1,32 @@
-'use client';
+"use client";
 
-import React, { ReactNode, useState } from 'react';
-import Navbar from '../../components/DashboardNavBar';
-import AdminSideBar from '@/components/AdminSideBar';
+import React, { ReactNode, useState, useEffect } from "react";
+import AdminSideBar from "@/components/admin/AdminSideBar";
+// import AdminNavbar from "@/components/admin/AdminNavbar";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<string>('dashboard');
-
+  const router = useRouter();
+  const pathname = usePathname();
+  const [currentPage, setCurrentPage] = useState<string>(pathname || "/admin");
+  
+  useEffect(() => {
+    setCurrentPage(pathname);
+  }, [pathname]);
+  
   const handleNavigate = (url: string) => {
     setCurrentPage(url);
-    // In a real app, you would navigate to the actual page
-    console.log(`Navigating to: ${url}`);
+    router.push(url);
   };
 
   return (
     <>
-      <Navbar />
       <div className="flex min-h-screen">
         <AdminSideBar currentPage={currentPage} onNavigate={handleNavigate} />
-        <main className="flex-1 bg-gray-50">{children}</main>
+        <div className="flex-1 flex flex-col">
+          {/* <AdminNavbar title="Admin Dashboard" /> */}
+          <main className="flex-1 bg-gray-50">{children}</main>
+        </div>
       </div>
     </>
   );

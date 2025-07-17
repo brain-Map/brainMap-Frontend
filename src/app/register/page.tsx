@@ -1,8 +1,7 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
-import Navbar from '@/components/NavBarModel';
-import Register from './register';
-import UserRegistrationForm from './role';
+import Register from './roleSelection';
+import AccountCreation from './createAccount';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -10,8 +9,7 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Navbar />
-      {!role ? <Register /> : <UserRegistrationForm />}
+      {!role ? <Register /> : <AccountCreation />}
     </>
   );
 }

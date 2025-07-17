@@ -7,21 +7,16 @@ import {
   Clock, 
   Calendar, 
   MessageCircle, 
-  Phone, 
-  Mail, 
   Award, 
   Briefcase, 
   GraduationCap,
   ChevronLeft,
-  Heart,
-  Share2,
   CheckCircle,
   Users,
   TrendingUp,
   DollarSign,
   ExternalLink
 } from 'lucide-react';
-import Navbar from '@/components/NavBarModel';
 
 const ExpertProfilePage = () => {
   const [activeTab, setActiveTab] = useState('about');
@@ -37,9 +32,8 @@ const ExpertProfilePage = () => {
     location: 'San Francisco, CA',
     responseTime: '1 hour',
     avatar: 'https://images.unsplash.com/photo-1494790108755-2616b73b83f4?w=200&h=200&fit=crop&crop=face',
-    hourlyRate: 120,
     availability: 'Available Now',
-    languages: ['English', 'Mandarin'],
+    verified: true, // Added verified status
     expertise: [
       { skill: 'Machine Learning', level: 95 },
       { skill: 'Deep Learning', level: 90 },
@@ -178,8 +172,6 @@ Her research focuses on deep learning, natural language processing, and ethical 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8 pt-24">
         {/* Back Button */}
@@ -209,7 +201,12 @@ Her research focuses on deep learning, natural language processing, and ethical 
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{expertData.name}</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2 flex items-center justify-center gap-2">
+                    {expertData.name}
+                    {expertData.verified && (
+                      <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                    )}
+                  </h1>
                   <p className="font-semibold text-lg mb-2" style={{ color: '#3D52A0' }}>{expertData.title}</p>
                   <div className="flex items-center justify-center text-gray-600 mb-3">
                     <MapPin className="w-4 h-4 mr-1" />
@@ -253,6 +250,33 @@ Her research focuses on deep learning, natural language processing, and ethical 
                     Schedule a Meeting
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Areas of Expertise */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                Areas of Expertise
+              </h3>
+              <div className="space-y-3">
+                {expertData.expertise.map((skill, index) => (
+                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-gray-900 text-sm">{skill.skill}</span>
+                      <span className="text-xs font-semibold" style={{ color: '#3D52A0' }}>{skill.level}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${skill.level}%`,
+                          backgroundColor: '#3D52A0'
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -326,56 +350,6 @@ Her research focuses on deep learning, natural language processing, and ethical 
                 </div>
               </div>
             </div>
-
-            {/* Consultation Rates */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                Consultation Packages
-              </h3>
-              
-              <div className="space-y-4">
-                {expertData.consultationRates.map((rate, index) => (
-                  <div 
-                    key={index} 
-                    className={`relative p-4 border-2 rounded-lg transition-all duration-300 ${
-                      rate.popular 
-                        ? 'border-orange-300 bg-orange-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    {/* Popular Badge */}
-                    {rate.popular && (
-                      <div className="absolute -top-2 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Most Popular
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 text-lg mb-1">{rate.type}</h4>
-                        <p className="text-sm text-gray-600">{rate.description}</p>
-                      </div>
-                      
-                      <div className="text-right ml-4">
-                        <div className={`text-2xl font-bold ${rate.popular ? 'text-orange-600' : ''}`} style={!rate.popular ? { color: '#3D52A0' } : {}}>
-                          ${rate.price.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-500">{rate.period}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Custom Packages Info */}
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="text-center">
-                  <h4 className="font-bold text-blue-900 mb-2">Need Something Custom?</h4>
-                  <p className="text-sm text-blue-700">For tailored packages that fit your specific requirements, click "Schedule a Meeting" above to discuss your needs.</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Main Content */}
@@ -417,32 +391,6 @@ Her research focuses on deep learning, natural language processing, and ethical 
                       </h3>
                       <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                         {expertData.about}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                        Areas of Expertise
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        {expertData.expertise.map((skill, index) => (
-                          <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-medium text-gray-900">{skill.skill}</span>
-                              <span className="text-sm font-semibold" style={{ color: '#3D52A0' }}>{skill.level}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="h-2 rounded-full transition-all duration-300"
-                                style={{ 
-                                  width: `${skill.level}%`,
-                                  backgroundColor: '#3D52A0'
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     </div>
                   </div>
@@ -561,6 +509,63 @@ Her research focuses on deep learning, natural language processing, and ethical 
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Consultation Packages */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                  Consultation Packages
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {expertData.consultationRates.map((rate, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative p-6 border-2 rounded-lg transition-all duration-300 ${
+                        rate.popular 
+                          ? 'border-orange-300 bg-orange-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {/* Popular Badge */}
+                      {rate.popular && (
+                        <div className="absolute -top-2 left-4 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          Most Popular
+                        </div>
+                      )}
+                      
+                      <div className="text-center">
+                        <h4 className="font-bold text-gray-900 text-lg mb-2">{rate.type}</h4>
+                        <div className={`text-3xl font-bold mb-2 ${rate.popular ? 'text-orange-600' : ''}`} style={!rate.popular ? { color: '#3D52A0' } : {}}>
+                          ${rate.price.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-4">{rate.period}</div>
+                        <p className="text-sm text-gray-600 mb-4">{rate.description}</p>
+                        <button 
+                          className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
+                            rate.popular 
+                              ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                              : 'text-white hover:opacity-90'
+                          }`}
+                          style={!rate.popular ? { backgroundColor: '#3D52A0' } : {}}
+                        >
+                          Select Package
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Custom Packages Info */}
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-center">
+                    <h4 className="font-bold text-blue-900 mb-2">Need Something Custom?</h4>
+                    <p className="text-sm text-blue-700">For tailored packages that fit your specific requirements, click "Schedule a Meeting" above to discuss your needs.</p>
+                  </div>
+                </div>
               </div>
             </div>
 
