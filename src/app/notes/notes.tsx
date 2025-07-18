@@ -212,7 +212,7 @@ const Notes: React.FC = () => {
 						/>
 					</div>
 					<button
-						className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-6 py-2 shadow transition-all flex items-center gap-2 self-end md:self-auto"
+						className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 self-end md:self-auto"
 						onClick={() => openModal('add')}
 					>
 						<Plus className="w-5 h-5" /> Add
