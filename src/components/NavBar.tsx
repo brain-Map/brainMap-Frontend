@@ -130,9 +130,6 @@ const NavBar: React.FC = () => {
     signOut();
   };
 
-  console.log("isMobileMenuOpen: ", isMobileMenuOpen);
-  
-
   return (
     <>
       <header className={`z-50 bg-white backdrop-blur-md  ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
@@ -320,7 +317,7 @@ const NavBar: React.FC = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-semibold text-gray-900">{user.email || 'User'}</div>
+                            <div className="font-semibold text-gray-900">{user.name ||user.email}</div>
                             <div className="text-sm text-gray-500">{user.email}</div>
                           </div>
                         </div>
@@ -367,7 +364,7 @@ const NavBar: React.FC = () => {
                 pathname !== '/login' && pathname !== '/register' && (
                   <Link
                     href="/login"
-                    className="hidden sm:flex items-center bg-gradient-to-r from-primary to-secondary text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                    className="hidden sm:flex items-center bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                   >
                     Sign In
                     <User className="ml-2 h-4 w-4" />

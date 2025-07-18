@@ -6,20 +6,165 @@ import {
   ChevronDown,
   Star,
   MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
+  X,
+  Calendar,
   ArrowUpDown,
 } from 'lucide-react';
 import TodoNotesSidebar from '@/components/TodoNotesSidebar';
 import projects from '@/data/projects/projects';
 import Pagination from '@/components/Pagination';
 
+
+
+interface CreateProjectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (formData: { name: string; description: string; deadline: string; priority: string }) => void;
+}
+
+const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    deadline: '',
+    priority: '',
+  });
+
+  const handleSubmit = () => {
+    if (!formData.name.trim()) {
+      alert('Project name is required');
+      return;
+    }
+    onSubmit(formData);
+    setFormData({ name: '', description: '', deadline: '', priority: '' });
+    onClose();
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Create New Project</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="space-y-4">
+          {/* Project Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Project Name *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Enter project name"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+              placeholder="Describe your project..."
+            />
+          </div>
+
+          {/* Deadline */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Deadline
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => handleChange('deadline', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Priority (Optional)
+            </label>
+            <div className="relative">
+              <select
+                value={formData.priority}
+                onChange={(e) => handleChange('priority', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white"
+              >
+                <option value="">Select priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary hover:text-black transition-colors"
+            >
+              Create Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ProjectsTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterProduct, setFilterProduct] = useState('Filter by product');
   const [currentPage, setCurrentPage] = useState(1);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 10;
+
+
+  
 
   const router = useRouter();
 
@@ -49,13 +194,19 @@ const ProjectsTable: React.FC = () => {
     currentPage * itemsPerPage
   );
 
+  
+  const handleCreateProject = (formData: { name: string; description: string; deadline: string; priority: string }) => {
+    console.log('Creating project:', formData);
+    alert(`Project "${formData.name}" created successfully!`);
+  };
+
   return (
     <div className="min-h-screen flex justify-between">
       <div className="w-full pl-6 pt-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Projects</h1>
-          <button className="bg-primary hover:bg-secondary text-white hover:text-black px-4 py-2 rounded-md font-medium transition-colors">
+          <button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-secondary text-white hover:text-black px-4 py-2 rounded-md font-medium transition-colors">
             Create project
           </button>
         </div>
@@ -186,8 +337,20 @@ const ProjectsTable: React.FC = () => {
       <div className="min-h-screen ml-6 bg-accent">
         <TodoNotesSidebar />
       </div>
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
+};
+
+const handleCreateProject = (formData: { name: string; description: string; deadline: string; priority: string }) => {
+  console.log('Creating project:', formData);
+  alert(`Project "${formData.name}" created successfully!`);
 };
 
 export default ProjectsTable;

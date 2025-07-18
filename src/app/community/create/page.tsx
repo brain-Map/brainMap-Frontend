@@ -30,14 +30,14 @@ import {
   Quote,
   Hash,
 } from "lucide-react"
+import { title } from "process"
 
-interface PostDraft {
+interface Post {
   type: "discussion" | "project" | "help"
   title: string
   content: string
   category: string
   tags: string[]
-  isDraft: boolean
 }
 
 const categories = {
@@ -69,17 +69,17 @@ const popularTags = [
 export default function BrainMapCommunityPost() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write")
-  const [post, setPost] = useState<PostDraft>({
+  const [post, setPost] = useState<Post>({
     type: "discussion",
     title: "",
     content: "",
     category: "",
     tags: [],
-    isDraft: false,
   })
   const [tagInput, setTagInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-    const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [error, setError] = useState('')
 
 
   const handleAddTag = (tag: string) => {
@@ -100,16 +100,51 @@ export default function BrainMapCommunityPost() {
     }
   }
 
-  const handleSubmit = async (isDraft = false) => {
+  const handleSubmit = async () => {
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
-    if (isDraft) {
-      console.log("Saved as draft:", post)
-    } else {
-      console.log("Published post:", post)
+
+    try{
+      if(!post.title.trim() || !post.content.trim() || !post.category){
+        setError("This field is required")
+        setIsSubmitting(false)
+        return
+      }
+
+      const postData ={
+        type: post.type,
+        title: post.title.trim(),
+        content: post.content.trim(),
+        category: post.category,
+        tags: post.tags
+      }
+
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch('http://localhost:8080/api/v1/posts', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(postData)
+      })
+
+      if (response.ok){
+        const responseData = await response.json()
+        console.log('Post Created Successfully: ', responseData);
+        router.push('/community')
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to create post: ', errorData);
+        setError(`Failed to create post: ${errorData.message || 'Unknown error'}`)
+        
+      }
+    } catch(err){
+      console.error("Error creating post: ", err)
+     setError('An error occurred while creating the post. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-    setIsSubmitting(false)
+    
   }
 
   const insertMarkdown = (syntax: string, placeholder = "") => {
@@ -486,16 +521,7 @@ Be descriptive and helpful to get the best engagement from the community!"
             {/* Action Buttons */}
             <div className="flex items-center justify-end gap-3">
               <Button
-                variant="outline"
-                onClick={() => handleSubmit(true)}
-                disabled={isSubmitting || !post.title.trim()}
-                className="gap-2 border-gray-300"
-              >
-                <Save className="w-4 h-4" />
-                Save Draft
-              </Button>
-              <Button
-                onClick={() => handleSubmit(false)}
+                onClick={() => handleSubmit()}
                 disabled={isSubmitting || !post.title.trim() || !post.content.trim()}
                 className="bg-primary hover:bg-secondary text-white hover:text-black gap-2"
               >
