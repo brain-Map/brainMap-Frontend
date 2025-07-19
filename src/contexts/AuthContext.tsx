@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('accessToken');
+        console.log("User signed out");
         setUser(null);
       } else if (session?.user) {
         localStorage.setItem('accessToken', session.access_token);

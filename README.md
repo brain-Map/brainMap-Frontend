@@ -14,6 +14,7 @@ cd brainMap-Frontend
 ```bash
 npm i
 npm install @supabase/supabase-js
+npm install axios
 ```
 
 ### Run the Development Server

@@ -13,31 +13,33 @@ import {
 import TodoNotesSidebar from '@/components/TodoNotesSidebar';
 import projects from '@/data/projects/projects';
 import Pagination from '@/components/Pagination';
+import { projectApi, CreateProjectRequest } from '@/services/projectApi';
+import { title } from 'process';
 
 
 
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: { name: string; description: string; deadline: string; priority: string }) => void;
+  onSubmit: (formData: { title: string; description: string; deadline: string; priority: string }) => void;
+  isLoading?: boolean;
 }
 
-const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
     deadline: '',
     priority: '',
   });
 
   const handleSubmit = () => {
-    if (!formData.name.trim()) {
+    if (!formData.title.trim()) {
       alert('Project name is required');
       return;
     }
     onSubmit(formData);
-    setFormData({ name: '', description: '', deadline: '', priority: '' });
-    onClose();
+    // Don't clear form here - let parent handle it after successful submission
   };
 
   const handleChange = (field: string, value: string) => {
@@ -76,8 +78,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
             </label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="Enter project name"
             />
@@ -125,9 +127,9 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white"
               >
                 <option value="">Select priority</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
                 <option value="urgent">Urgent</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
@@ -138,15 +140,17 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
           <div className="flex gap-3 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary hover:text-black transition-colors"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Project
+              {isLoading ? 'Creating...' : 'Create Project'}
             </button>
           </div>
         </div>
@@ -160,7 +164,8 @@ const ProjectsTable: React.FC = () => {
   const [filterProduct, setFilterProduct] = useState('Filter by product');
   const [currentPage, setCurrentPage] = useState(1);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const itemsPerPage = 10;
 
 
@@ -194,10 +199,33 @@ const ProjectsTable: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  
-  const handleCreateProject = (formData: { name: string; description: string; deadline: string; priority: string }) => {
-    console.log('Creating project:', formData);
-    alert(`Project "${formData.name}" created successfully!`);
+  const handleCreateProject = async (formData: { title: string; description: string; deadline: string; priority: string }) => {
+    setIsCreatingProject(true);
+    
+    try {
+      const projectData: CreateProjectRequest = {
+        title: formData.title,
+        description: formData.description || undefined,
+        deadline: formData.deadline || undefined,
+        priority: formData.priority || undefined,
+      };
+
+      const response = await projectApi.createProject(projectData);
+      
+      alert(`✅ Project "${response.title}" created successfully!`);
+      
+      setIsModalOpen(false);
+      
+      console.log('Created project:', response);
+      
+    } catch (error: any) {
+      console.error('Error creating project:', error);
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create project';
+      alert(`❌ Error: ${errorMessage}`);
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   return (
@@ -343,14 +371,10 @@ const ProjectsTable: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateProject}
+        isLoading={isCreatingProject}
       />
     </div>
   );
-};
-
-const handleCreateProject = (formData: { name: string; description: string; deadline: string; priority: string }) => {
-  console.log('Creating project:', formData);
-  alert(`Project "${formData.name}" created successfully!`);
 };
 
 export default ProjectsTable;
