@@ -44,9 +44,10 @@ export interface ProjectResponse {
   id: string;
   title: string;
   description?: string;
-  deadline?: string;
+  dueDate?: string;
   priority?: string;
   type?: string;
+  status?: string;
   createdAt?: string;
   lead?: {
     id: string;
