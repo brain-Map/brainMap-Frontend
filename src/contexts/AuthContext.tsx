@@ -1,4 +1,5 @@
 'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/superbaseClient';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,16 +11,20 @@ type User = {
   user_role?: string;
 } | null;
 
-const AuthContext = createContext<{
+type AuthContextType = {
   user: User;
-  signIn: (email: string, password: string) => Promise<any>;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<any>;
-}>({
+  updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<{ data: any, error: any }>;
+};
+
+const AuthContext = createContext<AuthContextType>({
   user: null,
-  signIn: () => Promise.resolve(null),
-  signOut: () => Promise.resolve(),
-  updateUserMetadata: () => Promise.resolve(null),
+  loading: true,
+  signIn: async () => ({ error: null }),
+  signOut: async () => {},
+  updateUserMetadata: async () => ({ data: null, error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -30,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const mapSupabaseUser = (supabaseUser: any): User => {
     if (!supabaseUser) return null;
-    
     return {
       id: supabaseUser.id,
       email: supabaseUser.email,
@@ -41,41 +45,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      localStorage.setItem('accessToken', session?.access_token || '');
-      console.log(session?.access_token);
-      setUser(mapSupabaseUser(session?.user));
-      setLoading(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.error("Session error:", error.message);
+        if (session?.user) {
+          localStorage.setItem('accessToken', session.access_token);
+          setUser(mapSupabaseUser(session.user));
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Unexpected session fetch error:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('accessToken');
+        console.log("User signed out");
         setUser(null);
-      } else {
-        localStorage.setItem('accessToken', session?.access_token || '');
-        setUser(mapSupabaseUser(session?.user));
-      }
-  }
-);
+      } else if (session?.user) {
+        localStorage.setItem('accessToken', session.access_token);
+        setUser(mapSupabaseUser(session.user));
 
-    return () => authListener.subscription.unsubscribe();
+        const user_role = localStorage.getItem("user_role");
+        if (!session.user.user_metadata?.user_role && user_role) {
+          supabase.auth.updateUser({
+            data: { user_role },
+          }).then(({ error }) => {
+            if (error) console.error("Error updating user role:", error);
+          });
+        }
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
       const redirectTo = searchParams.get('redirectTo') || '/';
-      router.push(redirectTo);
+      setTimeout(() => router.push(redirectTo), 200);
     }
-
     return { error };
   };
 
@@ -86,19 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserMetadata = async (metadata: { name?: string; user_role?: string }) => {
-    const { data, error } = await supabase.auth.updateUser({
-      data: metadata
-    });
-
-    if (!error && data.user) {
+    const { data, error } = await supabase.auth.updateUser({ data: metadata });
+    if (!error && data?.user) {
       setUser(mapSupabaseUser(data.user));
     }
-
     return { data, error };
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
+    loading,
     signIn,
     signOut,
     updateUserMetadata,
@@ -106,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
