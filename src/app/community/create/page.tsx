@@ -69,6 +69,7 @@ const popularTags = [
 export default function BrainMapCommunityPost() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write")
+  const [postId , setPostId] = useState("")
   const [post, setPost] = useState<Post>({
     type: "discussion",
     title: "",
@@ -131,7 +132,7 @@ export default function BrainMapCommunityPost() {
       if (response.ok){
         const responseData = await response.json()
         console.log('Post Created Successfully: ', responseData);
-        router.push('/community')
+        router.push(`/community/post/${responseData.communityPostId}`)
       } else {
         const errorData = await response.json()
         console.error('Failed to create post: ', errorData);

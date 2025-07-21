@@ -205,7 +205,7 @@ export default function CommunityPage() {
                 onClick={() => router.push("/community/create")}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Ask Question
+                New Post
               </Button>
             </div>
           </div>
