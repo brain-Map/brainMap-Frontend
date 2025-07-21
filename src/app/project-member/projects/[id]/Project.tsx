@@ -1,8 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, List, Video , Plus, Edit, MessageSquare, File, Clock, CheckCircle, SquareKanban  } from 'lucide-react';
-import projects from '@/data/projects/projects';
+// import projects from '@/data/projects/projects';
 import KanbanBoard from './Kanban';
+import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
+
 
 
 interface Supervisor {
@@ -35,7 +37,68 @@ interface Activity {
 export default function ProjectOverview({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState('Overview');
 
-  const project = projects.find((p) => p.id === params.id);
+  
+    // Backend data states
+      const [backendProjects, setBackendProjects] = useState<ProjectResponse[]>([]);
+      const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+      const [projectsError, setProjectsError] = useState<string | null>(null);
+      const [showOnlyBackendProjects, setShowOnlyBackendProjects] = useState(false);
+  
+        // Fetch projects from backend
+        const fetchProjects = async () => {
+          try {
+            setIsLoadingProjects(true);
+            setProjectsError(null);
+            const projects = await projectApi.getProjects();
+            setBackendProjects(projects);
+            console.log('Fetched projects:', projects);
+          } catch (error: any) {
+            console.error('Error fetching projects:', error);
+            setProjectsError(error.response?.data?.message || error.message || 'Failed to fetch projects');
+          } finally {
+            setIsLoadingProjects(false);
+          }
+        };
+      
+        // Fetch projects on component mount
+        useEffect(() => {
+          fetchProjects();
+        }, []);
+  
+  
+          // Combine backend projects with static projects for display
+    // You can choose to use only backend projects by removing the static projects
+    const allProjects = showOnlyBackendProjects ? 
+      backendProjects.map(project => ({
+        id: project.id,
+        name: project.title || 'Untitled Project',
+        description: project.description || '',
+        type: project.type || 'Team-managed software',
+        lead: project.lead || { name: 'Unknown', initials: 'UK' },
+        starred: false, // You can add this field to your backend response
+        status: 'Active', // Assuming all projects are active, you can modify this based on your data
+        createdAt: project.createdAt,
+        deadline: project.dueDate,
+        priority: project.priority,
+      })) :
+      [
+        ...backendProjects.map(project => ({
+          id: project.id,
+          name: project.title || 'Untitled Project',
+          description: project.description || '',
+          type: project.type || 'Team-managed software',
+          lead: project.lead || { name: 'Unknown', initials: 'UK' },
+          starred: false, // You can add this field to your backend response
+          status: 'Active', // Assuming all projects are active, you can modify this based on your data
+          createdAt: project.createdAt,
+          deadline: project.dueDate,
+          priority: project.priority,
+        })),
+  
+      ];
+      
+
+  const project = allProjects.find((p) => p.id === params.id);
   
   const supervisors: Supervisor[] = [
     {
