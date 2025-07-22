@@ -46,7 +46,7 @@ import { useParams } from "next/navigation";
 const allUsers = [
   {
     id: 1,
-    name: "John Smith",
+    name: "Sachith Dhanshka",
     email: "john.smith@university.edu",
     role: "Member",
     status: "Active",
@@ -60,7 +60,7 @@ const allUsers = [
   },
   {
     id: 2,
-    name: "Dr. Sarah Wilson",
+    name: "Dr. Isuru Naveen",
     email: "sarah.wilson@expert.com",
     role: "Domain Expert",
     status: "Active",
@@ -74,7 +74,7 @@ const allUsers = [
   },
   {
     id: 3,
-    name: "Mike Johnson",
+    name: "Dinuka Sahan",
     email: "mike.j@Member.edu",
     role: "Member",
     status: "Inactive",
@@ -88,7 +88,7 @@ const allUsers = [
   },
   {
     id: 4,
-    name: "Prof. Emily Davis",
+    name: "Prof. Nadun Madusanka",
     email: "emily.davis@expert.com",
     role: "Domain Expert",
     status: "Active",
@@ -102,7 +102,7 @@ const allUsers = [
   },
   {
     id: 5,
-    name: "Alex Chen",
+    name: "Kavinda Dimuthu",
     email: "alex.chen@university.edu",
     role: "Member",
     status: "Active",
@@ -116,7 +116,7 @@ const allUsers = [
   },
   {
     id: 6,
-    name: "Lisa Rodriguez",
+    name: "Eraji Thenuwara",
     email: "lisa.r@Member.edu",
     role: "Member",
     status: "Active",
@@ -130,7 +130,7 @@ const allUsers = [
   },
   {
     id: 7,
-    name: "Dr. James Wilson",
+    name: "Dr. Kasun Dananjaya",
     email: "james.wilson@expert.com",
     role: "Domain Expert",
     status: "Active",
@@ -144,7 +144,7 @@ const allUsers = [
   },
   {
     id: 8,
-    name: "Maria Garcia",
+    name: "Virat Kholi",
     email: "maria.g@Member.edu",
     role: "Member",
     status: "Inactive",
@@ -172,7 +172,7 @@ const allUsers = [
   },
   {
     id: 10,
-    name: "David Brown",
+    name: "David Beckham",
     email: "david.b@Member.edu",
     role: "Member",
     status: "Active",
@@ -186,7 +186,7 @@ const allUsers = [
   },
   {
     id: 11,
-    name: "Dr. Rachel Green",
+    name: "Dr. Lionel Messi",
     email: "rachel.green@expert.com",
     role: "Domain Expert",
     status: "Active",
