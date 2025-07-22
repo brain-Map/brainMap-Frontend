@@ -189,11 +189,6 @@ const formatDate = (dateString: string) => {
     { name: 'css', count: 621, color: 'bg-purple-100 text-purple-800' }
   ];
 
-  const topContributors = [
-    { name: 'John Smith', points: 2843, avatar: '👨‍💻' },
-    { name: 'Sarah Johnson', points: 1876, avatar: '👩‍💼' },
-    { name: 'Jake Chen', points: 1654, avatar: '👨‍🎓' }
-  ];
 
   return (
     <>
@@ -250,22 +245,6 @@ const formatDate = (dateString: string) => {
                     <span className="text-sm text-gray-500">
                       {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
                     </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Top Contributors */}
-            <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-              <CardTitle className="font-semibold text-gray-900 mb-3">Top Contributors</CardTitle>
-              <div className="space-y-3">
-                {topContributors.map((contributor) => (
-                  <div key={contributor.name} className="flex items-center space-x-3">
-                    <div className="text-2xl">{contributor.avatar}</div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 text-sm">{contributor.name}</div>
-                      <div className="text-xs text-gray-500">{contributor.points.toLocaleString()} points</div>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -481,7 +460,7 @@ const formatDate = (dateString: string) => {
                       : "Be the first to start a discussion!"}
                   </p>
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-primary hover:bg-blue-700 text-white"
                     onClick={() => router.push("/community/create")}
                   >
                     <Plus className="w-4 h-4 mr-2" />
