@@ -75,7 +75,7 @@ const successStories: SuccessStory[] = [
 
     <>
 {/* Hero section */}
- <div className="min-h-screen bg-gradient-to-br from-secondary/50 via-value3/50 to-secondary/50 flex items-center">
+ <div className="min-h-screen bg-gradient-to-br from-secondary/50 via-value3/50 to-secondary/50 flex items-center -mt-16">
       <div className="max-w-7xl mx-auto px-6 py-40">
         <div className="grid grid-cols-[2fr_1fr] gap-16 items-center">
           {/* Left Content */}
