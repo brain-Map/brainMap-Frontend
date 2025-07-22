@@ -293,10 +293,10 @@ export default function AllUsersPage() {
       // Map URL params to actual role names
       const roleMapping: Record<string, string> = {
         members: "Member",
-        "domain-experts": "Domain Expert",
-        moderators: "Moderator",
         member: "Member",
+        "domain-experts": "Domain Expert",
         "domain-expert": "Domain Expert",
+        moderators: "Moderator",
         moderator: "Moderator",
       };
 
@@ -365,13 +365,9 @@ export default function AllUsersPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button className="bg-[#3D52A0] hover:bg-[#2A3B7D] text-white shadow-sm">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
             <Button
               variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+              className=""
             >
               <Download className="mr-2 h-4 w-4" />
               Export
@@ -428,7 +424,7 @@ export default function AllUsersPage() {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-purple-500 text-white">
-                <UserPlus className="h-6 w-6" />
+                <UserCheck className="h-6 w-6" />
               </div>
             </div>
             <div className="mt-4">
@@ -599,7 +595,7 @@ export default function AllUsersPage() {
                 {paginatedUsers.map((user, index) => (
                   <TableRow
                     key={user.id}
-                    className={`hover:bg-gray-50 transition-colors ${
+                    className={`border-gray-200 hover:bg-gray-50 transition-colors ${
                       index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
                     }`}
                   >
@@ -678,7 +674,7 @@ export default function AllUsersPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-48 bg-white">
                           <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
                             <Edit className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">Edit User</span>

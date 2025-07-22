@@ -42,6 +42,8 @@ import {
   Clock,
   CreditCard,
   Activity,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 
 // Types
@@ -408,93 +410,129 @@ export default function TransactionsPage() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="mt-3 p-2 grid w-full h-15 grid-cols-3 gap-3">
-            <TabsTrigger className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white" value="overview">Overview</TabsTrigger>
-            <TabsTrigger className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white" value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white" value="audit">Audit Logs</TabsTrigger>
+            <TabsTrigger
+              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              value="overview"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              value="transactions"
+            >
+              Transactions
+            </TabsTrigger>
+            <TabsTrigger
+              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              value="audit"
+            >
+              Audit Logs
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card>
-                <CardContent className="p-6 ">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Total Transactions
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {summaryStats.totalTransactions}
-                      </p>
-                    </div>
-                    <Users className="h-8 w-8 text-blue-600" />
+            {/* Status cards */}
+            <div className="grid gap-6 md:grid-cols-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Transactions
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {summaryStats.totalTransactions}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-3 rounded-full bg-blue-200 text-white">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <span className="text-sm font-medium text-green-600">
+                    +12%
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {" "}
+                    from last month
+                  </span>
+                </div>
+              </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Total Payments
-                      </p>
-                      <p className="text-2xl font-bold text-green-600">
-                        ${summaryStats.totalPayments.toFixed(2)}
-                      </p>
-                    </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Payments
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${summaryStats.totalPayments.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-full bg-green-200 text-white">
                     <TrendingUp className="h-8 w-8 text-green-600" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="mt-4">
+                  <span className="text-sm font-medium text-green-600">
+                    +8%
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {" "}
+                    from last month
+                  </span>
+                </div>
+              </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Total Withdrawals
-                      </p>
-                      <p className="text-2xl font-bold text-purple-600">
-                        ${summaryStats.totalWithdrawals.toFixed(2)}
-                      </p>
-                    </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Withdrawals
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${summaryStats.totalWithdrawals.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-full bg-purple-200 text-white">
                     <DollarSign className="h-8 w-8 text-purple-600" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="mt-4">
+                  <span className="text-sm font-medium text-green-600">
+                    +15%
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {" "}
+                    from last month
+                  </span>
+                </div>
+              </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Pending Withdrawals
-                      </p>
-                      <p className="text-2xl font-bold text-yellow-600">
-                        {summaryStats.pendingWithdrawals}
-                      </p>
-                    </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Pending Withdrawals
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {summaryStats.pendingWithdrawals}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-full bg-yellow-200 text-white">
                     <Calendar className="h-8 w-8 text-yellow-600" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="mt-4">
+                  <span className="text-sm font-medium text-green-600">
+                    +5%
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {" "}
+                    from last month
+                  </span>
+                </div>
+              </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Failed Transactions
-                      </p>
-                      <p className="text-2xl font-bold text-red-600">
-                        {summaryStats.failedTransactions}
-                      </p>
-                    </div>
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Quick Stats */}

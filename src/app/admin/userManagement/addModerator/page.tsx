@@ -1,14 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { User, Shield, GraduationCap, Users, UserRoundPlus } from "lucide-react";
+import {
+  User,
+  Shield,
+  GraduationCap,
+  Users,
+  UserRoundPlus,
+} from "lucide-react";
 
 type UserRole = "domain-expert" | "moderator" | "member" | "";
 
@@ -18,17 +36,17 @@ interface FormData {
   password: string;
   confirmPassword: string;
   role: UserRole;
-  
+
   // Domain Expert fields
   education: string;
   qualifications: string;
   workExperience: string;
-  
+
   // Moderator fields
   areasOfResponsibility: string[];
   assignedCategories: string[];
   availabilitySchedule: string;
-  
+
   // Member fields
   memberEducation: string;
   interests: string[];
@@ -48,29 +66,34 @@ export default function AddNewUser() {
     assignedCategories: [],
     availabilitySchedule: "",
     memberEducation: "",
-    interests: []
+    interests: [],
   });
 
   const [newResponsibility, setNewResponsibility] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newInterest, setNewInterest] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
+    {}
+  );
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleArrayAdd = (field: "areasOfResponsibility" | "assignedCategories" | "interests", value: string) => {
+  const handleArrayAdd = (
+    field: "areasOfResponsibility" | "assignedCategories" | "interests",
+    value: string
+  ) => {
     if (value.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: [...prev[field], value.trim()]
+        [field]: [...prev[field], value.trim()],
       }));
-      
+
       // Clear the input fields
       if (field === "areasOfResponsibility") setNewResponsibility("");
       if (field === "assignedCategories") setNewCategory("");
@@ -78,22 +101,26 @@ export default function AddNewUser() {
     }
   };
 
-  const handleArrayRemove = (field: "areasOfResponsibility" | "assignedCategories" | "interests", index: number) => {
-    setFormData(prev => ({
+  const handleArrayRemove = (
+    field: "areasOfResponsibility" | "assignedCategories" | "interests",
+    index: number
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
+      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
   const validateForm = () => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
-    
+
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.password) newErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords don't match";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords don't match";
     if (!formData.role) newErrors.role = "Role selection is required";
-    
+
     setErrors(newErrors as Partial<Record<keyof FormData, string>>);
     return Object.keys(newErrors).length === 0;
   };
@@ -120,7 +147,7 @@ export default function AddNewUser() {
       assignedCategories: [],
       availabilitySchedule: "",
       memberEducation: "",
-      interests: []
+      interests: [],
     });
     setErrors({});
   };
@@ -146,33 +173,39 @@ export default function AddNewUser() {
                   id="education"
                   placeholder="Enter educational qualifications, degrees, and institutions..."
                   value={formData.education}
-                  onChange={(e) => handleInputChange("education", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("education", e.target.value)
+                  }
                   rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="qualifications">Professional Qualifications</Label>
+                <Label htmlFor="qualifications">
+                  Professional Qualifications
+                </Label>
                 <Textarea
                   id="qualifications"
                   placeholder="Enter certifications, licenses, and professional qualifications..."
                   value={formData.qualifications}
-                  onChange={(e) => handleInputChange("qualifications", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("qualifications", e.target.value)
+                  }
                   rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="workExperience">Work Experience</Label>
                 <Textarea
                   id="workExperience"
                   placeholder="Enter relevant work experience, positions held, and achievements..."
                   value={formData.workExperience}
-                  onChange={(e) => handleInputChange("workExperience", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("workExperience", e.target.value)
+                  }
                   rows={4}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
@@ -195,35 +228,50 @@ export default function AddNewUser() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="responsibilities">Areas of Responsibility</Label>
+                <Label htmlFor="responsibilities">
+                  Areas of Responsibility
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add area of responsibility..."
                     value={newResponsibility}
                     onChange={(e) => setNewResponsibility(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("areasOfResponsibility", newResponsibility)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      handleArrayAdd("areasOfResponsibility", newResponsibility)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                  <Button 
-                    type="button" 
-                    onClick={() => handleArrayAdd("areasOfResponsibility", newResponsibility)}
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      handleArrayAdd("areasOfResponsibility", newResponsibility)
+                    }
                     variant="outline"
                   >
                     Add
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.areasOfResponsibility.map((responsibility, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer">
-                      {responsibility}
-                      <button
-                        onClick={() => handleArrayRemove("areasOfResponsibility", index)}
-                        className="ml-2 text-red-500 hover:text-red-700"
+                  {formData.areasOfResponsibility.map(
+                    (responsibility, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="cursor-pointer"
                       >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
+                        {responsibility}
+                        <button
+                          onClick={() =>
+                            handleArrayRemove("areasOfResponsibility", index)
+                          }
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -234,12 +282,17 @@ export default function AddNewUser() {
                     placeholder="Add assigned category..."
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("assignedCategories", newCategory)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      handleArrayAdd("assignedCategories", newCategory)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                  <Button 
-                    type="button" 
-                    onClick={() => handleArrayAdd("assignedCategories", newCategory)}
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      handleArrayAdd("assignedCategories", newCategory)
+                    }
                     variant="outline"
                   >
                     Add
@@ -247,10 +300,16 @@ export default function AddNewUser() {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.assignedCategories.map((category, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer"
+                    >
                       {category}
                       <button
-                        onClick={() => handleArrayRemove("assignedCategories", index)}
+                        onClick={() =>
+                          handleArrayRemove("assignedCategories", index)
+                        }
                         className="ml-2 text-red-500 hover:text-red-700"
                       >
                         ×
@@ -266,7 +325,9 @@ export default function AddNewUser() {
                   id="availability"
                   placeholder="Enter preferred working hours, time zones, and availability schedule..."
                   value={formData.availabilitySchedule}
-                  onChange={(e) => handleInputChange("availabilitySchedule", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("availabilitySchedule", e.target.value)
+                  }
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
@@ -294,7 +355,9 @@ export default function AddNewUser() {
                   id="memberEducation"
                   placeholder="Enter educational background and current study level..."
                   value={formData.memberEducation}
-                  onChange={(e) => handleInputChange("memberEducation", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("memberEducation", e.target.value)
+                  }
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
@@ -307,11 +370,14 @@ export default function AddNewUser() {
                     placeholder="Add area of interest..."
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("interests", newInterest)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      handleArrayAdd("interests", newInterest)
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={() => handleArrayAdd("interests", newInterest)}
                     variant="outline"
                   >
@@ -320,7 +386,11 @@ export default function AddNewUser() {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.interests.map((interest, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer"
+                    >
                       {interest}
                       <button
                         onClick={() => handleArrayRemove("interests", index)}
@@ -345,20 +415,20 @@ export default function AddNewUser() {
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <UserRoundPlus className="w-10 h-10 text-primary" />
-              </div>
-              <div className="flex-1 grid gap-1">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Add New User
-                </h1>
-                <p className="text-gray-600">
-                  Create a new user account for the platform.
-                </p>
-              </div>
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <UserRoundPlus className="w-10 h-10 text-primary" />
+            </div>
+            <div className="flex-1 grid gap-1">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Add New Modarator
+              </h1>
+              <p className="text-gray-600">
+                Create a new Modarator account for the platform.
+              </p>
             </div>
           </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information Card */}
@@ -380,10 +450,18 @@ export default function AddNewUser() {
                     id="fullName"
                     placeholder="Enter full name"
                     value={formData.fullName}
-                    onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    className={errors.fullName ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
+                    onChange={(e) =>
+                      handleInputChange("fullName", e.target.value)
+                    }
+                    className={
+                      errors.fullName
+                        ? "border-red-500"
+                        : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    }
                   />
-                  {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName}</p>}
+                  {errors.fullName && (
+                    <p className="text-red-500 text-sm">{errors.fullName}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -394,9 +472,15 @@ export default function AddNewUser() {
                     placeholder="Enter email address"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={errors.email ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
+                    className={
+                      errors.email
+                        ? "border-red-500"
+                        : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    }
                   />
-                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-red-500 text-sm">{errors.email}</p>
+                  )}
                 </div>
               </div>
 
@@ -408,10 +492,18 @@ export default function AddNewUser() {
                     type="password"
                     placeholder="Enter password"
                     value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    className={errors.password ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                    className={
+                      errors.password
+                        ? "border-red-500"
+                        : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    }
                   />
-                  {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+                  {errors.password && (
+                    <p className="text-red-500 text-sm">{errors.password}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -421,54 +513,153 @@ export default function AddNewUser() {
                     type="password"
                     placeholder="Confirm password"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    className={errors.confirmPassword ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
+                    onChange={(e) =>
+                      handleInputChange("confirmPassword", e.target.value)
+                    }
+                    className={
+                      errors.confirmPassword
+                        ? "border-red-500"
+                        : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    }
                   />
-                  {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">User Role *</Label>
-                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value as UserRole)}>
-                  <SelectTrigger className={errors.role ? "border-red-500" : "px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}>
-                    <SelectValue placeholder="Select user role" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="domain-expert">
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4" />
-                        Domain Expert
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="moderator">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Moderator
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="member">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Member
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
               </div>
             </CardContent>
           </Card>
 
-          {/* Role-specific fields */}
-          {renderRoleSpecificFields()}
+          {/* modarator informaions */}
+          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-600" />
+                Moderator Responsibilities
+              </CardTitle>
+              <CardDescription>
+                Configuration for moderator responsibilities and schedule
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-300 rounded-lg bg-gray-50">
+                  {[
+                    { value: "REVIEW_INQUIRIES", label: "Review Inquiries" },
+                    { value: "HANDLE_REPORTS", label: "Handle Reports" },
+                    { value: "VERIFY_EXPERTS", label: "Verify Experts" },
+                    { value: "MONITOR_POSTS", label: "Monitor Posts" },
+                    { value: "MANAGE_TAGS", label: "Manage Tags" },
+                    { value: "BAN_USERS", label: "Ban Users" },
+                    {
+                      value: "SEND_NOTIFICATIONS",
+                      label: "Send Notifications",
+                    },
+                    {
+                      value: "VIEW_USER_ACTIVITY",
+                      label: "View User Activity",
+                    },
+                    { value: "LOCK_COMMENTS", label: "Lock Comments" },
+                    { value: "ESCALATE_ISSUES", label: "Escalate Issues" },
+                  ].map((responsibility) => (
+                    <div
+                      key={responsibility.value}
+                      className="flex items-center space-x-2"
+                    >
+                      <input
+                        type="checkbox"
+                        id={responsibility.value}
+                        checked={formData.areasOfResponsibility.includes(
+                          responsibility.value
+                        )}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              areasOfResponsibility: [
+                                ...prev.areasOfResponsibility,
+                                responsibility.value,
+                              ],
+                            }));
+                          } else {
+                            setFormData((prev) => ({
+                              ...prev,
+                              areasOfResponsibility:
+                                prev.areasOfResponsibility.filter(
+                                  (item) => item !== responsibility.value
+                                ),
+                            }));
+                          }
+                        }}
+                        className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                      />
+                      <label
+                        htmlFor={responsibility.value}
+                        className="text-sm font-medium text-gray-900 cursor-pointer"
+                      >
+                        {responsibility.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.areasOfResponsibility.map(
+                    (responsibility, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="cursor-pointer"
+                      >
+                        {responsibility}
+                        <button
+                          onClick={() =>
+                            handleArrayRemove("areasOfResponsibility", index)
+                          }
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.assignedCategories.map((category, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="cursor-pointer"
+                    >
+                      {category}
+                      <button
+                        onClick={() =>
+                          handleArrayRemove("assignedCategories", index)
+                        }
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        ×
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-6">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-secondary">
+            <Button
+              type="submit"
+              className="bg-primary hover:bg-secondary text-white"
+            >
               Create User
             </Button>
           </div>
