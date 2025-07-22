@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,11 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   ArrowLeft,
   Save,
-  Send,
   Eye,
   Code,
   HelpCircle,
@@ -29,36 +26,17 @@ import {
   ListOrdered,
   Quote,
   Hash,
+  Loader2,
 } from "lucide-react"
-import { title } from "process"
 import { communityApi, CreatePostRequest } from "@/services/communityApi"
+import { useAuth } from "@/contexts/AuthContext"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 interface Post {
   type: "discussion" | "project" | "help"
   title: string
   content: string
-  // category: string
   tags: string[]
-}
-
-const categories = {
-  discussion: [
-    "General Discussion",
-    "Best Practices", 
-    "Architecture",
-    "Performance",
-    "Career Advice",
-    "Learning Resources",
-  ],
-  project: [
-    "Web Development",
-    "Mobile Apps",
-    "Desktop Applications", 
-    "APIs & Backend",
-    "DevOps & Infrastructure",
-    "AI/ML Projects",
-  ],
-  help: ["Debugging", "Code Review", "Deployment Issues", "Database Problems", "Authentication", "Performance Issues"],
 }
 
 const popularTags = [
@@ -67,22 +45,59 @@ const popularTags = [
   "authentication", "deployment", "performance", "testing"
 ]
 
-export default function BrainMapCommunityPost() {
+export default function EditPost() {
   const router = useRouter()
+  const params = useParams()
+  const postId = params.id as string
+  const { user } = useAuth()
+  
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write")
-  const [postId , setPostId] = useState("")
   const [post, setPost] = useState<Post>({
     type: "discussion",
     title: "",
     content: "",
-    // category: "",
     tags: [],
   })
+  const [originalPost, setOriginalPost] = useState<Post | null>(null)
   const [tagInput, setTagInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
+  // Fetch existing post data
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setIsLoading(true)
+        const data = await communityApi.getPost(postId)
+        
+        // Check if user is authorized to edit this post
+        if (user && data.author && user.id !== data.author.id) {
+          setError("You are not authorized to edit this post")
+          return
+        }
+        
+        const postData: Post = {
+          type: (data.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
+          title: data.title || "",
+          content: data.content || "",
+          tags: data.tags?.map((tag: any) => tag.name) || []
+        }
+        
+        setPost(postData)
+        setOriginalPost(postData)
+      } catch (err: any) {
+        console.error("Error fetching post:", err)
+        setError(err.response?.data?.message || 'Failed to load post data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (postId && user) {
+      fetchPost()
+    }
+  }, [postId, user])
 
   const handleAddTag = (tag: string) => {
     if (tag && !post.tags.includes(tag) && post.tags.length < 8) {
@@ -117,19 +132,17 @@ export default function BrainMapCommunityPost() {
         type: post.type,
         title: post.title.trim(),
         content: post.content.trim(),
-        // category: post.category,
         tags: post.tags
       }
 
-      // Use the communityApi service instead of direct fetch
-      const response = await communityApi.createPost(postData)
+      const response = await communityApi.updatePost(postId, postData)
       
-      console.log('Post Created Successfully:', response)
-      router.push(`/community/post/${response.communityPostId}`)
+      console.log('Post Updated Successfully:', response)
+      router.push(`/community/post/${postId}`)
       
     } catch (err: any) {
-      console.error("Error creating post:", err)
-      setError(err.response?.data?.message || 'An error occurred while creating the post. Please try again.')
+      console.error("Error updating post:", err)
+      setError(err.response?.data?.message || 'An error occurred while updating the post. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -209,16 +222,17 @@ export default function BrainMapCommunityPost() {
       <div className="space-y-6">
         <div className="flex items-start gap-4">
           <Avatar className="w-10 h-10">
-            <AvatarFallback className="bg-blue-600 text-white">Y</AvatarFallback>
+            <AvatarFallback className="bg-blue-600 text-white">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-medium text-gray-900">You</span>
-              <span className="text-sm text-gray-500">Just now</span>
+              <span className="font-medium text-gray-900">{user?.name || 'You'}</span>
+              <span className="text-sm text-gray-500">Editing</span>
             </div>
             <div className="flex items-center gap-2">
               {getPostTypeIcon(post.type)}
-              {/* <span className="text-sm text-gray-600">{post.category || "Select a category"}</span> */}
             </div>
           </div>
         </div>
@@ -242,31 +256,80 @@ export default function BrainMapCommunityPost() {
     )
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading post data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error && !originalPost) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 mb-4">
+            <MessageCircle className="w-12 h-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Post</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => router.back()} variant="outline">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const hasChanges = originalPost && (
+    post.title !== originalPost.title ||
+    post.content !== originalPost.content ||
+    post.type !== originalPost.type ||
+    JSON.stringify(post.tags) !== JSON.stringify(originalPost.tags)
+  )
+
   return (
     <div className="min-h-screen bg-white mt-5">
-      
-
-
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center">
-          
-
-          {/* Main Content */}
           <div className="flex-1 max-w-4xl space-y-6">
-            {/* Back Button */}
-            <div className="flex items-center gap-4 mb-6">
-              <Button  size="sm" className="gap-2 text-white bg-primary hover:bg-secondary hover:text-black" onClick={() => router.back()}>
-                <ArrowLeft className="w-4 h-4" />
-                Back to Community
-              </Button>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <Button 
+                  size="sm" 
+                  className="gap-2 text-white bg-primary hover:bg-secondary hover:text-black" 
+                  onClick={() => router.back()}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Cancel
+                </Button>
+                <h1 className="text-xl font-semibold text-gray-900">Edit Post</h1>
+              </div>
+              {hasChanges && (
+                <span className="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                  Unsaved changes
+                </span>
+              )}
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
 
             {/* Post Type Selection */}
             <Card className="border border-gray-200">
               <CardHeader>
-                <CardTitle className="text-lg font-medium text-gray-900">What would you like to share?</CardTitle>
-                <CardDescription className="text-gray-600">Choose the type of post that best fits your content</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-900">Post Type</CardTitle>
+                <CardDescription className="text-gray-600">Update the type of your post</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -319,7 +382,7 @@ export default function BrainMapCommunityPost() {
             <Card className="border border-gray-200">
               <CardHeader>
                 <CardTitle className="text-lg font-medium text-gray-900">Post Details</CardTitle>
-                <CardDescription className="text-gray-600">Provide the basic information for your post</CardDescription>
+                <CardDescription className="text-gray-600">Update the basic information for your post</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Title */}
@@ -336,25 +399,6 @@ export default function BrainMapCommunityPost() {
                   />
                   <p className="text-xs text-gray-500">{post.title.length}/100 characters</p>
                 </div>
-
-                {/* Category */}
-                {/* <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium text-gray-700">
-                    Category *
-                  </Label>
-                  <Select value={post.category} onValueChange={(value) => setPost({ ...post, category: value })}>
-                    <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories[post.type].map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div> */}
 
                 {/* Tags */}
                 <div className="space-y-3">
@@ -430,7 +474,7 @@ export default function BrainMapCommunityPost() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg font-medium text-gray-900">Content</CardTitle>
-                    <CardDescription className="text-gray-600">Write your post content using Markdown formatting</CardDescription>
+                    <CardDescription className="text-gray-600">Update your post content using Markdown formatting</CardDescription>
                   </div>
                   <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "write" | "preview")}>
                     <TabsList className="bg-gray-100">
@@ -476,17 +520,7 @@ export default function BrainMapCommunityPost() {
                     {/* Content Textarea */}
                     <Textarea
                       name="content"
-                      placeholder="Share your thoughts, code, questions, or project details here...
-
-You can use Markdown formatting:
-- **bold text**
-- *italic text*
-- [links](url)
-- \`code\`
-- > quotes
-- # headings
-
-Be descriptive and helpful to get the best engagement from the community!"
+                      placeholder="Share your thoughts, code, questions, or project details here..."
                       value={post.content}
                       onChange={(e) => setPost({ ...post, content: e.target.value })}
                       className="min-h-[300px] resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
@@ -507,15 +541,25 @@ Be descriptive and helpful to get the best engagement from the community!"
             </Card>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-between">
               <Button
-                onClick={() => handleSubmit()}
-                disabled={isSubmitting || !post.title.trim() || !post.content.trim()}
-                className="bg-primary hover:bg-secondary text-white hover:text-black gap-2"
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
               >
-                <Send className="w-4 h-4" />
-                {isSubmitting ? "Publishing..." : "Publish Post"}
+                Cancel
               </Button>
+              
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => handleSubmit()}
+                  disabled={isSubmitting || !post.title.trim() || !post.content.trim() || !hasChanges}
+                  className="bg-primary hover:bg-secondary text-white hover:text-black gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSubmitting ? "Updating..." : "Update Post"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
