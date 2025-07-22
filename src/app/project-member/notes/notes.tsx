@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Search, User, Upload, Book, StickyNote, Star, Archive, Tag, ChevronDown, Share2, Pencil } from 'lucide-react';
+import { Plus, Search, User, Upload, Book, StickyNote, Star, Archive, Tag,Share2, Pencil } from 'lucide-react';
 
 const initialNotes = [
 	{
@@ -60,13 +60,13 @@ const initialNotes = [
   },
 ];
 
-const sidebarLinks = [
-  { icon: StickyNote, label: 'Sticky Notes' },
-  { icon: Book, label: 'Notes' },
-  { icon: Star, label: 'Starred' },
-  { icon: Archive, label: 'Archive' },
-  { icon: Tag, label: 'Label' },
-];
+// const sidebarLinks = [
+//   { icon: StickyNote, label: 'Sticky Notes' },
+//   { icon: Book, label: 'Notes' },
+//   { icon: Star, label: 'Starred' },
+//   { icon: Archive, label: 'Archive' },
+//   { icon: Tag, label: 'Label' },
+// ];
 
 const Notes = () => {
 	const [notes, setNotes] = useState(initialNotes);
@@ -267,76 +267,12 @@ const Notes = () => {
 
 	return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r flex flex-col p-4 gap-4">
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-          <Upload className="w-4 h-4" /> Upload
-        </button>
-        {/* Custom Notes Section */}
-        <div className="mt-2">
-          <div className="uppercase text-xs text-gray-400 font-semibold tracking-widest mb-2 pl-1">.notes</div>
-          {/* Notes Search Bar */}
-          <div className="mb-3 px-1">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search notes..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
-              />
-            </div>
-          </div>
-          <nav className="flex flex-col gap-1">
-            <button
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 transition ${filter === 'project' ? 'bg-blue-100 font-bold' : ''}`}
-              onClick={handleProjectNotesClick}
-            >
-              <Book className="w-5 h-5" /> Project Notes
-            </button>
-            <button
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 transition ${filter === 'personal' ? 'bg-blue-100 font-bold' : ''}`}
-              onClick={() => {
-                setFilter('personal');
-                setSelectedProject(null);
-                const firstPersonal = notes.find(n => n.tags && n.tags.includes('Personal'));
-                if (firstPersonal) setSelectedNote(firstPersonal);
-              }}
-            >
-              <StickyNote className="w-5 h-5" /> Personal Notes
-            </button>
-          </nav>
-          <div className="border-t border-gray-200 my-3" />
-          <nav className="flex flex-col gap-1">
-            <button
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 transition ${filter === 'starred' ? 'bg-yellow-100 font-bold' : ''}`}
-              onClick={() => {
-                setFilter('starred');
-                setSelectedProject(null);
-                setSelectedNote(null);
-              }}
-            >
-              <Star className="w-5 h-5" /> Starred
-            </button>
-            <button
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 transition ${filter === 'archived' ? 'bg-gray-200 font-bold' : ''}`}
-              onClick={() => {
-                setFilter('archived');
-                setSelectedProject(null);
-                setSelectedNote(null);
-              }}
-            >
-              <Archive className="w-5 h-5" /> Archived
-            </button>
-          </nav>
-        </div>
-      </aside>
+      
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <header className="flex items-center justify-between px-8 py-4 border-b bg-white sticky top-0 z-10">
+        <header className="flex items-center justify-between px-8 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div className="flex items-center gap-3 w-1/2">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -345,7 +281,7 @@ const Notes = () => {
                 placeholder="Search for anything..."
 							value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-700 placeholder-gray-400"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:ring-primary focus:border-primary text-gray-700 placeholder-gray-400"
 						/>
 					</div>
           </div>
@@ -353,27 +289,27 @@ const Notes = () => {
             {/* Project Notes: show Create New Project or Create New Note depending on view */}
             {filter === 'project' && !selectedProject ? (
               <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary hover:text-black transition"
                 onClick={handleCreateNewProject}
               >
                 <Plus className="w-4 h-4" /> Create New Project
               </button>
             ) : filter === 'project' && selectedProject ? (
 					<button
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary hover:text-black transition"
                 onClick={handleCreateNewNote}
               >
                 <Plus className="w-4 h-4" /> Create New Note
               </button>
             ) : filter === 'personal' ? (
               <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary hover:text-black transition"
                 onClick={handleCreateNewPersonal}
               >
                 <Plus className="w-4 h-4" /> Create New
               </button>
             ) : (
-              <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition" onClick={handleCreateNew}>
+              <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-secondary hover:text-black transition" onClick={handleCreateNew}>
                 <Plus className="w-4 h-4" /> Create New
               </button>
             )}
@@ -381,7 +317,7 @@ const Notes = () => {
               <Share2 className="w-4 h-4" /> Share
 					</button>
             <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-              <User className="w-5 h-5 text-blue-600" />
+              <User className="w-5 h-5 text-primary" />
               <span className="font-semibold text-gray-700">Esther Howard</span>
             </div>
 				</div>
@@ -390,7 +326,7 @@ const Notes = () => {
         {/* Content Area */}
         <div className="flex flex-1 overflow-hidden">
           {/* Notes List */}
-          <section className="w-96 bg-white border-r flex flex-col overflow-y-auto">
+          <section className="w-96 bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
             <div className="flex items-center justify-between px-6 pt-6 pb-2">
               <h2 className="text-lg font-bold text-gray-800">
                 {filter === 'project' && !selectedProject ? 'Projects' : 'Notes'}
@@ -463,7 +399,7 @@ const Notes = () => {
                   {filteredNotes.map(note => (
                     <div
                       key={note.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition border-l-4 ${selectedNote && selectedNote.id === note.id ? 'border-blue-600 bg-blue-50' : 'border-transparent'}`}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition  ${selectedNote && selectedNote.id === note.id ? ' bg-blue-50' : 'border-transparent'}`}
                       onClick={() => setSelectedNote(note)}
                     >
                       <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 font-bold text-xl">
@@ -488,7 +424,7 @@ const Notes = () => {
                 filteredNotes.map(note => (
                   <div
                     key={note.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition border-l-4 ${selectedNote && selectedNote.id === note.id ? 'border-blue-600 bg-blue-50' : 'border-transparent'}`}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition  ${selectedNote && selectedNote.id === note.id ? ' bg-blue-50' : 'border-transparent'}`}
                     onClick={() => {
                       setIsCreating(false);
                       setIsEditing(false);

@@ -116,7 +116,6 @@ const visibleProjects = showAll
     { title: "Messages", icon: MessageSquare, url: "/project-member/chat" , pathname: "chat"},
     { title: "Calendar", icon: Calendar, url: "/project-member/calendar", pathname: "calendar" },
     { title: "Notes", icon: NotepadText , url: "/project-member/notes", pathname: "notes" },
-    { title: "To-do", icon: ListChecks  , url: "/project-member/todo", pathname: "todo" },
     { title: "Settings", icon: Settings, url: "/project-member/settings", pathname: "settings" },
 
   ];
