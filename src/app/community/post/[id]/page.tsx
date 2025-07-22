@@ -1,7 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { useParams } from "next/navigation"
+import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2, Edit, Trash2 } from "lucide-react"
+import { communityApi } from "@/services/communityApi"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
+import DeleteModal from "@/components/modals/DeleteModal"
+import { useDeleteModal } from "@/hooks/useDeleteModal"
 
 interface Comment {
   id: string
@@ -23,13 +29,17 @@ interface Post {
   title: string
   content: string
   author: {
+    id: string
     name: string
     avatar: string
     role: string
     verified: boolean
   }
   category: string
-  tags: string[]
+  tags: Array<{
+    name: string
+    id: string
+  }>
   likes: number
   comments: number
   views: number
@@ -38,129 +48,6 @@ interface Post {
   isBookmarked: boolean
   type: "discussion" | "project" | "help"
 }
-
-const mockPost: Post = {
-  id: "1",
-  title: "Building a Real-time Chat App with Next.js 14 and Socket.io",
-  content: `Just completed an amazing real-time chat application using Next.js 14, Socket.io, and Prisma. This project has been a fantastic learning experience, and I wanted to share the journey with the community.
-
-## Key Features Implemented:
-- **Real-time messaging** with Socket.io
-- **User authentication** using NextAuth.js
-- **File sharing** with drag-and-drop support
-- **Emoji reactions** and custom emoji picker
-- **Group chats and direct messaging**
-- **End-to-end encryption** for secure communication
-- **Dark mode support** with theme persistence
-- **Mobile-responsive design**
-
-## Tech Stack:
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Socket.io, Prisma ORM
-- **Database**: PostgreSQL
-- **Authentication**: NextAuth.js
-- **Deployment**: Vercel + Railway
-
-## Challenges Faced:
-The biggest challenge was implementing real-time features while maintaining good performance. I had to optimize the Socket.io connections and implement proper room management for group chats.
-
-## What I Learned:
-This project taught me a lot about real-time web applications, WebSocket management, and scaling considerations. The authentication flow with NextAuth.js was also a great learning experience.
-
-I've open-sourced the project on GitHub and would love to get feedback from the community. Feel free to ask any questions about the implementation!
-
-**GitHub**: https://github.com/sarahchen/realtime-chat-app
-**Live Demo**: https://chat-app-demo.vercel.app`,
-  author: {
-    name: "Sarah Chen",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "Advanced Student",
-    verified: true,
-  },
-  category: "Project Showcase",
-  tags: ["Next.js", "Socket.io", "Real-time", "Chat", "TypeScript"],
-  likes: 47,
-  comments: 23,
-  views: 342,
-  createdAt: "2 hours ago",
-  isLiked: false,
-  isBookmarked: true,
-  type: "project",
-}
-
-const mockComments: Comment[] = [
-  {
-    id: "1",
-    content: "This is incredible work, Sarah! I've been trying to implement real-time features in my own project. Could you share more details about how you handled the Socket.io room management?",
-    author: {
-      name: "Alex Rodriguez",
-      avatar: "/placeholder.svg?height=32&width=32",
-      role: "Intermediate",
-      verified: false,
-    },
-    likes: 8,
-    replies: [
-      {
-        id: "1-1",
-        content: "Thanks Alex! For room management, I created a custom hook that handles joining/leaving rooms based on the current chat context. I also implemented a cleanup function to prevent memory leaks. Happy to share the code snippet if you're interested!",
-        author: {
-          name: "Sarah Chen",
-          avatar: "/placeholder.svg?height=32&width=32",
-          role: "Advanced Student",
-          verified: true,
-        },
-        likes: 12,
-        replies: [],
-        createdAt: "1 hour ago",
-        isLiked: false,
-      },
-      {
-        id: "1-2",
-        content: "That would be amazing! I'm particularly interested in the cleanup function part.",
-        author: {
-          name: "Alex Rodriguez",
-          avatar: "/placeholder.svg?height=32&width=32",
-          role: "Intermediate",
-          verified: false,
-        },
-        likes: 3,
-        replies: [],
-        createdAt: "45 minutes ago",
-        isLiked: true,
-      },
-    ],
-    createdAt: "2 hours ago",
-    isLiked: true,
-  },
-  {
-    id: "2",
-    content: "Great project! How did you handle the end-to-end encryption? I'm working on a similar project and security is a major concern for me.",
-    author: {
-      name: "Michael Kim",
-      avatar: "/placeholder.svg?height=32&width=32",
-      role: "Advanced Student",
-      verified: true,
-    },
-    likes: 15,
-    replies: [],
-    createdAt: "1.5 hours ago",
-    isLiked: false,
-  },
-  {
-    id: "3",
-    content: "The UI looks fantastic! Did you use any specific component library or is it all custom Tailwind? The dark mode implementation is particularly smooth.",
-    author: {
-      name: "Emma Wilson",
-      avatar: "/placeholder.svg?height=32&width=32",
-      role: "Beginner",
-      verified: false,
-    },
-    likes: 6,
-    replies: [],
-    createdAt: "1 hour ago",
-    isLiked: false,
-  },
-]
 
 const popularTags = [
   { name: "JavaScript", count: 2345, color: "bg-yellow-100 text-yellow-800" },
@@ -177,25 +64,205 @@ const topContributors = [
   { name: "Emma Wilson", avatar: "👩‍🎓", points: 7654 },
 ]
 
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    // Less than a minute ago
+    if (diffInSeconds < 60) {
+      return "Just now"
+    }
+    
+    // Less than an hour ago
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60)
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+    }
+    
+    // Less than a day ago
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600)
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    }
+    
+    // Less than a week ago
+    if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400)
+      return `${days} day${days > 1 ? 's' : ''} ago`
+    }
+    
+    // More than a week ago
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch (error) {
+    return dateString
+  }
+}
+
 export default function PostPage() {
-  const [post, setPost] = useState<Post>(mockPost)
-  const [comments, setComments] = useState<Comment[]>(mockComments)
+  const params = useParams()
+  const postId = params.id
+  const { user } = useAuth()
+  const router = useRouter()
+  
+  const [post, setPost] = useState<Post | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
   const [sortBy, setSortBy] = useState("recent")
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const deleteModal = useDeleteModal({
+    title: "Delete Post",
+    confirmText: "Delete Post"
+  })
+
+  const handleEditPost = () => {
+    setShowOptionsMenu(false)
+    console.log("Edit post:", post?.id)
+    router.push(`/community/post/${post?.id}/edit`)
+  }
+
+  const handleDeletePost = () => {
+    setShowOptionsMenu(false)
+    deleteModal.openModal(
+      async (postId: string) => {
+        await communityApi.deletePost(postId)
+        router.push("/community")
+      },
+      [post?.id as string],
+      post?.title
+    )
+  }
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowOptionsMenu(false)
+      }
+    }
+
+    if (showOptionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showOptionsMenu])
+
+  // Fetch post data from API
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const data = await communityApi.getPost(postId as string)
+        
+        console.log("Post Data: ", data);
+        console.log("Post Title: ", data.title);
+        
+        
+        // Transform API data to match our interface
+        const transformedPost: Post = {
+          id: data.communityPostId || postId as string,
+          title: data.title || "Untitled Post",
+          content: data.content || "",
+          author: {
+            id: data.author?.id,
+            name: data.author?.username || "Anonymous",
+            avatar: data.author?.avatar || "/placeholder.svg?height=40&width=40",
+            role: data.author?.role || "Student",
+            verified: data.author?.verified || false,
+          },
+          category: data.type?.toLowerCase() || "discussion", // Map type to category
+          tags: data.tags?.map((tag: any) => ({
+            name: tag.name,
+            id: tag.id
+          })) || [],
+          likes: data.likes || 0,
+          comments: data.replies || 0, // Use replies field for comments count
+          views: data.views || 0,
+          createdAt: formatDate(data.createdAt) || "Unknown",
+          isLiked: data.isLiked || false,
+          isBookmarked: false,
+          type: (data.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
+        }
+        
+        setPost(transformedPost)
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch post")
+        console.error("Error fetching post:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (postId) {
+      fetchPost()
+    }
+  }, [postId])
 
   const handleBack = () => {
     // In a real app, this would use router.back() or navigate to community page
+    
     console.log("Navigate back to community")
+    router.push("/community")
   }
 
-  const handleLike = () => {
-    setPost({ ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 })
+  const handleLike = async () => {
+    if (!post) return
+    
+    try {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ liked: !post.isLiked }),
+      })
+      
+      if (response.ok) {
+        setPost({ 
+          ...post, 
+          isLiked: !post.isLiked, 
+          likes: post.isLiked ? post.likes - 1 : post.likes + 1 
+        })
+      }
+    } catch (err) {
+      console.error("Error liking post:", err)
+    }
   }
 
-  const handleBookmark = () => {
-    setPost({ ...post, isBookmarked: !post.isBookmarked })
+  const handleBookmark = async () => {
+    if (!post) return
+    
+    try {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookmarked: !post.isBookmarked }),
+      })
+      
+      if (response.ok) {
+        setPost({ ...post, isBookmarked: !post.isBookmarked })
+      }
+    } catch (err) {
+      console.error("Error bookmarking post:", err)
+    }
   }
 
   const handleCommentLike = (commentId: string, isReply = false, parentId?: string) => {
@@ -225,27 +292,41 @@ export default function PostPage() {
     }
   }
 
-  const handleSubmitComment = () => {
-    if (!newComment.trim()) return
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !post) return
 
-    const comment: Comment = {
-      id: Date.now().toString(),
-      content: newComment,
-      author: {
-        name: "You",
-        avatar: "/placeholder.svg?height=32&width=32",
-        role: "Student",
-        verified: false,
-      },
-      likes: 0,
-      replies: [],
-      createdAt: "Just now",
-      isLiked: false,
+    try {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: newComment }),
+      })
+      
+      if (response.ok) {
+        const comment: Comment = {
+          id: Date.now().toString(),
+          content: newComment,
+          author: {
+            name: "You",
+            avatar: "/placeholder.svg?height=32&width=32",
+            role: "Student",
+            verified: false,
+          },
+          likes: 0,
+          replies: [],
+          createdAt: "Just now",
+          isLiked: false,
+        }
+
+        setComments([comment, ...comments])
+        setNewComment("")
+        setPost({ ...post, comments: post.comments + 1 })
+      }
+    } catch (err) {
+      console.error("Error submitting comment:", err)
     }
-
-    setComments([comment, ...comments])
-    setNewComment("")
-    setPost({ ...post, comments: post.comments + 1 })
   }
 
   const handleSubmitReply = (parentId: string) => {
@@ -369,11 +450,57 @@ export default function PostPage() {
     </div>
   )
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading post...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 mb-4">
+            <MessageCircle className="w-12 h-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to load post</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Post not found
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Post not found</h2>
+          <p className="text-gray-600">The post you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       
-      <div className="sticky top-0 z-50 ">
+      <div className="top-0 z-50 ">
         <div className="max-w-7xl mx-auto px-4 py-4 mt-4">
           <div className="flex items-center gap-4">
             <button 
@@ -406,13 +533,8 @@ export default function PostPage() {
         </div>
       </div>
 
-      
-
       <div className="max-w-7xl mx-auto px-4 py-6">
-    
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-          
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Popular Tags */}
@@ -447,11 +569,7 @@ export default function PostPage() {
                 ))}
               </div>
             </div>
-
-            
           </div>
-
-
 
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
@@ -487,25 +605,62 @@ export default function PostPage() {
                         {post.createdAt}
                         <span>•</span>
                         <Tag className="w-3 h-3" />
-                        {post.category}
-                        <span>•</span>
-                        <Eye className="w-3 h-3" />
-                        {post.views} views
+                        {post.type}
+                        {/* <span>•</span> */}
+                        {/* <Eye className="w-3 h-3" />
+                        {post.views} views */}
                       </div>
                     </div>
                   </div>
-                  <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  
+                  {/* Options Menu - Only show if user is the author */}
+                  {user && post && user.id === post.author.id && (
+                    <div className="relative" ref={menuRef}>
+                      <button 
+                        onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                      
+                      {showOptionsMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                          <div className="py-2">
+                            <button
+                              onClick={handleEditPost}
+                              className="flex items-center gap-3 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit Post
+                            </button>
+                            <button
+                              onClick={handleDeletePost}
+                              className="flex items-center gap-3 w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Regular more options for non-authors */}
+                  {(!user || !post || user.id !== post.author.id) && (
+                    <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-4">{post.title}</h1>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {post.tags.map((tag) => (
                     <span
-                      key={tag}
+                      key={tag.id}
                       className="px-2 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md font-normal cursor-pointer transition-colors"
                     >
-                      #{tag}
+                      #{tag.name}
                     </span>
                   ))}
                 </div>
@@ -610,9 +765,11 @@ export default function PostPage() {
               </div>
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* Delete Modal */}
+      <DeleteModal {...deleteModal.modalProps} />
     </div>
   )
 }

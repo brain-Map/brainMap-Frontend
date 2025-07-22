@@ -111,19 +111,6 @@ export default function DashboardPage() {
     { name: "Jul", value: 4300 },
   ]
 
-  // Student engagement data
-  const engagementData: ChartData[] = [
-    { name: "Active", value: 18, color: "bg-green-500" },
-    { name: "Inactive", value: 6, color: "bg-gray-400" },
-  ]
-
-  // Package popularity data
-  const packageData: ChartData[] = [
-    { name: "Premium", value: 12, color: "bg-purple-500" },
-    { name: "Standard", value: 8, color: "bg-primary" },
-    { name: "Quick", value: 4, color: "bg-green-500" },
-  ]
-
   const renderRevenueChart = () => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -146,64 +133,6 @@ export default function DashboardPage() {
         <p className="text-sm text-gray-600">
           Monthly revenue growth: <span className="text-green-600 font-medium">+15.3%</span>
         </p>
-      </div>
-    </div>
-  )
-
-  const renderEngagementChart = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Student Engagement</h3>
-        <Users className="h-5 w-5 text-gray-400" />
-      </div>
-      <div className="space-y-4">
-        {engagementData.map((item, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">{item.name} Students</span>
-              <span className="text-sm text-gray-500">{item.value}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full ${item.color}`}
-                style={{ width: `${(item.value / (engagementData[0].value + engagementData[1].value)) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
-          Engagement rate: <span className="text-green-600 font-medium">75%</span>
-        </p>
-      </div>
-    </div>
-  )
-
-  const renderPackageChart = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Package Popularity</h3>
-        <Activity className="h-5 w-5 text-gray-400" />
-      </div>
-      <div className="space-y-3">
-        {packageData.map((item, index) => (
-          <div key={index} className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-              <span className="text-sm text-gray-700">{item.name} Mentorship</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-16 bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full ${item.color}`}
-                  style={{ width: `${(item.value / Math.max(...packageData.map((d) => d.value))) * 100}%` }}
-                ></div>
-              </div>
-              <span className="text-sm font-medium text-gray-900">{item.value}</span>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   )
@@ -237,10 +166,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="w-full mb-8">
           {renderRevenueChart()}
-          {renderEngagementChart()}
-          {renderPackageChart()}
         </div>
 
         {/* Recent Student Requests */}

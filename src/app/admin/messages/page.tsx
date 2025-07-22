@@ -59,7 +59,7 @@ export default function MessagesPage() {
       {
         id: "1",
         userId: "usr_001",
-        userName: "John Smith",
+        userName: "Sachith Dhanushka",
         userEmail: "john.smith@email.com",
         userRole: "student",
         messageType: "support",
@@ -75,7 +75,7 @@ export default function MessagesPage() {
       {
         id: "2",
         userId: "usr_002",
-        userName: "Sarah Johnson",
+        userName: "Dinuka Sahan",
         userEmail: "sarah.j@email.com",
         userRole: "domain-expert",
         messageType: "complaint",
@@ -92,7 +92,7 @@ export default function MessagesPage() {
       {
         id: "3",
         userId: "usr_003",
-        userName: "Mike Davis",
+        userName: "Isuru Naveen",
         userEmail: "mike.davis@email.com",
         userRole: "project-member",
         messageType: "inquiry",

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,10 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react"
+import { communityApi } from "@/services/communityApi"
+import userPlaceholder from "@/../public/image/user_placeholder.jpg"
+import { StaticImageData } from "next/image"
+
 
 interface Post {
   id: string
@@ -45,81 +49,100 @@ interface Post {
   trending?: boolean
 }
 
-const mockPosts: Post[] = [
-  {
-    id: "1",
-    title: "Building a Real-time Chat App with Next.js 14 and Socket.io",
-    content:
-      "Just completed an amazing real-time chat application using Next.js 14, Socket.io, and Prisma. The app features real-time messaging, user authentication, file sharing, and emoji reactions. I've implemented both group chats and direct messaging with end-to-end encryption. The UI is built with Tailwind CSS and includes dark mode support. Would love to get feedback from the community and answer any questions about the implementation!",
-    author: {
-      name: "Sarah Chen",
-      avatar: "/placeholder.svg?height=40&width=40",
-      role: "Advanced Student",
-      verified: true,
-    },
-    category: "Project Showcase",
-    tags: ["Next.js", "Socket.io", "Real-time", "Chat", "TypeScript"],
-    likes: 47,
-    comments: 23,
-    views: 342,
-    createdAt: "2 hours ago",
-    isLiked: false,
-    isBookmarked: true,
-    type: "project",
-    featured: true,
-    trending: true,
-  },
-  {
-    id: "2",
-    title: "Help: Deployment issues with Vercel and Prisma",
-    content:
-      "I'm experiencing some strange behavior when deploying my Next.js app to Vercel. The Prisma client works perfectly in development, but I'm getting connection timeout errors in production. I've checked my environment variables and database connection string multiple times. Has anyone encountered similar issues?",
-    author: {
-      name: "Alex Rodriguez",
-      avatar: "/placeholder.svg?height=40&width=40",
-      role: "Beginner",
-      verified: false,
-    },
-    category: "Help & Support",
-    tags: ["Vercel", "Prisma", "Deployment", "Database", "Production"],
-    likes: 12,
-    comments: 18,
-    views: 156,
-    createdAt: "4 hours ago",
-    isLiked: true,
-    isBookmarked: false,
-    type: "help",
-  },
-  {
-    id: "3",
-    title: "State Management Patterns: Zustand vs Redux Toolkit in 2024",
-    content:
-      "After working with both Zustand and Redux Toolkit on several projects, I wanted to share my thoughts on when to use each. Zustand shines for smaller to medium applications with its simplicity and minimal boilerplate, while RTK is still king for complex state management scenarios. What's your experience been like?",
-    author: {
-      name: "Michael Kim",
-      avatar: "/placeholder.svg?height=40&width=40",
-      role: "Intermediate",
-      verified: true,
-    },
-    category: "Discussion",
-    tags: ["React", "State Management", "Zustand", "Redux", "Architecture"],
-    likes: 34,
-    comments: 29,
-    views: 287,
-    createdAt: "6 hours ago",
-    isLiked: false,
-    isBookmarked: false,
-    type: "discussion",
-    trending: true,
-  },
-]
-
 export default function CommunityPage() {
   const router = useRouter()
-  const [posts, setPosts] = useState<Post[]>(mockPosts)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recent")
+
+  // Helper function to format date
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    // Less than a minute ago
+    if (diffInSeconds < 60) {
+      return "Just now"
+    }
+    
+    // Less than an hour ago
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60)
+      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+    }
+    
+    // Less than a day ago
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600)
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    }
+    
+    // Less than a week ago
+    if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400)
+      return `${days} day${days > 1 ? 's' : ''} ago`
+    }
+    
+    // More than a week ago
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch (error) {
+    return dateString
+  }
+}
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true)
+        const data = await communityApi.getPosts()
+        
+        console.log("Posts Data: ", data)
+        
+        // Transform API data to match your Post interface
+        const transformedPosts: Post[] = data.map((post: any) => ({
+          id: post.communityPostId,
+          title: post.title || "Untitled Post",
+          content: post.content || "",
+          author: {
+            name: post.author?.username || "Anonymous",
+            avatar: "/image/user_placeholder.jpg",
+            role: post.author?.role || "Project Member",
+            verified: post.author?.verified || false,
+          },
+          category: post.type?.toLowerCase() || "discussion",
+          tags: post.tags?.map((tag: any) => tag.name) || [],
+          likes: post.likes || 0,
+          comments: post.replies || 0,
+          views: post.views || 0,
+          createdAt: formatDate(post.createdAt),
+          isLiked: post.isLiked || false,
+          isBookmarked: false,
+          type: (post.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
+          featured: false,
+          trending: false,
+        }))
+        
+        setPosts(transformedPosts)
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch posts")
+        console.error("Error fetching posts:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
 
   const handleLike = (postId: string) => {
     setPosts(
@@ -166,130 +189,134 @@ export default function CommunityPage() {
     { name: 'css', count: 621, color: 'bg-purple-100 text-purple-800' }
   ];
 
-  const topContributors = [
-    { name: 'John Smith', points: 2843, avatar: '👨‍💻' },
-    { name: 'Sarah Johnson', points: 1876, avatar: '👩‍💼' },
-    { name: 'Jake Chen', points: 1654, avatar: '👨‍🎓' }
-  ];
 
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <MessageCircle className="w-6 h-6 text-blue-600" />
-                <span className="text-xl font-semibold text-gray-900">Community</span>
-              </div>
-              <nav className="flex space-x-6">
-                <button className="text-blue-600 font-medium">Questions</button>
-                <button className="text-gray-600 hover:text-gray-900">Tags</button>
-                <button className="text-gray-600 hover:text-gray-900">Users</button>
-              </nav>
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-2">
+              <MessageCircle className="w-6 h-6 text-blue-600" />
+              <span className="text-xl font-semibold text-gray-900">Community</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search questions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <Button
-                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black font-medium"
-                onClick={() => router.push("/community/create")}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Ask Question
-              </Button>
-            </div>
+            <nav className="flex space-x-6">
+              <button className="text-blue-600 font-medium">Questions</button>
+              <button className="text-gray-600 hover:text-gray-900">Tags</button>
+              <button className="text-gray-600 hover:text-gray-900">Users</button>
+            </nav>
           </div>
-        </header>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search questions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <Button
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black font-medium"
+              onClick={() => router.push("/community/create")}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Post
+            </Button>
+          </div>
+        </div>
+      </header>
 
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Popular Tags */}
-              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-                <CardTitle className="font-semibold text-gray-900 mb-3">Popular Tags</CardTitle>
-                <div className="space-y-2">
-                  {popularTags.map((tag) => (
-                    <div key={tag.name} className="flex items-center justify-between">
-                      <Badge className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
-                        {tag.name}
-                      </Badge>
-                      <span className="text-sm text-gray-500">
-                        {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Popular Tags */}
+            <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
+              <CardTitle className="font-semibold text-gray-900 mb-3">Popular Tags</CardTitle>
+              <div className="space-y-2">
+                {popularTags.map((tag) => (
+                  <div key={tag.name} className="flex items-center justify-between">
+                    <Badge className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
+                      {tag.name}
+                    </Badge>
+                    <span className="text-sm text-gray-500">
+                      {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
 
-              {/* Top Contributors */}
-              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-                <CardTitle className="font-semibold text-gray-900 mb-3">Top Contributors</CardTitle>
-                <div className="space-y-3">
-                  {topContributors.map((contributor) => (
-                    <div key={contributor.name} className="flex items-center space-x-3">
-                      <div className="text-2xl">{contributor.avatar}</div>
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 text-sm">{contributor.name}</div>
-                        <div className="text-xs text-gray-500">{contributor.points.toLocaleString()} points</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+            {/* Sort Options */}
+            <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
+              <CardTitle className="font-semibold text-gray-900 mb-3">Sort Posts</CardTitle>
+              <div className="space-y-2">
+                {[
+                  { value: "recent", label: "Latest", icon: Clock },
+                  { value: "popular", label: "Popular", icon: Heart },
+                  { value: "trending", label: "Trending", icon: Fire },
+                ].map(({ value, label, icon: Icon }) => (
+                  <Button
+                    key={value}
+                    variant={sortBy === value ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setSortBy(value)}
+                    className={`w-full justify-start ${
+                      sortBy === value ? "bg-primary text-white" : "text-gray-600"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 mr-2" />
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+          </div>
 
-              {/* Sort Options */}
-              <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-                <CardTitle className="font-semibold text-gray-900 mb-3">Sort Posts</CardTitle>
-                <div className="space-y-2">
-                  {[
-                    { value: "recent", label: "Latest", icon: Clock },
-                    { value: "popular", label: "Popular", icon: Heart },
-                    { value: "trending", label: "Trending", icon: Fire },
-                  ].map(({ value, label, icon: Icon }) => (
-                    <Button
-                      key={value}
-                      variant={sortBy === value ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setSortBy(value)}
-                      className={`w-full justify-start ${
-                        sortBy === value ? "bg-primary text-white" : "text-gray-600"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </Card>
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Recent Questions</h1>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-4 bg-gray-100 rounded-lg p-1">
+                  <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
+                  <TabsTrigger value="discussion" className="text-sm">Discussion</TabsTrigger>
+                  <TabsTrigger value="project" className="text-sm">Projects</TabsTrigger>
+                  <TabsTrigger value="help" className="text-sm">Help</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Recent Questions</h1>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-4 bg-gray-100 rounded-lg p-1">
-                    <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
-                    <TabsTrigger value="discussion" className="text-sm">Discussion</TabsTrigger>
-                    <TabsTrigger value="project" className="text-sm">Projects</TabsTrigger>
-                    <TabsTrigger value="help" className="text-sm">Help</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading posts...</p>
               </div>
+            )}
 
-              {/* Posts List */}
+            {/* Error State */}
+            {error && (
+              <Card className="bg-red-50 border border-red-200 rounded-lg">
+                <CardContent className="text-center py-8">
+                  <p className="text-red-600 mb-4">{error}</p>
+                  <Button 
+                    onClick={() => window.location.reload()} 
+                    variant="outline"
+                    className="text-red-600 border-red-300"
+                  >
+                    Try Again
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Posts List */}
+            {!loading && !error && (
               <div className="space-y-4">
                 {sortedPosts.map((post) => (
                   <Card key={post.id} className="bg-white shadow-none border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
@@ -308,26 +335,17 @@ export default function CommunityPage() {
                             <span className="font-medium text-gray-700">{post.likes}</span>
                             <ChevronDown className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
                           </div>
-                          <div className="flex space-x-3 mt-2 text-xs">
-                            <div className="flex items-center space-x-1">
-                              <MessageCircle className="w-4 h-4" />
-                              <span>{post.comments}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Eye className="w-4 h-4" />
-                              <span>{post.views}</span>
-                            </div>
-                          </div>
                         </div>
 
                         {/* Question Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-2">
-                            
-                              <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-2">
-                                {post.title}
-                              </h3>
-                            
+                            <h3 
+                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-2 cursor-pointer"
+                              onClick={() => handlePostClick(post.id)}
+                            >
+                              {post.title}
+                            </h3>
                             {post.trending && (
                               <Badge className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-md ml-2">
                                 <Fire className="w-3 h-3 mr-1" />
@@ -336,17 +354,15 @@ export default function CommunityPage() {
                             )}
                           </div>
 
-                          <p className="mt-2 text-gray-600 text-sm leading-relaxed mb-4">
-                              {post.content}
-                            </p>
+                          <p className="mt-2 text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                            {post.content}
+                          </p>
                           
-                         
-
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex flex-wrap gap-2">
-                              {post.tags.map((tag) => (
+                              {post.tags.map((tag, index) => (
                                 <Badge
-                                  key={tag}
+                                  key={index}
                                   className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium hover:bg-gray-200"
                                 >
                                   {tag}
@@ -395,6 +411,7 @@ export default function CommunityPage() {
                               >
                                 <MessageCircle className="w-4 h-4 mr-1" />
                                 Comment
+                                <span>{post.comments}</span>
                               </Button>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -420,41 +437,42 @@ export default function CommunityPage() {
                   </Card>
                 ))}
               </div>
+            )}
 
-              {/* Load More */}
-              {sortedPosts.length > 0 && (
-                <div className="text-center mt-8">
-                  <Button variant="outline" className="text-blue-600 hover:text-blue-700 border-blue-200">
-                    Load More Questions
+            {/* Load More */}
+            {!loading && !error && sortedPosts.length > 0 && (
+              <div className="text-center mt-8">
+                <Button variant="outline" className="text-blue-600 hover:text-blue-700 border-blue-200">
+                  Load More Questions
+                </Button>
+              </div>
+            )}
+
+            {/* No Results */}
+            {!loading && !error && sortedPosts.length === 0 && (
+              <Card className="bg-white border border-gray-200 rounded-lg">
+                <CardContent className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">No posts found</h3>
+                  <p className="text-gray-600 mb-6">
+                    {searchQuery
+                      ? "Try adjusting your search terms or browse different categories."
+                      : "Be the first to start a discussion!"}
+                  </p>
+                  <Button 
+                    className="bg-primary hover:bg-blue-700 text-white"
+                    onClick={() => router.push("/community/create")}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Post
                   </Button>
-                </div>
-              )}
-
-              {/* No Results */}
-              {sortedPosts.length === 0 && (
-                <Card className="bg-white border border-gray-200 rounded-lg">
-                  <CardContent className="text-center py-12">
-                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2 text-gray-900">No posts found</h3>
-                    <p className="text-gray-600 mb-6">
-                      {searchQuery
-                        ? "Try adjusting your search terms or browse different categories."
-                        : "Be the first to start a discussion!"}
-                    </p>
-                    <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => router.push("/community/new")}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create First Post
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
+    </div>
     </>
   )
 }

@@ -227,7 +227,7 @@ const ProfileCompletion = () => {
 
       console.log('Sending JSON payload:', profilePayload);
 
-      const response = await fetch('http://localhost:8080/api/v1/users', {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

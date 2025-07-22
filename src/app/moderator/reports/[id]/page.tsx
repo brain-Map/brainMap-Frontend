@@ -24,7 +24,8 @@ import {
   ArrowLeft,
   DollarSign,
   Lock,
-  Users
+  Users,
+  ShieldAlert
 } from 'lucide-react';
 
 interface Report {
@@ -190,6 +191,11 @@ export default function ReportDetailsPage() {
   const handleDismissReport = (reportId: string) => {
     console.log('Dismissing report:', reportId);
     // Add your dismiss logic here
+  };
+
+  const handleReportToAdmin = (reportId: string) => {
+    console.log('Reporting to admin:', reportId);
+    // Add your report to admin logic here
   };
 
   const TypeIcon = getTypeIcon(report.type);
@@ -378,6 +384,16 @@ export default function ReportDetailsPage() {
               >
                 <Ban className="w-4 h-4 mr-2" />
                 Suspend Reported Profile
+              </Button>
+
+              <Button 
+                onClick={() => handleReportToAdmin(report.id)}
+                variant="outline"
+                className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                disabled={report.status === 'dismissed' || report.status === 'resolved'}
+              >
+                <ShieldAlert className="w-4 h-4 mr-2" />
+                Report to Admin
               </Button>
             </div>
           </div>

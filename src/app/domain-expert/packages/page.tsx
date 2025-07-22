@@ -7,17 +7,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  Users,
   CheckCircle,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Star,
-  BarChart3,
-  PieChart,
-  Activity,
-  Eye,
   MoreVertical,
+  Filter,
+  Search,
+  X,
 } from "lucide-react"
 
 interface Package {
@@ -27,270 +21,250 @@ interface Package {
   price: number
   duration: string
   features: string[]
-  popular: boolean
-  students: number
-  revenue: number
-  rating: number
-  completionRate: number
+  subjectStream: string
   status: "active" | "draft" | "archived"
   createdAt: string
   lastUpdated: string
 }
 
-interface PackageStats {
-  totalRevenue: number
-  totalStudents: number
-  averageRating: number
-  completionRate: number
-  revenueChange: number
-  studentsChange: number
-  ratingChange: number
-  completionChange: number
+interface PackageFormData {
+  title: string
+  description: string
+  price: string
+  duration: string
+  features: string[]
+  subjectStream: string
+  status: "active" | "draft" | "archived"
 }
 
 export default function PackagesPage() {
   const [activeTab, setActiveTab] = useState<"active" | "draft" | "archived">("active")
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
-  const [showPackageModal, setShowPackageModal] = useState(false)
+  const [selectedStream, setSelectedStream] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null)
+  
+  // Form state
+  const [formData, setFormData] = useState<PackageFormData>({
+    title: "",
+    description: "",
+    price: "",
+    duration: "",
+    features: [""],
+    subjectStream: "",
+    status: "draft"
+  })
+  const [formErrors, setFormErrors] = useState<Partial<PackageFormData>>({})
 
   // Dummy data for packages
   const packages: Package[] = [
     {
       id: "1",
-      title: "Quick Consultation",
-      description: "30-minute one-on-one session to address specific questions",
+      title: "ML Fundamentals Consultation",
+      description: "30-minute session covering machine learning basics and career guidance",
       price: 50,
       duration: "30 minutes",
-      features: ["1-on-1 video call", "Personalized advice", "Follow-up email"],
-      popular: false,
-      students: 24,
-      revenue: 1200,
-      rating: 4.6,
-      completionRate: 95,
+      features: ["1-on-1 video call", "ML roadmap guidance", "Resource recommendations", "Follow-up email"],
+      subjectStream: "Machine Learning",
       status: "active",
       createdAt: "2024-01-15",
       lastUpdated: "2024-12-20",
     },
     {
       id: "2",
-      title: "Standard Mentorship",
-      description: "Regular mentorship sessions with assignments and feedback",
-      price: 150,
-      duration: "4 weeks",
-      features: ["Weekly 1-hour sessions", "Personalized assignments", "Email support", "Progress tracking"],
-      popular: true,
-      students: 56,
-      revenue: 8400,
-      rating: 4.8,
-      completionRate: 89,
+      title: "Deep Learning Mentorship",
+      description: "Comprehensive mentorship program for deep learning specialization",
+      price: 300,
+      duration: "8 weeks",
+      features: [
+        "Weekly 1-hour sessions",
+        "Hands-on projects",
+        "Code review",
+        "Career guidance",
+        "Certificate of completion",
+      ],
+      subjectStream: "Machine Learning",
       status: "active",
       createdAt: "2024-01-10",
       lastUpdated: "2024-12-18",
     },
     {
       id: "3",
-      title: "Premium Mentorship",
-      description: "Comprehensive mentorship program with priority support",
-      price: 300,
-      duration: "8 weeks",
-      features: [
-        "Bi-weekly 1-hour sessions",
-        "Custom curriculum",
-        "Priority support",
-        "Career guidance",
-        "Certificate of completion",
-      ],
-      popular: false,
-      students: 18,
-      revenue: 5400,
-      rating: 4.9,
-      completionRate: 92,
+      title: "Network Security Basics",
+      description: "Introduction to network security concepts and best practices",
+      price: 75,
+      duration: "2 hours",
+      features: ["Security fundamentals", "Threat assessment", "Best practices", "Q&A session"],
+      subjectStream: "Networking",
       status: "active",
       createdAt: "2024-01-05",
       lastUpdated: "2024-12-15",
     },
     {
       id: "4",
-      title: "Group Workshop",
-      description: "Interactive group sessions for collaborative learning",
-      price: 75,
-      duration: "2 hours",
-      features: ["Group video session", "Interactive exercises", "Resource materials"],
-      popular: false,
-      students: 12,
-      revenue: 900,
-      rating: 4.4,
-      completionRate: 88,
+      title: "Advanced Networking Workshop",
+      description: "Deep dive into advanced networking protocols and architecture",
+      price: 150,
+      duration: "4 hours",
+      features: ["Protocol analysis", "Network design", "Troubleshooting", "Hands-on labs"],
+      subjectStream: "Networking",
       status: "draft",
       createdAt: "2024-12-01",
       lastUpdated: "2024-12-10",
     },
     {
       id: "5",
-      title: "Group Workshop",
-      description: "Interactive group sessions for collaborative learning",
-      price: 75,
-      duration: "2 hours",
-      features: ["Group video session", "Interactive exercises", "Resource materials"],
-      popular: false,
-      students: 12,
-      revenue: 900,
-      rating: 4.4,
-      completionRate: 88,
+      title: "Cloud Computing Fundamentals",
+      description: "Introduction to cloud platforms and services",
+      price: 100,
+      duration: "3 hours",
+      features: ["AWS/Azure overview", "Cloud architecture", "Cost optimization", "Migration strategies"],
+      subjectStream: "Cloud Computing",
       status: "archived",
-      createdAt: "2024-12-01",
-      lastUpdated: "2024-12-10",
+      createdAt: "2024-11-01",
+      lastUpdated: "2024-11-15",
     },
   ]
 
-  // Calculate statistics
-  const activePackages = packages.filter((pkg) => pkg.status === "active")
-  const draftPackages = packages.filter((pkg) => pkg.status === "draft")
-  const archivedPackages = packages.filter((pkg) => pkg.status === "archived")
+  // Get unique subject streams
+  const subjectStreams = Array.from(new Set(packages.map(pkg => pkg.subjectStream)))
 
-  const stats: PackageStats = {
-    totalRevenue: activePackages.reduce((sum, pkg) => sum + pkg.revenue, 0),
-    totalStudents: activePackages.reduce((sum, pkg) => sum + pkg.students, 0),
-    averageRating: activePackages.reduce((sum, pkg) => sum + pkg.rating, 0) / activePackages.length,
-    completionRate: activePackages.reduce((sum, pkg) => sum + pkg.completionRate, 0) / activePackages.length,
-    revenueChange: 15.3,
-    studentsChange: 8.7,
-    ratingChange: 0.2,
-    completionChange: -2.1,
-  }
-
-  // Chart data for package performance
-  const packagePerformanceData = activePackages.map((pkg) => ({
-    name: pkg.title.split(" ")[0],
-    students: pkg.students,
-    revenue: pkg.revenue,
-    rating: pkg.rating,
-  }))
-
-  // Revenue distribution data
-  const revenueDistributionData = activePackages.map((pkg) => ({
-    name: pkg.title,
-    value: pkg.revenue,
-    percentage: Math.round((pkg.revenue / stats.totalRevenue) * 100),
-  }))
-
+  // Filter packages based on tab, stream, and search
   const getCurrentPackages = () => {
-    switch (activeTab) {
-      case "active":
-        return activePackages
-      case "draft":
-        return draftPackages
-      case "archived":
-        return archivedPackages
-      default:
-        return activePackages
+    return packages.filter(pkg => {
+      const matchesTab = pkg.status === activeTab
+      const matchesStream = selectedStream === "all" || pkg.subjectStream === selectedStream
+      const matchesSearch = searchQuery === "" || 
+        pkg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pkg.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pkg.subjectStream.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      return matchesTab && matchesStream && matchesSearch
+    })
+  }
+
+  const getTabCount = (tab: "active" | "draft" | "archived") => {
+    return packages.filter(pkg => pkg.status === tab).length
+  }
+
+  const handleDeletePackage = (packageId: string) => {
+    if (confirm("Are you sure you want to delete this package?")) {
+      // Handle deletion logic here
+      console.log("Deleting package:", packageId)
     }
   }
 
-  const getTabCount = (tab: "active" | "drafts" | "archived") => {
-    switch (tab) {
-      case "active":
-        return activePackages.length
-      case "drafts":
-        return draftPackages.length
-      case "archived":
-        return archivedPackages.length
-      default:
-        return 0
+  const handleEditPackage = (pkg: Package) => {
+    setEditingPackage(pkg)
+    setShowCreateModal(true)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      price: "",
+      duration: "",
+      features: [""],
+      subjectStream: "",
+      status: "draft"
+    })
+    setFormErrors({})
+  }
+
+  const handleCreatePackage = () => {
+    setEditingPackage(null)
+    resetForm()
+    setShowCreateModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowCreateModal(false)
+    setEditingPackage(null)
+    resetForm()
+  }
+
+  const handleInputChange = (field: keyof PackageFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }))
     }
   }
 
-  const renderStatCard = (title: string, value: string, change: number, icon: React.ReactNode, color: string) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-        </div>
-        <div className={`p-3 rounded-full ${color} text-white`}>{icon}</div>
-      </div>
-      <div className="mt-4 flex items-center">
-        {change >= 0 ? (
-          <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-        ) : (
-          <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-        )}
-        <span className={`text-sm font-medium ${change >= 0 ? "text-green-600" : "text-red-600"}`}>
-          {change >= 0 ? "+" : ""}
-          {change}%
-        </span>
-        <span className="text-sm text-gray-500 ml-1">vs last month</span>
-      </div>
-    </div>
-  )
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...formData.features]
+    newFeatures[index] = value
+    setFormData(prev => ({
+      ...prev,
+      features: newFeatures
+    }))
+  }
 
-  const renderPackagePerformanceChart = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Package Performance</h3>
-        <BarChart3 className="h-5 w-5 text-gray-400" />
-      </div>
-      <div className="space-y-4">
-        {packagePerformanceData.map((pkg, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">{pkg.name}</span>
-              <span className="text-sm text-gray-500">{pkg.students} students</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{
-                      width: `${(pkg.students / Math.max(...packagePerformanceData.map((p) => p.students))) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                <span className="text-sm font-medium text-gray-700">{pkg.rating}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  const addFeature = () => {
+    setFormData(prev => ({
+      ...prev,
+      features: [...prev.features, ""]
+    }))
+  }
 
-  const renderRevenueDistributionChart = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Revenue Distribution</h3>
-        <PieChart className="h-5 w-5 text-gray-400" />
-      </div>
-      <div className="space-y-3">
-        {revenueDistributionData.map((item, index) => (
-          <div key={index} className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  index === 0
-                    ? "bg-blue-500"
-                    : index === 1
-                      ? "bg-green-500"
-                      : index === 2
-                        ? "bg-purple-500"
-                        : "bg-orange-500"
-                }`}
-              ></div>
-              <span className="text-sm text-gray-700">{item.name}</span>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">${item.value.toLocaleString()}</div>
-              <div className="text-xs text-gray-500">{item.percentage}%</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  const removeFeature = (index: number) => {
+    if (formData.features.length > 1) {
+      const newFeatures = formData.features.filter((_, i) => i !== index)
+      setFormData(prev => ({
+        ...prev,
+        features: newFeatures
+      }))
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const errors: Partial<PackageFormData> = {}
+
+    if (!formData.title.trim()) errors.title = "Title is required"
+    if (!formData.description.trim()) errors.description = "Description is required"
+    if (!formData.price.trim()) errors.price = "Price is required"
+    else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+      errors.price = "Price must be a valid positive number"
+    }
+    if (!formData.duration.trim()) errors.duration = "Duration is required"
+    if (!formData.subjectStream.trim()) errors.subjectStream = "Subject stream is required"
+    
+    const validFeatures = formData.features.filter(f => f.trim())
+    if (validFeatures.length === 0) errors.features = ["At least one feature is required"]
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) return
+
+    // Filter out empty features
+    const validFeatures = formData.features.filter(f => f.trim())
+    
+    const packageData = {
+      ...formData,
+      price: Number(formData.price),
+      features: validFeatures,
+      id: editingPackage?.id || Date.now().toString(),
+      createdAt: editingPackage?.createdAt || new Date().toISOString().split('T')[0],
+      lastUpdated: new Date().toISOString().split('T')[0]
+    }
+
+    console.log("Package data:", packageData)
+    // Here you would typically send the data to your backend
+    
+    handleCloseModal()
+  }
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
@@ -299,54 +273,48 @@ export default function PackagesPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Service Packages</h1>
-              <p className="mt-2 text-gray-600">Manage your mentorship service offerings and track performance</p>
+              <h1 className="text-3xl font-bold text-gray-900">My Service Packages</h1>
+              <p className="mt-2 text-gray-600">Manage your mentorship and consultation service offerings</p>
             </div>
-            <button className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+            <button 
+              onClick={handleCreatePackage}
+              className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Create Package
             </button>
           </div>
         </div>
 
-        {/* Statistics Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Package Performance Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {renderStatCard(
-              "Total Revenue",
-              `$${stats.totalRevenue.toLocaleString()}`,
-              stats.revenueChange,
-              <DollarSign className="h-5 w-5" />,
-              "bg-green-500",
-            )}
-            {renderStatCard(
-              "Total Students",
-              stats.totalStudents.toString(),
-              stats.studentsChange,
-              <Users className="h-5 w-5" />,
-              "bg-blue-500",
-            )}
-            {renderStatCard(
-              "Average Rating",
-              stats.averageRating.toFixed(1),
-              stats.ratingChange,
-              <Star className="h-5 w-5" />,
-              "bg-yellow-500",
-            )}
-            {renderStatCard(
-              "Completion Rate",
-              `${stats.completionRate.toFixed(1)}%`,
-              stats.completionChange,
-              <Activity className="h-5 w-5" />,
-              "bg-purple-500",
-            )}
-          </div>
+        {/* Filters and Search */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search packages..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {renderPackagePerformanceChart()}
-            {renderRevenueDistributionChart()}
+            {/* Subject Stream Filter */}
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={selectedStream}
+                onChange={(e) => setSelectedStream(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Streams</option>
+                {subjectStreams.map(stream => (
+                  <option key={stream} value={stream}>{stream}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -355,8 +323,8 @@ export default function PackagesPage() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               {[
-                { key: "active", label: "Active Packages" },
-                { key: "drafts", label: "Drafts" },
+                { key: "active", label: "Active" },
+                { key: "draft", label: "Drafts" },
                 { key: "archived", label: "Archived" },
               ].map((tab) => (
                 <button
@@ -378,18 +346,22 @@ export default function PackagesPage() {
         {/* Packages Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {getCurrentPackages().map((pkg) => (
-            <div key={pkg.id} className="flex justify-between flex-col bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
-              {pkg.popular && (
-                <div className="absolute top-4 right-4 px-2 py-1 bg-blue-500 text-white text-xs rounded">Popular</div>
-              )}
-
+            <div key={pkg.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
               {/* Package Header */}
-              <div className="mb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{pkg.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>
                   </div>
+                  <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mb-2">
+                    {pkg.subjectStream}
+                  </span>
+                  <p className="text-sm text-gray-600">{pkg.description}</p>
+                </div>
+                <div className="relative">
+                  <button className="p-1 hover:bg-gray-100 rounded">
+                    <MoreVertical className="h-4 w-4 text-gray-400" />
+                  </button>
                 </div>
               </div>
 
@@ -402,25 +374,36 @@ export default function PackagesPage() {
               </div>
 
               {/* Features */}
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-6">
                 {pkg.features.map((feature, j) => (
                   <div key={j} className="flex items-center">
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
                     <span className="text-sm text-gray-700">{feature}</span>
                   </div>
                 ))}
               </div>
 
               {/* Actions */}
-              <div className="flex justify-between space-x-2">
-                <button className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                  <Edit className="mr-1 h-4 w-4" />
-                  Edit
-                </button>
-                <button className="flex items-center px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
-                  <Trash2 className="mr-1 h-4 w-4" />
-                  Delete
-                </button>
+              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                <div className="text-xs text-gray-500">
+                  Updated {new Date(pkg.lastUpdated).toLocaleDateString()}
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleEditPackage(pkg)}
+                    className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <Edit className="mr-1 h-4 w-4" />
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDeletePackage(pkg.id)}
+                    className="flex items-center px-3 py-1 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -441,19 +424,229 @@ export default function PackagesPage() {
             </div>
             <h3 className="mt-4 text-lg font-medium text-gray-900">No packages found</h3>
             <p className="mt-2 text-gray-500">
-              {activeTab === "active"
-                ? "You don't have any active packages yet."
-                : activeTab === "draft"
-                  ? "No draft packages to show."
-                  : "No archived packages to show."}
+              {searchQuery || selectedStream !== "all" 
+                ? "Try adjusting your search or filters."
+                : activeTab === "active"
+                  ? "You don't have any active packages yet."
+                  : activeTab === "draft"
+                    ? "No draft packages to show."
+                    : "No archived packages to show."
+              }
             </p>
-            <button className="mt-4 flex items-center mx-auto px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Package
-            </button>
+            {!searchQuery && selectedStream === "all" && (
+              <button 
+                onClick={handleCreatePackage}
+                className="mt-4 flex items-center mx-auto px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Package
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Create/Edit Package Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {editingPackage ? "Edit Package" : "Create New Package"}
+              </h2>
+              <button
+                onClick={handleCloseModal}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Title */}
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  Package Title *
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    formErrors.title ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="e.g., ML Fundamentals Consultation"
+                />
+                {formErrors.title && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.title}</p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    formErrors.description ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="Describe what this package offers..."
+                />
+                {formErrors.description && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
+                )}
+              </div>
+
+              {/* Price and Duration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                    Price (USD) *
+                  </label>
+                  <input
+                    type="number"
+                    id="price"
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange("price", e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      formErrors.price ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="50"
+                  />
+                  {formErrors.price && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.price}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration *
+                  </label>
+                  <input
+                    type="text"
+                    id="duration"
+                    value={formData.duration}
+                    onChange={(e) => handleInputChange("duration", e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      formErrors.duration ? "border-red-300" : "border-gray-300"
+                    }`}
+                    placeholder="e.g., 30 minutes, 2 hours, 4 weeks"
+                  />
+                  {formErrors.duration && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.duration}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Subject Stream */}
+              <div>
+                <label htmlFor="subjectStream" className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject Stream *
+                </label>
+                <input
+                  type="text"
+                  id="subjectStream"
+                  value={formData.subjectStream}
+                  onChange={(e) => handleInputChange("subjectStream", e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    formErrors.subjectStream ? "border-red-300" : "border-gray-300"
+                  }`}
+                  placeholder="e.g., Machine Learning, Networking, Cloud Computing"
+                />
+                {formErrors.subjectStream && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.subjectStream}</p>
+                )}
+              </div>
+
+              {/* Features */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Package Features *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addFeature}
+                    className="flex items-center px-2 py-1 text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Feature
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {formData.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={(e) => handleFeatureChange(index, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g., 1-on-1 video call"
+                      />
+                      {formData.features.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(index)}
+                          className="p-1 text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {formErrors.features && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.features[0]}</p>
+                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) => handleInputChange("status", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  {editingPackage ? "Update Package" : "Create Package"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'domain-expert' | 'project-member';
+  role: 'domain-expert' | 'project-member' | 'moderator';
   status: 'active' | 'pending' | 'banned' | 'inactive';
   joinDate: string;
   lastActive: string;
@@ -41,6 +42,7 @@ export default function ModeratorUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const router = useRouter();
 
   // Mock data - replace with actual API calls
   const userStats: UserStats = {
@@ -53,6 +55,40 @@ export default function ModeratorUsersPage() {
   };
 
   const users: User[] = [
+    // Example moderators
+    {
+      id: '19',
+      name: 'Alice Moderator',
+      email: 'alice.moderator@brainmap.com',
+      role: 'moderator',
+      status: 'active',
+      joinDate: '2023-05-10',
+      lastActive: '2024-07-11',
+      projects: 0,
+      verified: true
+    },
+    {
+      id: '20',
+      name: 'Bob Supervisor',
+      email: 'bob.supervisor@brainmap.com',
+      role: 'moderator',
+      status: 'active',
+      joinDate: '2024-01-20',
+      lastActive: '2024-07-10',
+      projects: 0,
+      verified: true
+    },
+    {
+      id: '21',
+      name: 'Carol Admin',
+      email: 'carol.admin@brainmap.com',
+      role: 'moderator',
+      status: 'inactive',
+      joinDate: '2023-09-15',
+      lastActive: '2024-06-30',
+      projects: 0,
+      verified: true
+    },
     {
       id: '1',
       name: 'John Doe',
@@ -280,7 +316,8 @@ export default function ModeratorUsersPage() {
   const getRoleBadge = (role: User['role']) => {
     const colors = {
       'domain-expert': 'bg-purple-100 text-purple-800',
-      'project-member': 'bg-green-100 text-green-800'
+      'project-member': 'bg-green-100 text-green-800',
+      'moderator': 'bg-blue-100 text-blue-800'
     };
 
     return (
@@ -290,12 +327,22 @@ export default function ModeratorUsersPage() {
     );
   };
 
-  const filteredUsers = users.filter(user => {
+  // Shuffle users array
+  function shuffleArray<T>(array: T[]): T[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  const shuffledUsers = shuffleArray(users);
+  const filteredUsers = shuffledUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
-    
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -397,7 +444,7 @@ export default function ModeratorUsersPage() {
                     <div className="bg-purple-600 h-2 rounded-full w-[40%] transition-all duration-500"></div>
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-700">Project Members</span>
@@ -407,6 +454,14 @@ export default function ModeratorUsersPage() {
                     <div className="bg-green-600 h-2 rounded-full w-[60%] transition-all duration-500"></div>
                   </div>
                 </div>
+
+              {/* Moderators count row (no bar, just count) */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Moderators</span>
+                  <span className="text-sm font-semibold text-blue-600">{users.filter(u => u.role === 'moderator').length}</span>
+                </div>
+              </div>
               </div>
             </CardContent>
           </Card>
@@ -572,6 +627,7 @@ export default function ModeratorUsersPage() {
                 <option value="all">All Roles</option>
                 <option value="domain-expert">Domain Expert</option>
                 <option value="project-member">Project Member</option>
+                <option value="moderator">Moderator</option>
               </select>
 
               <select
@@ -634,36 +690,39 @@ export default function ModeratorUsersPage() {
                         {new Date(user.lastActive).toLocaleDateString()}
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          {user.status === 'banned' ? (
+                        {user.role !== 'moderator' ? (
+                          <div className="flex items-center space-x-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
-                              disabled
+                              className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                              onClick={() => router.push(`/moderator/users/${user.id}`)}
                             >
-                              <Ban className="h-4 w-4 mr-1" />
-                              Suspended
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
                             </Button>
-                          ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
-                            >
-                              <Ban className="h-4 w-4 mr-1" />
-                              Suspend
-                            </Button>
-                          )}
-                        </div>
+                            {user.status === 'banned' ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                                disabled
+                              >
+                                <Ban className="h-4 w-4 mr-1" />
+                                Suspended
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                              >
+                                <Ban className="h-4 w-4 mr-1" />
+                                Suspend
+                              </Button>
+                            )}
+                          </div>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
