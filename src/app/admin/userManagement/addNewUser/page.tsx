@@ -129,7 +129,7 @@ export default function AddNewUser() {
     switch (formData.role) {
       case "domain-expert":
         return (
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-blue-600" />
@@ -148,6 +148,8 @@ export default function AddNewUser() {
                   value={formData.education}
                   onChange={(e) => handleInputChange("education", e.target.value)}
                   rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+
                 />
               </div>
               
@@ -159,6 +161,8 @@ export default function AddNewUser() {
                   value={formData.qualifications}
                   onChange={(e) => handleInputChange("qualifications", e.target.value)}
                   rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+
                 />
               </div>
               
@@ -170,6 +174,7 @@ export default function AddNewUser() {
                   value={formData.workExperience}
                   onChange={(e) => handleInputChange("workExperience", e.target.value)}
                   rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
             </CardContent>
@@ -178,7 +183,7 @@ export default function AddNewUser() {
 
       case "moderator":
         return (
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-green-600" />
@@ -197,6 +202,7 @@ export default function AddNewUser() {
                     value={newResponsibility}
                     onChange={(e) => setNewResponsibility(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("areasOfResponsibility", newResponsibility)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                   <Button 
                     type="button" 
@@ -229,6 +235,7 @@ export default function AddNewUser() {
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("assignedCategories", newCategory)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                   <Button 
                     type="button" 
@@ -261,6 +268,7 @@ export default function AddNewUser() {
                   value={formData.availabilitySchedule}
                   onChange={(e) => handleInputChange("availabilitySchedule", e.target.value)}
                   rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
             </CardContent>
@@ -269,7 +277,7 @@ export default function AddNewUser() {
 
       case "member":
         return (
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-purple-600" />
@@ -288,6 +296,7 @@ export default function AddNewUser() {
                   value={formData.memberEducation}
                   onChange={(e) => handleInputChange("memberEducation", e.target.value)}
                   rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
 
@@ -299,6 +308,7 @@ export default function AddNewUser() {
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleArrayAdd("interests", newInterest)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                   <Button 
                     type="button" 
@@ -352,7 +362,7 @@ export default function AddNewUser() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information Card */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-600" />
@@ -371,7 +381,7 @@ export default function AddNewUser() {
                     placeholder="Enter full name"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    className={errors.fullName ? "border-red-500" : ""}
+                    className={errors.fullName ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
                   />
                   {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName}</p>}
                 </div>
@@ -384,7 +394,7 @@ export default function AddNewUser() {
                     placeholder="Enter email address"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={errors.email ? "border-red-500" : ""}
+                    className={errors.email ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
                   />
                   {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
                 </div>
@@ -399,7 +409,7 @@ export default function AddNewUser() {
                     placeholder="Enter password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    className={errors.password ? "border-red-500" : ""}
+                    className={errors.password ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
                   />
                   {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                 </div>
@@ -412,7 +422,7 @@ export default function AddNewUser() {
                     placeholder="Confirm password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    className={errors.confirmPassword ? "border-red-500" : ""}
+                    className={errors.confirmPassword ? "border-red-500" : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}
                   />
                   {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
                 </div>
@@ -421,7 +431,7 @@ export default function AddNewUser() {
               <div className="space-y-2">
                 <Label htmlFor="role">User Role *</Label>
                 <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value as UserRole)}>
-                  <SelectTrigger className={errors.role ? "border-red-500" : ""}>
+                  <SelectTrigger className={errors.role ? "border-red-500" : "px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"}>
                     <SelectValue placeholder="Select user role" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -454,11 +464,11 @@ export default function AddNewUser() {
           {renderRoleSpecificFields()}
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-6 border-t">
+          <div className="flex justify-end gap-4 pt-6">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="bg-primary hover:bg-secondary">
               Create User
             </Button>
           </div>

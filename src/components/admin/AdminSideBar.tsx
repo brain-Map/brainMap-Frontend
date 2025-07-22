@@ -117,13 +117,6 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       ],
     },
     {
-      title: "Add New User",
-      icon: UserPlus,
-      url: "/admin/userManagement/addNewUser",
-      count: "12",
-      color: "bg-green-500",
-    },
-    {
       title: "Active Users",
       icon: UserCheck,
       url: "/admin/userManagement/active-users",
@@ -136,6 +129,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       url: "/admin/userManagement/banned-users",
       count: "3",
       color: "bg-red-500",
+    },
+    {
+      title: "Add New User",
+      icon: UserPlus,
+      url: "/admin/userManagement/addNewUser",
+      count: "12",
+      color: "bg-green-500",
     },
   ];
 
