@@ -171,7 +171,6 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
 
   const tabs = [
     { name: 'Overview', icon: Edit },
-    { name: 'Notes', icon: Edit },
     { name: 'Calendar', icon: Calendar },
     { name: 'Kanban', icon: SquareKanban  },
     { name: 'Message', icon: MessageSquare },

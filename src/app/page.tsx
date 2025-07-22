@@ -6,7 +6,7 @@ import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';
 import ConnectLearnAchieveHero from '../components/ConnectLearnAchievePoster';
 import PopularServices from '../components/Carousel'
-import { ArrowRight, PlayCircle, CheckCircle, Shield, Users,TrendingUp, Star
+import { ArrowRight, CheckCircle, Shield, Users,TrendingUp, Star
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -113,7 +113,7 @@ const successStories: SuccessStory[] = [
                 </div>
                 <div className="ml-2">
                   <div className="text-xl font-bold text-gray-900 pl-5">4.9/5</div>
-                  <div className="text-sm text-gray-500 pl-5">App Store Rating</div>
+                  <div className="text-sm text-gray-500 pl-5">Success Rating</div>
                 </div>
               </div>
             </div>
@@ -154,7 +154,7 @@ const successStories: SuccessStory[] = [
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Good Morning!</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">Welcome back!</h3>
                     <p className="text-gray-600">Let's make today productive</p>
                   </div>
                   <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
@@ -279,16 +279,21 @@ const successStories: SuccessStory[] = [
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center gap-8">
             {/* Left side - Image */}
-            <div className="lg:w-1/2">
-              <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden shadow-lg">
+            <div className="lg:w-1/2 h-auto">
+              <div className="relative w-full  rounded-lg overflow-hidden shadow-lg">
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <div className="text-center w-full h-full flex items-center justify-center">
+                    {/* <div className="w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <p className="text-gray-600">Video Call Interface</p>
+                    <p className="text-gray-600">Video Call Interface</p> */}
+                    <img
+                      src="/image/3807471.jpg"
+                      alt="Project Success Partner"
+                      className="w-full h-full object-cover"/>
+
                   </div>
                 </div>
               </div>
@@ -358,12 +363,10 @@ const successStories: SuccessStory[] = [
                 <div className="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-hidden shadow-xl">
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
-                      <div className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-600 font-medium">Domain Expert</p>
+                          <img
+                      src="/image/becomeamentor.jpg"
+                      alt="Project Success Partner"
+                      className="w-full h-full object-cover"/>
                     </div>
                   </div>
                 </div>
