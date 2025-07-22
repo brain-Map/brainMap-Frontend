@@ -20,7 +20,7 @@ export default function RootLayout({
   }
   return (
     <>
-        <div className="flex min-h-screen bg-gray-50 w-[100%]">
+        <div className="flex min-h-screen bg-gray-50 w-[100%] mt-[60px]">
           <Sidebar />
           <main className="flex-1">{children}</main>
         </div>

@@ -59,35 +59,24 @@ export function Sidebar() {
       icon: BookOpen,
       url: "/domain-expert/requests",
       count: "3",
-      color: "bg-orange-500",
-    },
-    {
-      title: "Task Board",
-      icon: ClipboardList,
-      url: "/domain-expert/tasks",
-      count: "8",
-      color: "bg-primary",
     },
     {
       title: "Chat Messages",
-      url: "/domain-expert/chat",
+      url: "/chat",
       icon: MessageSquare,
       count: "5",
-      color: "bg-green-500",
     },
     {
       title: "Video Calls",
       url: "/domain-expert/video-calls",
       icon: Video,
       count: "2",
-      color: "bg-purple-500",
     },
     {
       title: "Ratings & Reviews",
       icon: Star,
       url: "/domain-expert/reviews",
       count: "12",
-      color: "bg-yellow-500",
     },
   ]
 
@@ -97,15 +86,13 @@ export function Sidebar() {
       title: "Finances",
       icon: CreditCard,
       url: "/domain-expert/finances",
-      count: "$3,240",
-      color: "bg-green-500",
+      count: "Rs. 3,240",
     },
     {
       title: "Reports",
       icon: FileText,
       url: "/domain-expert/reports",
       count: "4",
-      color: "bg-primary",
     },
   ]
 
@@ -116,42 +103,36 @@ export function Sidebar() {
       icon: Package,
       url: "/domain-expert/projects/ai-healthcare",
       count: "Active",
-      color: "bg-green-500",
     },
     {
       title: "EdTech Learning System",
       icon: BookOpen,
       url: "/domain-expert/projects/edtech-learning",
       count: "Review",
-      color: "bg-primary",
     },
     {
       title: "FinTech Mobile App",
       icon: CreditCard,
       url: "/domain-expert/projects/fintech-mobile",
       count: "Planning",
-      color: "bg-purple-500",
     },
     {
       title: "Smart City IoT",
       icon: ClipboardList,
       url: "/domain-expert/projects/smart-city",
       count: "Testing",
-      color: "bg-orange-500",
     },
     {
       title: "E-commerce Analytics",
       icon: FileText,
       url: "/domain-expert/projects/ecommerce-analytics",
       count: "Active",
-      color: "bg-green-500",
     },
     {
       title: "Blockchain Wallet",
       icon: CreditCard,
       url: "/domain-expert/projects/blockchain-wallet",
       count: "Planning",
-      color: "bg-purple-500",
     },
   ]
 
@@ -170,7 +151,7 @@ export function Sidebar() {
                 <button
                   key={item.title}
                   onClick={() => handleNavigate(item.url)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
+                  className={`w-full flex items-center gap-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                     pathname === item.url
                       ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -194,7 +175,7 @@ export function Sidebar() {
                 <button
                   key={project.title}
                   onClick={() => handleNavigate(project.url)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === project.url
                       ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -204,7 +185,7 @@ export function Sidebar() {
                   <project.icon className="h-4 w-4" />
                   <span className="flex-1 text-left truncate">{project.title}</span>
                   <span
-                    className={`text-xs px-2 py-1 rounded ${
+                    className={`text-xs py-1 rounded ${
                       project.count === "Active"
                         ? "bg-green-100 text-green-700"
                         : project.count === "Review"
@@ -246,7 +227,7 @@ export function Sidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
+                  {/* <div className={`w-2 h-2 rounded-full ${item.color}`}></div> */}
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1 text-left">{item.title}</span>
                   <span className="text-xs text-gray-500">{item.count}</span>
@@ -263,13 +244,12 @@ export function Sidebar() {
                 <button
                   key={item.title}
                   onClick={() => handleNavigate(item.url)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === item.url
                       ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1 text-left">{item.title}</span>
                   <span className="text-xs text-gray-500">{item.count}</span>
