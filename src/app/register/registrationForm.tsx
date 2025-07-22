@@ -244,10 +244,10 @@ const UserRegistrationForm = () => {
             Welcome! Your {userType.toLowerCase()} profile has been created successfully.
           </p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/project-member/dashboard')}
             className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black transition-colors"
           >
-            Go to Login
+            Go to Dashboard
           </button>
         </div>
       </div>
