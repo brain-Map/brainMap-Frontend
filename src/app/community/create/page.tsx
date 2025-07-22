@@ -31,12 +31,13 @@ import {
   Hash,
 } from "lucide-react"
 import { title } from "process"
+import { communityApi, CreatePostRequest } from "@/services/communityApi"
 
 interface Post {
   type: "discussion" | "project" | "help"
   title: string
   content: string
-  category: string
+  // category: string
   tags: string[]
 }
 
@@ -74,7 +75,7 @@ export default function BrainMapCommunityPost() {
     type: "discussion",
     title: "",
     content: "",
-    category: "",
+    // category: "",
     tags: [],
   })
   const [tagInput, setTagInput] = useState("")
@@ -103,49 +104,35 @@ export default function BrainMapCommunityPost() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
+    setError('')
 
-    try{
-      if(!post.title.trim() || !post.content.trim() || !post.category){
-        setError("This field is required")
+    try {
+      if (!post.title.trim() || !post.content.trim()) {
+        setError("All required fields must be filled")
         setIsSubmitting(false)
         return
       }
 
-      const postData ={
+      const postData: CreatePostRequest = {
         type: post.type,
         title: post.title.trim(),
         content: post.content.trim(),
-        category: post.category,
+        // category: post.category,
         tags: post.tags
       }
 
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch('http://localhost:8080/api/v1/posts', {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(postData)
-      })
-
-      if (response.ok){
-        const responseData = await response.json()
-        console.log('Post Created Successfully: ', responseData);
-        router.push(`/community/post/${responseData.communityPostId}`)
-      } else {
-        const errorData = await response.json()
-        console.error('Failed to create post: ', errorData);
-        setError(`Failed to create post: ${errorData.message || 'Unknown error'}`)
-        
-      }
-    } catch(err){
-      console.error("Error creating post: ", err)
-     setError('An error occurred while creating the post. Please try again.')
+      // Use the communityApi service instead of direct fetch
+      const response = await communityApi.createPost(postData)
+      
+      console.log('Post Created Successfully:', response)
+      router.push(`/community/post/${response.communityPostId}`)
+      
+    } catch (err: any) {
+      console.error("Error creating post:", err)
+      setError(err.response?.data?.message || 'An error occurred while creating the post. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
-    
   }
 
   const insertMarkdown = (syntax: string, placeholder = "") => {
@@ -231,7 +218,7 @@ export default function BrainMapCommunityPost() {
             </div>
             <div className="flex items-center gap-2">
               {getPostTypeIcon(post.type)}
-              <span className="text-sm text-gray-600">{post.category || "Select a category"}</span>
+              {/* <span className="text-sm text-gray-600">{post.category || "Select a category"}</span> */}
             </div>
           </div>
         </div>
@@ -313,7 +300,7 @@ export default function BrainMapCommunityPost() {
                           ? "ring-2 ring-blue-500 border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
-                      onClick={() => setPost({ ...post, type, category: "" })}
+                      onClick={() => setPost({ ...post, type })}
                     >
                       <CardContent className="p-4 text-center">
                         <div className={`w-10 h-10 bg-${color}-100 rounded-lg flex items-center justify-center mx-auto mb-3`}>
@@ -351,7 +338,7 @@ export default function BrainMapCommunityPost() {
                 </div>
 
                 {/* Category */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="category" className="text-sm font-medium text-gray-700">
                     Category *
                   </Label>
@@ -367,7 +354,7 @@ export default function BrainMapCommunityPost() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
 
                 {/* Tags */}
                 <div className="space-y-3">
