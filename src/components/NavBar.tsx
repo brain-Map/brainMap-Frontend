@@ -24,6 +24,7 @@ import {
   GraduationCap,
   Shield,
   Crown,
+  MessageCircle,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,23 +101,21 @@ const NavBar: React.FC = () => {
   // Navigation items for project members
   const projectMemberNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/project-member/dashboard' },
-    { label: 'Projects', href: '/project-member/projects' },
-    { label: 'Kanban Board', href: '/project-member/listBoard' },
-    { label: 'Todo & Notes', href: '/project-member/todo' },
-    { label: 'Calendar', href: '/project-member/calendar' },
-    { label: 'Chat', href: '/project-member/chat' },
+    { label: 'Find a Mentor', href: '/search-experts' },
+    { label: 'Find a Service', href: '/services' },
     { label: 'Community', href: '/community' },
+    { label: 'About Us', href: '/about' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   // Navigation items for mentors (previously domain experts)
   const mentorNavItems: NavItem[] = [
-    { label: 'Dashboard', href: '/mentor/dashboard' },
-    { label: 'Packages', href: '/mentor/packages' },
-    { label: 'Requests', href: '/mentor/requests' },
-    { label: 'Video Calls', href: '/mentor/video-calls' },
-    { label: 'Calendar', href: '/mentor/calendar' },
-    { label: 'Finances', href: '/mentor/finances' },
+    { label: 'Dashboard', href: '/domain-expert/dashboard' },
+    { label: 'My Services', href: '/domain-expert/packages' },
+    { label: 'My Wallet', href: '/domain-expert/finances' },
     { label: 'Community', href: '/community' },
+    { label: 'About Us', href: '/about' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   // Navigation items for moderators
@@ -144,13 +143,13 @@ const NavBar: React.FC = () => {
     if (!user) return visitorNavItems;
     
     switch (userRole) {
-      case 'project-member':
+      case 'Project Member':
         return projectMemberNavItems;
-      case 'mentor':
+      case 'Mentor':
         return mentorNavItems;
-      case 'moderator':
+      case 'Moderator':
         return moderatorNavItems;
-      case 'admin':
+      case 'Admin':
         return adminNavItems;
       default:
         return visitorNavItems;
@@ -178,7 +177,7 @@ const NavBar: React.FC = () => {
 
     // Add role-specific dashboard link
     switch (userRole) {
-      case 'project-member':
+      case 'Project Member':
         return [
           { 
             label: 'Dashboard', 
@@ -188,7 +187,7 @@ const NavBar: React.FC = () => {
           },
           ...baseItems
         ];
-      case 'mentor':
+      case 'Mentor':
         return [
           { 
             label: 'Dashboard', 
@@ -198,7 +197,7 @@ const NavBar: React.FC = () => {
           },
           ...baseItems
         ];
-      case 'moderator':
+      case 'Moderator':
         return [
           { 
             label: 'Dashboard', 
@@ -208,7 +207,7 @@ const NavBar: React.FC = () => {
           },
           ...baseItems
         ];
-      case 'admin':
+      case 'Admin':
         return [
           { 
             label: 'Dashboard', 
@@ -243,13 +242,13 @@ const NavBar: React.FC = () => {
   // Get role-specific search placeholder
   const getSearchPlaceholder = (): string => {
     switch (userRole) {
-      case 'project-member':
+      case 'Project Member':
         return 'Search projects, tasks, or team members...';
-      case 'mentor':
+      case 'Mentor':
         return 'Search requests, students, or resources...';
-      case 'moderator':
+      case 'Moderator':
         return 'Search users, reports, or content...';
-      case 'admin':
+      case 'Admin':
         return 'Search users, content, or system data...';
       default:
         return 'Search projects, experts, or topics...';
@@ -259,13 +258,13 @@ const NavBar: React.FC = () => {
   // Get role-specific create button text and action
   const getCreateButtonConfig = () => {
     switch (userRole) {
-      case 'project-member':
+      case 'Project Member':
         return { text: 'New Project', action: () => console.log('Create project') };
-      case 'mentor':
+      case 'Mentor':
         return { text: 'New Package', action: () => console.log('Create package') };
-      case 'moderator':
+      case 'Moderator':
         return { text: 'New Report', action: () => console.log('Create report') };
-      case 'admin':
+      case 'Admin':
         return { text: 'Create', action: () => console.log('Admin create') };
       default:
         return { text: 'Create', action: () => console.log('Default create') };
@@ -277,13 +276,13 @@ const NavBar: React.FC = () => {
     if (!user || !isDashboard) return '';
     
     switch (userRole) {
-      case 'project-member':
+      case 'Project Member':
         return 'border-l-4 border-l-blue-500';
-      case 'mentor':
+      case 'Mentor':
         return 'border-l-4 border-l-green-500';
-      case 'moderator':
+      case 'Moderator':
         return 'border-l-4 border-l-yellow-500';
-      case 'admin':
+      case 'Admin':
         return 'border-l-4 border-l-red-500';
       default:
         return '';
@@ -448,7 +447,14 @@ const NavBar: React.FC = () => {
                 </>
               )}
 
-              {/* Notifications */}
+              {/* Notifications and Chat */}
+              {(userRole === 'Project Member' || userRole === 'Mentor') && (
+                <button className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
+                  <MessageCircle className="w-5 h-5 text-gray-600 group-hover:text-primary" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                </button>
+              )}
+              
               <button className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
                 <Bell className="w-5 h-5 text-gray-600 group-hover:text-primary" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -490,17 +496,17 @@ const NavBar: React.FC = () => {
                               <div className="text-sm text-gray-500">{user.email}</div>
                               {userRole && (
                                 <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
-                                  userRole === 'admin' ? 'bg-red-100 text-red-700' :
-                                  userRole === 'moderator' ? 'bg-yellow-100 text-yellow-700' :
-                                  userRole === 'mentor' ? 'bg-green-100 text-green-700' :
-                                  userRole === 'project-member' ? 'bg-blue-100 text-blue-700' :
+                                  userRole === 'Admin' ? 'bg-red-100 text-red-700' :
+                                  userRole === 'Moderator' ? 'bg-yellow-100 text-yellow-700' :
+                                  userRole === 'Mentor' ? 'bg-green-100 text-green-700' :
+                                  userRole === 'Project Member' ? 'bg-blue-100 text-blue-700' :
                                   'bg-gray-100 text-gray-700'
                                 }`}>
-                                  {userRole === 'admin' && <Crown className="w-3 h-3" />}
-                                  {userRole === 'moderator' && <Shield className="w-3 h-3" />}
-                                  {userRole === 'mentor' && <GraduationCap className="w-3 h-3" />}
-                                  {userRole === 'project-member' && <Briefcase className="w-3 h-3" />}
-                                  {userRole.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                  {userRole === 'Admin' && <Crown className="w-3 h-3" />}
+                                  {userRole === 'Moderator' && <Shield className="w-3 h-3" />}
+                                  {userRole === 'Mentor' && <GraduationCap className="w-3 h-3" />}
+                                  {userRole === 'Project Member' && <Briefcase className="w-3 h-3" />}
+                                  {userRole}
                                 </span>
                               )}
                             </div>
