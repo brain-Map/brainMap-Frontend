@@ -155,13 +155,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       count: "15",
       color: "bg-yellow-500",
     },
-    {
-      title: "Security Alerts",
-      icon: Shield,
-      url: "/admin/moderation/security-alerts",
-      count: "2",
-      color: "bg-red-500",
-    },
+    // {
+    //   title: "Security Alerts",
+    //   icon: Shield,
+    //   url: "/admin/moderation/security-alerts",
+    //   count: "2",
+    //   color: "bg-red-500",
+    // },
   ];
 
   return (
