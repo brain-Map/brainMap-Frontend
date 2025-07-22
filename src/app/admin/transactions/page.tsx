@@ -14,6 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -38,6 +44,8 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
+  ArrowUpDown,
   RefreshCw,
   Clock,
   CreditCard,
@@ -235,6 +243,10 @@ export default function TransactionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Sorting
+  const [sortField, setSortField] = useState("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
   // Apply filters
   useEffect(() => {
     let filtered = transactions;
@@ -275,6 +287,19 @@ export default function TransactionsPage() {
       });
     }
 
+    // Apply sorting
+    filtered = filtered.sort((a, b) => {
+      const aValue = a[sortField as keyof Transaction];
+      const bValue = b[sortField as keyof Transaction];
+      const direction = sortDirection === "asc" ? 1 : -1;
+      
+      if (aValue === undefined && bValue === undefined) return 0;
+      if (aValue === undefined) return direction;
+      if (bValue === undefined) return -direction;
+      
+      return aValue < bValue ? -direction : aValue > bValue ? direction : 0;
+    });
+
     setFilteredTransactions(filtered);
     setCurrentPage(1);
   }, [
@@ -284,6 +309,8 @@ export default function TransactionsPage() {
     roleFilter,
     dateRange,
     transactions,
+    sortField,
+    sortDirection,
   ]);
 
   // Calculate summary stats
@@ -324,6 +351,15 @@ export default function TransactionsPage() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
   };
 
   const handleTransactionAction = (
@@ -589,28 +625,41 @@ export default function TransactionsPage() {
             {/* Filters and Search */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Search Transactions
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by username, ID, or project..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
-                      />
+                <div className="space-y-6">
+                  {/* Search Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Search Transactions
+                      </label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search by username, ID, or project..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                        />
+                      </div>
                     </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto mt-2 sm:mt-0"
+                    >
+                      <Filter className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 lg:w-auto">
+
+                  {/* Filter Controls Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Type
                       </label>
                       <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                           <SelectValue placeholder="All Types" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -625,7 +674,7 @@ export default function TransactionsPage() {
                         Status
                       </label>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                           <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -642,7 +691,7 @@ export default function TransactionsPage() {
                         Role
                       </label>
                       <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                           <SelectValue placeholder="All Roles" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -656,7 +705,7 @@ export default function TransactionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Date Range
                       </label>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Input
                           type="date"
                           value={dateRange.start}
@@ -682,14 +731,6 @@ export default function TransactionsPage() {
                       </div>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleClearFilters}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 lg:mb-0"
-                  >
-                    <Filter className="mr-2 h-4 w-4" />
-                    Clear Filters
-                  </Button>
                 </div>
               </div>
             </div>
@@ -716,158 +757,195 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-gray-50 border-b border-gray-200">
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-semibold text-gray-900 py-4">Transaction ID</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Username</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Role</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Type</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Amount</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4">Date</TableHead>
-                      <TableHead className="text-right font-semibold text-gray-900 py-4">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                      {currentTransactions.length > 0 ? (
-                        currentTransactions.map((transaction, index) => (
-                          <TableRow
-                            key={transaction.id}
-                            className={`border-gray-200 hover:bg-gray-50 transition-colors ${
-                              index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
-                            }`}
+              {/* Table Header */}
+              <div className="bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-gray-700">
+                  <div
+                    className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("id")}
+                  >
+                    Transaction ID
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div
+                    className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("username")}
+                  >
+                    Username
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div className="col-span-1">Role</div>
+                  <div
+                    className="col-span-1 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("type")}
+                  >
+                    Type
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div
+                    className="col-span-1 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("amount")}
+                  >
+                    Amount
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div
+                    className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("status")}
+                  >
+                    Status
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div
+                    className="col-span-1 flex items-center cursor-pointer hover:text-gray-900"
+                    onClick={() => handleSort("date")}
+                  >
+                    Date
+                    <ArrowUpDown className="ml-2 w-4 h-4" />
+                  </div>
+                  <div className="col-span-2">Actions</div>
+                </div>
+              </div>
+
+              {/* Table Body */}
+              <div className="divide-y divide-gray-100">
+                {currentTransactions.length > 0 ? (
+                  currentTransactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="col-span-2">
+                        <span className="font-mono text-sm font-medium text-gray-900">
+                          {transaction.id}
+                        </span>
+                      </div>
+
+                      <div className="col-span-2">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {transaction.username}
+                          </p>
+                          {transaction.projectName && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {transaction.projectName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="col-span-1">
+                        <Badge
+                          variant="outline"
+                          className={
+                            transaction.userRole === "Expert"
+                              ? "border-purple-200 text-purple-700"
+                              : "border-blue-200 text-blue-700"
+                          }
+                        >
+                          {transaction.userRole}
+                        </Badge>
+                      </div>
+
+                      <div className="col-span-1">
+                        <Badge className={getTypeColor(transaction.type)}>
+                          {transaction.type}
+                        </Badge>
+                      </div>
+
+                      <div className="col-span-1">
+                        <span className="font-semibold text-gray-900">
+                          ${transaction.amount.toFixed(2)}
+                        </span>
+                      </div>
+
+                      <div className="col-span-2">
+                        <Badge className={getStatusColor(transaction.status)}>
+                          {transaction.status}
+                        </Badge>
+                      </div>
+
+                      <div className="col-span-1">
+                        <span className="text-gray-700">
+                          {new Date(transaction.date).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <div className="col-span-2">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                           >
-                          <TableCell className="font-mono text-sm">
-                            {transaction.id}
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {transaction.username}
-                              </p>
-                              {transaction.projectName && (
-                                <p className="text-xs text-gray-500">
-                                  {transaction.projectName}
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                transaction.userRole === "Expert"
-                                  ? "border-purple-200 text-purple-700"
-                                  : "border-blue-200 text-blue-700"
-                              }
-                            >
-                              {transaction.userRole}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getTypeColor(transaction.type)}>
-                              {transaction.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            ${transaction.amount.toFixed(2)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={getStatusColor(transaction.status)}
-                            >
-                              {transaction.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(transaction.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedTransaction(transaction);
-                                  setIsDetailsModalOpen(true);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="inline-flex items-center px-2 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
                               {transaction.status === "Pending" && (
                                 <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
+                                  <DropdownMenuItem
                                     onClick={() =>
-                                      handleTransactionAction(
-                                        transaction.id,
-                                        "approve"
-                                      )
+                                      handleTransactionAction(transaction.id, "approve")
                                     }
-                                    className="text-green-600 hover:text-green-700"
+                                    className="text-green-600 focus:text-green-700"
                                   >
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Approve
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() =>
-                                      handleTransactionAction(
-                                        transaction.id,
-                                        "reject"
-                                      )
+                                      handleTransactionAction(transaction.id, "reject")
                                     }
-                                    className="text-red-600 hover:text-red-700"
+                                    className="text-red-600 focus:text-red-700"
                                   >
-                                    <X className="h-4 w-4" />
-                                  </Button>
+                                    <X className="w-4 h-4 mr-2" />
+                                    Reject
+                                  </DropdownMenuItem>
                                 </>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
+                              <DropdownMenuItem
                                 onClick={() =>
-                                  handleTransactionAction(
-                                    transaction.id,
-                                    "flag"
-                                  )
+                                  handleTransactionAction(transaction.id, "flag")
                                 }
-                                className="text-orange-600 hover:text-orange-700"
+                                className="text-orange-600 focus:text-orange-700"
                               >
-                                <Flag className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-12">
-                            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                              <Search className="h-6 w-6 text-gray-400" />
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
-                              No transactions found
-                            </h3>
-                            <p className="text-gray-500 mb-4">
-                              No transactions match your current search criteria.
-                            </p>
-                            <Button
-                              variant="outline"
-                              onClick={handleClearFilters}
-                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                              Clear Filters
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                                <Flag className="w-4 h-4 mr-2" />
+                                Flag for Review
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-6 py-12 text-center">
+                    <Search className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No transactions found
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      No transactions match your current search criteria.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearFilters}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                )}
+              </div>
 
                 {/* Pagination */}
                 {filteredTransactions.length > 0 && totalPages > 1 && (
