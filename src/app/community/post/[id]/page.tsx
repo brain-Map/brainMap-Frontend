@@ -1,8 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
-import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2 } from "lucide-react"
+import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2, Edit, Trash2 } from "lucide-react"
+import { communityApi } from "@/services/communityApi"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
+import DeleteModal from "@/components/modals/DeleteModal"
+import { useDeleteModal } from "@/hooks/useDeleteModal"
 
 interface Comment {
   id: string
@@ -24,6 +29,7 @@ interface Post {
   title: string
   content: string
   author: {
+    id: string
     name: string
     avatar: string
     role: string
@@ -101,6 +107,8 @@ const formatDate = (dateString: string) => {
 export default function PostPage() {
   const params = useParams()
   const postId = params.id
+  const { user } = useAuth()
+  const router = useRouter()
   
   const [post, setPost] = useState<Post | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
@@ -110,6 +118,47 @@ export default function PostPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
   const [sortBy, setSortBy] = useState("recent")
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const deleteModal = useDeleteModal({
+    title: "Delete Post",
+    confirmText: "Delete Post"
+  })
+
+  const handleEditPost = () => {
+    setShowOptionsMenu(false)
+    console.log("Edit post:", post?.id)
+    router.push(`/community/post/${post?.id}/edit`)
+  }
+
+  const handleDeletePost = () => {
+    setShowOptionsMenu(false)
+    deleteModal.openModal(
+      async (postId: string) => {
+        await communityApi.deletePost(postId)
+        router.push("/community")
+      },
+      [post?.id as string],
+      post?.title
+    )
+  }
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowOptionsMenu(false)
+      }
+    }
+
+    if (showOptionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showOptionsMenu])
 
   // Fetch post data from API
   useEffect(() => {
@@ -118,48 +167,39 @@ export default function PostPage() {
         setLoading(true)
         setError(null)
         
-        const response = await fetch(`http://localhost:8080/api/v1/posts/${postId}`)
+        const data = await communityApi.getPost(postId as string)
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch post: ${response.status}`)
-        }
-        
-        const data = await response.json()
         console.log("Post Data: ", data);
         console.log("Post Title: ", data.title);
         
         
-        // Transform API data to match our interface if needed
+        // Transform API data to match our interface
         const transformedPost: Post = {
-          id: data.communityPostId || postId,
+          id: data.communityPostId || postId as string,
           title: data.title || "Untitled Post",
           content: data.content || "",
           author: {
+            id: data.author?.id,
             name: data.author?.username || "Anonymous",
             avatar: data.author?.avatar || "/placeholder.svg?height=40&width=40",
             role: data.author?.role || "Student",
             verified: data.author?.verified || false,
           },
-          category: data.category || "General",
-          tags: data.tags?.map(tag => ({
+          category: data.type?.toLowerCase() || "discussion", // Map type to category
+          tags: data.tags?.map((tag: any) => ({
             name: tag.name,
             id: tag.id
           })) || [],
           likes: data.likes || 0,
-          comments: data.comments || 0,
+          comments: data.replies || 0, // Use replies field for comments count
           views: data.views || 0,
           createdAt: formatDate(data.createdAt) || "Unknown",
           isLiked: data.isLiked || false,
-          isBookmarked: data.isBookmarked || false,
-          type: data.type?.toLowerCase() || "discussion",
+          isBookmarked: false,
+          type: (data.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
         }
         
         setPost(transformedPost)
-        
-        // If the API response includes comments, set them
-        if (data.commentsList) {
-          setComments(data.commentsList)
-        }
         
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch post")
@@ -176,14 +216,16 @@ export default function PostPage() {
 
   const handleBack = () => {
     // In a real app, this would use router.back() or navigate to community page
+    
     console.log("Navigate back to community")
+    router.push("/community")
   }
 
   const handleLike = async () => {
     if (!post) return
     
     try {
-      const response = await fetch(`http://localhost:8080/posts/${post.id}/like`, {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +249,7 @@ export default function PostPage() {
     if (!post) return
     
     try {
-      const response = await fetch(`http://localhost:8080/posts/${post.id}/bookmark`, {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/bookmark`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +296,7 @@ export default function PostPage() {
     if (!newComment.trim() || !post) return
 
     try {
-      const response = await fetch(`http://localhost:8080/posts/${post.id}/comments`, {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -458,7 +500,7 @@ export default function PostPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       
-      <div className="sticky top-0 z-50 ">
+      <div className="top-0 z-50 ">
         <div className="max-w-7xl mx-auto px-4 py-4 mt-4">
           <div className="flex items-center gap-4">
             <button 
@@ -570,18 +612,55 @@ export default function PostPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  
+                  {/* Options Menu - Only show if user is the author */}
+                  {user && post && user.id === post.author.id && (
+                    <div className="relative" ref={menuRef}>
+                      <button 
+                        onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                      
+                      {showOptionsMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                          <div className="py-2">
+                            <button
+                              onClick={handleEditPost}
+                              className="flex items-center gap-3 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit Post
+                            </button>
+                            <button
+                              onClick={handleDeletePost}
+                              className="flex items-center gap-3 w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete Post
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Regular more options for non-authors */}
+                  {(!user || !post || user.id !== post.author.id) && (
+                    <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-4">{post.title}</h1>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {post.tags.map((tag) => (
                     <span
-                      key={tag}
+                      key={tag.id}
                       className="px-2 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md font-normal cursor-pointer transition-colors"
                     >
-                      #{tag}
+                      #{tag.name}
                     </span>
                   ))}
                 </div>
@@ -688,6 +767,9 @@ export default function PostPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Modal */}
+      <DeleteModal {...deleteModal.modalProps} />
     </div>
   )
 }
