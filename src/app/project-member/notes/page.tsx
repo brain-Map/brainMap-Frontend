@@ -1,11 +1,6 @@
-import React from 'react'
+import React from 'react';
+import Notes from './notes';
 
-const page = () => {
-  return (
-    <div>
-      <h1>notes</h1>
-    </div>
-  )
-}
-
-export default page
+export default function NotesPage() {
+  return <Notes />;
+} 

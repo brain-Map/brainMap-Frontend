@@ -259,15 +259,15 @@ export default function ChatPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 h-full overflow-hidden">
           {/* Conversations List */}
           <div className="lg:col-span-1 h-full overflow-hidden">
-            <div className="bg-white shadow-sm border border-gray-200 h-full flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex-shrink-0">
+            <div className="bg-white shadow-sm  h-full flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-gray-200 bg-gray-100 flex-shrink-0">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
-                  <div className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <div className="bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {conversations.filter((c) => c.unreadCount > 0).length}
                   </div>
                 </div>
-                <div className="relative">
+                <div className="relative bg-white rounded-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <input
                     type="text"
@@ -290,7 +290,7 @@ export default function ChatPage() {
                     >
                       <div className="relative">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-blue-600">{conversation.studentAvatar}</span>
+                          <span className="text-sm font-medium text-primary">{conversation.studentAvatar}</span>
                         </div>
                         {conversation.isOnline && (
                           <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
@@ -304,7 +304,7 @@ export default function ChatPage() {
                         <p className="text-sm text-gray-500 truncate">{conversation.lastMessage}</p>
                       </div>
                       {conversation.unreadCount > 0 && (
-                        <div className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        <div className="bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                           {conversation.unreadCount}
                         </div>
                       )}
@@ -317,16 +317,16 @@ export default function ChatPage() {
 
           {/* Chat Window */}
           <div className="lg:col-span-3 h-full overflow-hidden">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col overflow-hidden">
+            <div className="bg-white  shadow-sm border-l border-gray-200 h-full flex flex-col overflow-hidden">
               {currentConversation ? (
                 <>
                   {/* Chat Header */}
-                  <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                  <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-gray-100">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="relative">
                           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">
+                            <span className="text-sm font-medium text-primary">
                               {currentConversation.studentAvatar}
                             </span>
                           </div>
@@ -365,7 +365,7 @@ export default function ChatPage() {
                         >
                           <div
                             className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.sender === "me" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
+                              message.sender === "me" ? "bg-primary text-white" : "bg-gray-200 text-gray-900"
                             }`}
                           >
                             <p className="text-sm">{message.content}</p>
