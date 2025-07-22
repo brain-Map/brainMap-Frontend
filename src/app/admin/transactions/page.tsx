@@ -377,33 +377,37 @@ export default function TransactionsPage() {
   ];
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="flex-1 overflow-auto bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid gap-3">
         {/* Header */}
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-gray-500">
-            <span>Admin</span>
-            <ChevronLeft className="h-4 w-4 mx-1 rotate-180" />
-            <span className="text-gray-900 font-medium">Transactions</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Transaction Management
-            </h1>
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handleRefresh}
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
-              <ExportUtils transactions={filteredTransactions} />
+        <div className="flex justify-between">
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <DollarSign className="w-10 h-10 text-primary" />
+              </div>
+              <div className="flex-1 grid gap-1">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Transaction Management
+                </h1>
+                <p className="text-gray-600">
+                  Manage and oversee all financial transactions in the system.
+                </p>
+              </div>
             </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+            <ExportUtils transactions={filteredTransactions} />
           </div>
         </div>
 
@@ -411,19 +415,19 @@ export default function TransactionsPage() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="mt-3 p-2 grid w-full h-15 grid-cols-3 gap-3">
             <TabsTrigger
-              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
               value="overview"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger
-              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
               value="transactions"
             >
               Transactions
             </TabsTrigger>
             <TabsTrigger
-              className=" data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
+              className="data-[state=active]:bg-primary data-[state=active]:text-white hover:bg-secondary bg-gray-200 text-xl focus:bg-primary focus:text-white"
               value="audit"
             >
               Audit Logs
@@ -431,7 +435,7 @@ export default function TransactionsPage() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Status cards */}
+            {/* Stats Cards */}
             <div className="grid gap-6 md:grid-cols-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
@@ -443,18 +447,13 @@ export default function TransactionsPage() {
                       {summaryStats.totalTransactions}
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-blue-200 text-white">
-                    <Users className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 rounded-full bg-blue-500 text-white">
+                    <Users className="h-6 w-6" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <span className="text-sm font-medium text-green-600">
-                    +12%
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {" "}
-                    from last month
-                  </span>
+                  <span className="text-sm font-medium text-green-600">+12%</span>
+                  <span className="text-sm text-gray-600"> from last month</span>
                 </div>
               </div>
 
@@ -468,18 +467,13 @@ export default function TransactionsPage() {
                       ${summaryStats.totalPayments.toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-green-200 text-white">
-                    <TrendingUp className="h-8 w-8 text-green-600" />
+                  <div className="p-3 rounded-full bg-green-500 text-white">
+                    <TrendingUp className="h-6 w-6" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <span className="text-sm font-medium text-green-600">
-                    +8%
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {" "}
-                    from last month
-                  </span>
+                  <span className="text-sm font-medium text-green-600">+8%</span>
+                  <span className="text-sm text-gray-600"> from last month</span>
                 </div>
               </div>
 
@@ -493,18 +487,13 @@ export default function TransactionsPage() {
                       ${summaryStats.totalWithdrawals.toFixed(2)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-purple-200 text-white">
-                    <DollarSign className="h-8 w-8 text-purple-600" />
+                  <div className="p-3 rounded-full bg-purple-500 text-white">
+                    <DollarSign className="h-6 w-6" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <span className="text-sm font-medium text-green-600">
-                    +15%
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {" "}
-                    from last month
-                  </span>
+                  <span className="text-sm font-medium text-green-600">+15%</span>
+                  <span className="text-sm text-gray-600"> from last month</span>
                 </div>
               </div>
 
@@ -518,27 +507,21 @@ export default function TransactionsPage() {
                       {summaryStats.pendingWithdrawals}
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-yellow-200 text-white">
-                    <Calendar className="h-8 w-8 text-yellow-600" />
+                  <div className="p-3 rounded-full bg-emerald-500 text-white">
+                    <Calendar className="h-6 w-6" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <span className="text-sm font-medium text-green-600">
-                    +5%
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {" "}
-                    from last month
-                  </span>
+                  <span className="text-sm font-medium text-green-600">+5%</span>
+                  <span className="text-sm text-gray-600"> from last month</span>
                 </div>
               </div>
-
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {quickStats.map((stat, index) => (
-                <Card key={index}>
+                <Card key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -559,7 +542,7 @@ export default function TransactionsPage() {
             </div>
 
             {/* Recent Transactions Preview */}
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
               </CardHeader>
@@ -603,151 +586,159 @@ export default function TransactionsPage() {
           </TabsContent>
 
           <TabsContent value="transactions" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters & Search
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
-                  {/* Search */}
-                  <div className="lg:col-span-2">
-                    <Label htmlFor="search">Search</Label>
+            {/* Filters and Search */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Search Transactions
+                    </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
-                        id="search"
-                        placeholder="Search by username, ID, or project"
+                        placeholder="Search by username, ID, or project..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
                       />
                     </div>
                   </div>
-
-                  {/* Type Filter */}
-                  <div>
-                    <Label htmlFor="type">Type</Label>
-                    <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Types</SelectItem>
-                        <SelectItem value="Payment">Payment</SelectItem>
-                        <SelectItem value="Withdrawal">Withdrawal</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 lg:w-auto">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Type
+                      </label>
+                      <Select value={typeFilter} onValueChange={setTypeFilter}>
+                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                          <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="All">All Types</SelectItem>
+                          <SelectItem value="Payment">Payment</SelectItem>
+                          <SelectItem value="Withdrawal">Withdrawal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                      </label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                          <SelectValue placeholder="All Statuses" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="All">All Statuses</SelectItem>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Approved">Approved</SelectItem>
+                          <SelectItem value="Rejected">Rejected</SelectItem>
+                          <SelectItem value="Failed">Failed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Role
+                      </label>
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                          <SelectValue placeholder="All Roles" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="All">All Roles</SelectItem>
+                          <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Expert">Expert</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date Range
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={dateRange.start}
+                          onChange={(e) =>
+                            setDateRange((prev) => ({
+                              ...prev,
+                              start: e.target.value,
+                            }))
+                          }
+                          className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                        />
+                        <Input
+                          type="date"
+                          value={dateRange.end}
+                          onChange={(e) =>
+                            setDateRange((prev) => ({
+                              ...prev,
+                              end: e.target.value,
+                            }))
+                          }
+                          className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                        />
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Status Filter */}
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Statuses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Statuses</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Approved">Approved</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Failed">Failed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Role Filter */}
-                  <div>
-                    <Label htmlFor="role">User Role</Label>
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Roles" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All">All Roles</SelectItem>
-                        <SelectItem value="Student">Student</SelectItem>
-                        <SelectItem value="Expert">Expert</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Date Range */}
-                  <div>
-                    <Label htmlFor="dateStart">Start Date</Label>
-                    <Input
-                      id="dateStart"
-                      type="date"
-                      value={dateRange.start}
-                      onChange={(e) =>
-                        setDateRange((prev) => ({
-                          ...prev,
-                          start: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="dateEnd">End Date</Label>
-                    <Input
-                      id="dateEnd"
-                      type="date"
-                      value={dateRange.end}
-                      onChange={(e) =>
-                        setDateRange((prev) => ({
-                          ...prev,
-                          end: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button onClick={handleClearFilters} variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 lg:mb-0"
+                  >
+                    <Filter className="mr-2 h-4 w-4" />
                     Clear Filters
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Transactions Table */}
-            <Card>
-              <CardHeader>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <CardTitle>
-                    Transactions ({filteredTransactions.length} results)
-                  </CardTitle>
-                  <div className="text-sm text-gray-500">
-                    Page {currentPage} of {totalPages}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Transactions ({filteredTransactions.length} of {transactions.length})
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {filteredTransactions.length === transactions.length
+                        ? "Showing all transactions"
+                        : `Filtered results: ${filteredTransactions.length} transactions found`}
+                    </p>
                   </div>
+                  {filteredTransactions.length > 0 && totalPages > 1 && (
+                    <div className="text-sm text-gray-500">
+                      Page {currentPage} of {totalPages}
+                    </div>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Transaction ID</TableHead>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {currentTransactions.map((transaction) => (
-                        <TableRow key={transaction.id}>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50 border-b border-gray-200">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="font-semibold text-gray-900 py-4">Transaction ID</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Username</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Role</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Type</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Amount</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Status</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4">Date</TableHead>
+                      <TableHead className="text-right font-semibold text-gray-900 py-4">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {currentTransactions.length > 0 ? (
+                        currentTransactions.map((transaction, index) => (
+                          <TableRow
+                            key={transaction.id}
+                            className={`border-gray-200 hover:bg-gray-50 transition-colors ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                            }`}
+                          >
                           <TableCell className="font-mono text-sm">
                             {transaction.id}
                           </TableCell>
@@ -851,19 +842,41 @@ export default function TransactionsPage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-12">
+                            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                              <Search className="h-6 w-6 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                              No transactions found
+                            </h3>
+                            <p className="text-gray-500 mb-4">
+                              No transactions match your current search criteria.
+                            </p>
+                            <Button
+                              variant="outline"
+                              onClick={handleClearFilters}
+                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                            >
+                              Clear Filters
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-gray-700">
+                {filteredTransactions.length > 0 && totalPages > 1 && (
+                  <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+                    <div className="text-sm text-gray-700">
                       Showing {startIndex + 1} to{" "}
                       {Math.min(endIndex, filteredTransactions.length)} of{" "}
                       {filteredTransactions.length} results
-                    </p>
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -872,35 +885,61 @@ export default function TransactionsPage() {
                           setCurrentPage((prev) => Math.max(prev - 1, 1))
                         }
                         disabled={currentPage === 1}
+                        className="border-gray-300 text-gray-700 hover:bg-white disabled:opacity-50"
                       >
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronLeft className="h-4 w-4 mr-1" />
                         Previous
                       </Button>
-                      <span className="text-sm">
-                        Page {currentPage} of {totalPages}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                          let page;
+                          if (totalPages <= 5) {
+                            page = i + 1;
+                          } else if (currentPage <= 3) {
+                            page = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            page = totalPages - 4 + i;
+                          } else {
+                            page = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className={
+                                currentPage === page
+                                  ? "bg-[#3D52A0] text-white hover:bg-[#2A3B7D] border-[#3D52A0]"
+                                  : "border-gray-300 text-gray-700 hover:bg-white"
+                              }
+                            >
+                              {page}
+                            </Button>
+                          );
+                        })}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
-                          )
+                          setCurrentPage(Math.min(totalPages, currentPage + 1))
                         }
                         disabled={currentPage === totalPages}
+                        className="border-gray-300 text-gray-700 hover:bg-white disabled:opacity-50"
                       >
                         Next
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-6">
-            <Card>
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
                 <CardTitle>Admin Audit Logs</CardTitle>
               </CardHeader>
