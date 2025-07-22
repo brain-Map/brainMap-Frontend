@@ -19,6 +19,7 @@ import {
   UserCheck,
   GraduationCap,
   Award,
+  Wallet,
 } from "lucide-react";
 import { Router } from "next/router";
 
@@ -72,6 +73,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
     { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
     { title: "Settings", icon: Settings, url: "/admin/settings" },
+    {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
   ];
 
   // User Management Items
@@ -115,13 +117,6 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       ],
     },
     {
-      title: "Add New User",
-      icon: UserPlus,
-      url: "/admin/userManagement/addNewUser",
-      count: "12",
-      color: "bg-green-500",
-    },
-    {
       title: "Active Users",
       icon: UserCheck,
       url: "/admin/userManagement/active-users",
@@ -135,6 +130,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       count: "3",
       color: "bg-red-500",
     },
+    {
+      title: "Add Moderators",
+      icon: UserPlus,
+      url: "/admin/userManagement/addModerator",
+      count: "12",
+      color: "bg-green-500",
+    },
   ];
 
   // Moderation Items
@@ -142,21 +144,21 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Reports",
       icon: Flag,
-      url: "/admin/reports",
+      url: "/admin/moderation/reports",
       count: "8",
       color: "bg-orange-500",
     },
     {
-      title: "Pending Reviews",
+      title: "Pending Reports",
       icon: Bell,
-      url: "/admin/pending-reviews",
+      url: "/admin/moderation/report/pending",
       count: "15",
       color: "bg-yellow-500",
     },
     {
       title: "Security Alerts",
       icon: Shield,
-      url: "/admin/security-alerts",
+      url: "/admin/moderation/security-alerts",
       count: "2",
       color: "bg-red-500",
     },

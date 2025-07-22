@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Eye,
   MessageSquare,
@@ -15,6 +15,7 @@ import {
   Star,
   Book,
 } from "lucide-react";
+import { useParams } from "next/navigation";
 
 // Types
 interface Report {
@@ -215,6 +216,7 @@ export default function ReportManagement() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const params = useParams();
 
   // Sample data
   const [reports, setReports] = useState<Report[]>([
@@ -354,6 +356,18 @@ export default function ReportManagement() {
       );
     }
   };
+
+  // filter from params 
+  const allParams = params?.params as string[] | undefined;
+  const reportType = allParams?.[0];
+  const status = allParams?.[1]
+
+  useEffect(() => {
+    // filter pending reports
+    if(status == "pending"){
+      setStatusFilter("pending")
+    }
+  }, [reportType]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
