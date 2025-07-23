@@ -72,7 +72,7 @@ export default function DashboardPage() {
   const recentActivities: RecentActivity[] = [
     {
       id: 1,
-      title: "New Student Request",
+      title: "New Appointment Request",
       description: "Alex Johnson requested Premium Mentorship for Machine Learning",
       time: "2 hours ago",
       type: "request",
@@ -170,10 +170,10 @@ export default function DashboardPage() {
           {renderRevenueChart()}
         </div>
 
-        {/* Recent Student Requests */}
+        {/* Recent Appointment Requests */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Student Requests</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Appointment Requests</h2>
             <div className="space-y-4">
               {[
                 {

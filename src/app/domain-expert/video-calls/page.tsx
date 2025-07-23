@@ -269,49 +269,6 @@ export default function VideoCallsPage() {
               </div>
             </div>
 
-            {/* Quick Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Settings</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Auto-join calls</span>
-                  <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600">
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-6" />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Camera on by default</span>
-                  <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600">
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-6" />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Microphone on by default</span>
-                  <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200">
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Test Connection */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Connection Test</h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                  <Mic className="mr-2 h-4 w-4" />
-                  Test Microphone
-                </button>
-                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                  <Video className="mr-2 h-4 w-4" />
-                  Test Camera
-                </button>
-                <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Audio Settings
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
