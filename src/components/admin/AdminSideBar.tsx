@@ -69,10 +69,10 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   // Admin Menu Items
   const menuItems: MenuItem[] = [
     { title: "Dashboard", icon: Home, url: "/admin" },
-    { title: "Content", icon: FileText, url: "/admin/content" },
+    // { title: "Content", icon: FileText, url: "/admin/content" },
     { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
     { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
-    { title: "Settings", icon: Settings, url: "/admin/settings" },
+    // { title: "Settings", icon: Settings, url: "/admin/settings" },
     {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
   ];
 
@@ -151,17 +151,17 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Pending Reports",
       icon: Bell,
-      url: "/admin/moderation/report/pending",
+      url: "/admin/moderation/report/pending",  
       count: "15",
       color: "bg-yellow-500",
     },
-    {
-      title: "Security Alerts",
-      icon: Shield,
-      url: "/admin/moderation/security-alerts",
-      count: "2",
-      color: "bg-red-500",
-    },
+    // {
+    //   title: "Security Alerts",
+    //   icon: Shield,
+    //   url: "/admin/moderation/security-alerts",
+    //   count: "2",
+    //   color: "bg-red-500",
+    // },
   ];
 
   return (
@@ -325,7 +325,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           </div>
 
           {/* System */}
-          <div>
+          {/* <div>
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               SYSTEM
             </h3>
@@ -364,7 +364,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
                 <span>Usage Analytics</span>
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
