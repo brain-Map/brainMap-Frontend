@@ -147,7 +147,7 @@ const NavBar: React.FC = () => {
         return projectMemberNavItems;
       case 'Mentor':
         return mentorNavItems;
-      case 'Moderator':
+      case 'moderator':
         return moderatorNavItems;
       case 'Admin':
         return adminNavItems;
