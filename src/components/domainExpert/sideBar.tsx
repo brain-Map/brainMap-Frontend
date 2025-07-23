@@ -47,7 +47,6 @@ export function Sidebar() {
   // Main Menu Items
   const menuItems: MenuItem[] = [
     { title: "Dashboard", icon: Home, url: "/domain-expert/dashboard" },
-    { title: "Profile & Credentials", icon: User, url: "/domain-expert/profile" },
     { title: "Service Packages", icon: Package, url: "/domain-expert/packages" },
     { title: "Calendar", icon: Calendar, url: "/domain-expert/calendar" },
   ]
@@ -55,7 +54,7 @@ export function Sidebar() {
   // Student Management
   const studentManagement: MenuSection[] = [
     {
-      title: "Student Requests",
+      title: "Appointment Requests",
       icon: BookOpen,
       url: "/domain-expert/requests",
       count: "3",
@@ -87,12 +86,6 @@ export function Sidebar() {
       icon: CreditCard,
       url: "/domain-expert/finances",
       count: "Rs. 3,240",
-    },
-    {
-      title: "Reports",
-      icon: FileText,
-      url: "/domain-expert/reports",
-      count: "4",
     },
   ]
 
@@ -151,7 +144,7 @@ export function Sidebar() {
                 <button
                   key={item.title}
                   onClick={() => handleNavigate(item.url)}
-                  className={`w-full flex items-center gap-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                     pathname === item.url
                       ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -244,7 +237,7 @@ export function Sidebar() {
                 <button
                   key={item.title}
                   onClick={() => handleNavigate(item.url)}
-                  className={`w-full flex items-center gap-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     pathname === item.url
                       ? "bg-primary text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"

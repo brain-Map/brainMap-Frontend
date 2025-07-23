@@ -289,10 +289,10 @@ const ProfileCompletion = () => {
             Welcome! Your {userType.toLowerCase()} profile has been created successfully.
           </p>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/')}
             className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black transition-colors"
           >
-            Go to Login
+            Go to Homepage
           </button>
         </div>
       </div>
@@ -629,23 +629,57 @@ const ProfileCompletion = () => {
                   </div>
                 )}
 
+                {/* Updated button section for Step 1 */}
                 <div className="flex justify-end pt-6">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black disabled:bg-blue-400 transition-colors flex items-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        {userType === 'Project Member' ? 'Updating Profile...' : 'Next...'}
-                      </>
-                    ) : userType === 'Project Member' ? (
-                      'Complete Registration'
-                    ) : (
-                      'Next'
-                    )}
-                  </button>
+                  {userType === 'Project Member' ? (
+                    <div className='flex gap-3'>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black disabled:bg-blue-400 transition-colors flex items-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                            Updating Profile...
+                          </>
+                        ) : (
+                          'Complete Registration'
+                        )}
+                      </button>
+                      <button
+                          type="button"
+                          onClick={() => router.push('/project-member/dashboard')}
+                          className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
+                        >
+                          Skip for now
+                        </button>
+                      </div>
+                  ) : (
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => router.push('/domain-expert/dashboard')}
+                        className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
+                      >
+                        Skip for now
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black disabled:bg-blue-400 transition-colors flex items-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                            Next...
+                          </>
+                        ) : (
+                          'Next'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </form>
@@ -679,6 +713,85 @@ const ProfileCompletion = () => {
                       {errors.qualification}
                     </p>
                   )}
+                </div>
+
+                {/* New Qualification Documents Upload Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Qualification Documents *
+                  </label>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Upload documents to verify your qualifications (degrees, certificates, licenses, etc.). These will be reviewed by our moderators.
+                  </p>
+                  <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-2">
+                      {profileData.certifications.length > 0 
+                        ? `${profileData.certifications.length} document(s) selected` 
+                        : 'Click to upload or drag and drop qualification documents'
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (Max 10MB each, up to 5 files)</p>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      multiple
+                      onChange={(e) => e.target.files && handleFileUpload('certifications', e.target.files)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                  
+                  {/* Display selected files */}
+                  {profileData.certifications.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Selected Documents:</p>
+                      {profileData.certifications.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                              <Upload className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                              <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newFiles = profileData.certifications.filter((_, i) => i !== index);
+                              setProfileData(prev => ({ ...prev, certifications: newFiles }));
+                            }}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            <AlertCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {errors.certifications && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.certifications}
+                    </p>
+                  )}
+                  
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-blue-800">
+                        <p className="font-medium mb-1">Document Verification Process:</p>
+                        <ul className="list-disc list-inside space-y-0.5 text-blue-700">
+                          <li>Your documents will be reviewed by our moderators</li>
+                          <li>Verification typically takes 2-3 business days</li>
+                          <li>You'll be notified via email once verification is complete</li>
+                          <li>Accepted formats: Academic transcripts, diplomas, certificates, professional licenses</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -853,20 +966,30 @@ const ProfileCompletion = () => {
                     <ChevronLeft className="w-4 h-4" />
                     Back
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black disabled:bg-blue-400 transition-colors flex items-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        Updating Profile...
-                      </>
-                    ) : (
-                      'Complete Registration'
-                    )}
-                  </button>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => router.push('/domain-expert/dashboard')}
+                      className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
+                    >
+                      Skip for now
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary hover:text-black disabled:bg-blue-400 transition-colors flex items-center gap-2"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                          Updating Profile...
+                        </>
+                      ) : (
+                        'Complete Registration'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </form>
