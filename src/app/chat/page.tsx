@@ -254,7 +254,7 @@ export default function ChatPage() {
 
   return (
     <>
-    <div className="flex-1 bg-gray-50 h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex-1 bg-gray-50 h-[calc(100vh-4rem)] overflow-hidden mt-[70px]">
       <div className="mx-auto h-full overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-4 h-full overflow-hidden">
           {/* Conversations List */}
