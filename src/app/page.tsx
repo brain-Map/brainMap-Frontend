@@ -8,10 +8,12 @@ import ConnectLearnAchieveHero from '../components/ConnectLearnAchievePoster';
 import PopularServices from '../components/Carousel'
 import { ArrowRight, CheckCircle, Shield, Users,TrendingUp, Star
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext'; // Adjust the import path as necessary
+
 
 
 const Home: React.FC = () => {
@@ -20,6 +22,7 @@ const Home: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const { user } = useAuth(); // Access the user from AuthContext
     const [email, setEmail] = useState('');
+    const router = useRouter();
 
   const handleGetStarted = () => {
     console.log('Get started clicked');
@@ -31,7 +34,14 @@ const Home: React.FC = () => {
 
     
     const handleClick = (buttonName: string) => {
+
     console.log(`${buttonName} button clicked!`);
+    if( buttonName === 'Get Started') {
+      router.push('/search-experts');
+    } else {
+        router.push('/becomeamentor');
+
+    }
   };
 
   // console.log(user);
@@ -352,7 +362,7 @@ const successStories: SuccessStory[] = [
                 textColor="text-white"
                 hoverBackgroundColor="hover:bg-secondary hover:text-black"
                 icon={ArrowRight}
-                onClick={() => handleClick('Get Started')}
+                onClick={() => handleClick('Join Now')}
               />
 
             </div>

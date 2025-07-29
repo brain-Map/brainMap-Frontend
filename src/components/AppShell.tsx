@@ -21,7 +21,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <NavBar />
-      <div className='mt-16'>{children}</div>
+      <div className=''>{children}</div>
       {!isDashboard && <Footer />}
     </>
   );
