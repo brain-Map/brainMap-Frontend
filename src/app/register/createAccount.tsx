@@ -82,7 +82,7 @@ const AccountCreation = () => {
 
   const handleAccountCreation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("nigga");
+    // console.log("nigga");
     
     if (!validateForm()) return;
     const userName = accountData.userName;

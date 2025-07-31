@@ -16,13 +16,14 @@ import TodoNotesSidebar from '@/components/TodoNotesSidebar';
 // import projects from '@/data/projects/projects';
 import Pagination from '@/components/Pagination';
 import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: { title: string; description: string; deadline: string; priority: string }) => void;
+  onSubmit: (formData: { title: string; description: string; dueDate: string; priority: string}) => void;
   isLoading?: boolean;
 }
 
@@ -38,7 +39,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    deadline: '',
+    dueDate: '',
     priority: '',
   });
 
@@ -116,8 +117,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
             <div className="relative">
               <input
                 type="date"
-                value={formData.deadline}
-                onChange={(e) => handleChange('deadline', e.target.value)}
+                value={formData.dueDate}
+                onChange={(e) => handleChange('dueDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
@@ -254,6 +255,9 @@ const ProjectsTable: React.FC = () => {
     projectId: '',
     projectName: '',
   });
+  const user = useAuth().user;
+
+  // console.log('Current user:', user?.id);
   
   // Backend data states
   const [backendProjects, setBackendProjects] = useState<ProjectResponse[]>([]);
@@ -348,8 +352,9 @@ const ProjectsTable: React.FC = () => {
       lead: project.lead || { name: 'Unknown', initials: 'UK' },
       starred: false, // You can add this field to your backend response
       createdAt: project.createdAt,
-      deadline: project.dueDate,
+      dueDate: project.dueDate,
       priority: project.priority,
+      userName: project.userName || 'Unknown User',
     })) :
     [
       ...backendProjects.map(project => ({
@@ -360,8 +365,9 @@ const ProjectsTable: React.FC = () => {
         lead: project.lead || { name: 'Unknown', initials: 'UK' },
         starred: false, // You can add this field to your backend response
         createdAt: project.createdAt,
-        deadline: project.dueDate,
+        dueDate: project.dueDate,
         priority: project.priority,
+        userName: project.userName || 'Unknown User',
       })),
 
     ];
@@ -378,16 +384,19 @@ const ProjectsTable: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  const handleCreateProject = async (formData: { title: string; description: string; deadline: string; priority: string }) => {
+  const handleCreateProject = async (formData: { title: string; description: string; dueDate: string; priority: string }) => {
     setIsCreatingProject(true);
     
     try {
       const projectData: CreateProjectRequest = {
         title: formData.title,
         description: formData.description || undefined,
-        deadline: formData.deadline || undefined,
+        dueDate: formData.dueDate || undefined,
         priority: formData.priority || undefined,
+        ownerId: user?.id || '', // Use the current user's ID
       };
+
+      console.log('Creating project with data:', projectData);
 
       const response = await projectApi.createProject(projectData);
       
@@ -502,7 +511,7 @@ const ProjectsTable: React.FC = () => {
                   </div>
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Description</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Type</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Priority</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Lead</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Project Action</th>
               </tr>
@@ -566,13 +575,13 @@ const ProjectsTable: React.FC = () => {
                         : project.description
                       : ""}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{project.type}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{project.priority}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                         {project.lead.initials}
                       </div>
-                      <span className="text-sm text-gray-900">{project.lead.name}</span>
+                      <span className="text-sm text-gray-900">{project.userName}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">

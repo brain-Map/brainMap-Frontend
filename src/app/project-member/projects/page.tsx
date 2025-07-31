@@ -2,11 +2,7 @@ import React from 'react'
 import Projects from './Projects'
 
 const page = () => {
-  return (
-    <>
-        <Projects/>
-    </>
-  )
+  return <Projects />;
 }
 
 export default page
