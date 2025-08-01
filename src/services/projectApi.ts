@@ -36,8 +36,9 @@ api.interceptors.response.use(
 export interface CreateProjectRequest {
   title: string;
   description?: string;
-  deadline?: string;
+  dueDate?: string;
   priority?: string;
+  ownerId?: string; // Assuming ownerId is a string, adjust as necessary
 }
 
 export interface ProjectResponse {
@@ -54,6 +55,7 @@ export interface ProjectResponse {
     name: string;
     initials: string;
   };
+  userName?: string; // Assuming this is the name of the user who created the project
 }
 
 // Project API functions
