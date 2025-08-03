@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import { 
   User, 
   CheckCircle, 
@@ -9,28 +9,72 @@ import {
   MapPin,
   Building2,
   Mail,
-  Phone
+  Phone,
+  Ellipsis ,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import api from '@/utils/api';
+
+
+export interface User {
+  id: string;
+  firstname: string;
+  lastname: string;
+  username?: string;
+  email: string;
+  role: string;
+  about: string;
+  location?: string;
+  phone?: string;
+  company?: string;
+  fieldsOfInterest?: string[];
+  followers?: number;
+  following?: number;
+  profileViews?: number;
+  isVerified?: boolean;
+}
+
+const userService = {
+  getUser: async (userId: string): Promise<User> => {
+    try {
+      const response = await api.get(`/api/project-member/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  }
+};
 
 const ProjectDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const user1 = useAuth().user;
+  // const user1 = auth.user;
+  const [user, setUser] = useState<User | null>(null);
 
-  // Mock data
-  const user = {
-    fullName: "Nadun Madusanka",
-    username: "nadu_nm",
-    role: "Project Member",
-    isVerified: true,
-    bio: "Passionate project manager with 5+ years experience in leading cross-functional teams and delivering high-impact solutions.",
-    avatar: "/api/placeholder/280/280",
-    location: "San Francisco, CA",
-    email: "sarah.johnson@company.com",
-    phone: "+1 (555) 123-4567",
-    company: "TechCorp Inc.",
-    fieldsOfInterest: ["Project Management", "Agile", "Scrum", "Leadership", "Strategy"],
-    followers: 127,
-    following: 89,
-    profileViews: 2456
+  console.log('User in ProjectDashboard:', user1);
+
+  const userId = user1?.id;
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!userId) return;
+      
+      try {
+        const userData = await userService.getUser(userId);
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  const handleEditAbout = () => {
+    // Logic to handle editing the about section
+    console.log('Edit About Clicked');
   };
 
   const currentProjects = [
@@ -161,10 +205,10 @@ const ProjectDashboard = () => {
               
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <h1 className="text-xl font-bold text-gray-900">{user.fullName}</h1>
-                  {user.isVerified && <CheckCircle className="w-5 h-5 text-green-500" />}
+                  <h1 className="text-xl font-bold text-gray-900">{user1?.name}</h1>
+                  {user?.isVerified && <CheckCircle className="w-5 h-5 text-green-500" />}
                 </div>
-                <p className="text-gray-600 text-sm">@{user.username}</p>
+                <p className="text-gray-600 text-sm">@{user?.username}</p>
               </div>
 
               <button className="w-full bg-primary hover:bg-secondary hover:text-black text-white py-2.5 px-4 rounded-lg transition-colors duration-200 mb-6 flex items-center justify-center gap-2">
@@ -172,33 +216,33 @@ const ProjectDashboard = () => {
                 Edit Profile
               </button>
 
-              <div className="flex justify-center gap-8 mb-6">
+              {/* <div className="flex justify-center gap-8 mb-6">
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900">{user.followers}</div>
+                  <div className="text-lg font-semibold text-gray-900">{user?.followers ? user.followers : 0}</div>
                   <div className="text-sm text-gray-500">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900">{user.following}</div>
+                  <div className="text-lg font-semibold text-gray-900">{user?.following ? user.following : 0}</div>
                   <div className="text-sm text-gray-500">Following</div>
                 </div>
-              </div>
+              </div> */}
 
               <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3 text-gray-600">
+                <div className={`flex items-center gap-3 ${user?.company ? "text-gray-600" : "text-gray-400"}`}>
                   <Building2 className="w-4 h-4 text-gray-400" />
-                  <span>{user.company}</span>
+                  <span>{user?.company ? user.company : "Add your work place..."}</span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span>{user.location}</span>
+                <div className={`flex items-center gap-3 ${user?.location ? "text-gray-600" : "text-gray-400"}`}>
+                  <MapPin className={`w-4 h-4 text-gray-400 ${user?.location ? "text-gray-400" : "text-gray-400"}`} />
+                  <span>{user?.location ? user.location : "Add your location..."}</span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span>{user.email}</span>
+                <div className={`flex items-center gap-3 ${user?.email ? "text-gray-600" : "text-gray-400"}`}>
+                  <Mail className={`w-4 h-4 text-gray-400 ${user?.email ? "text-gray-400" : "text-gray-400"}`} />
+                  <span>{user?.email ? user.email : "Add your email..."}</span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <span>{user.phone}</span>
+                <div className={`flex items-center gap-3 ${user?.phone ? "text-gray-600" : "text-gray-400"}`}>
+                  <Phone className={`w-4 h-4 text-gray-400 ${user?.phone ? "text-gray-600" : "text-gray-400"}`} />
+                  <span>{user?.phone ? user.phone : "Add your phone number... "}</span>
                 </div>
               </div>
             </div>
@@ -208,8 +252,8 @@ const ProjectDashboard = () => {
               <h3 className="font-semibold text-lg mb-4 text-gray-900">Profile Statistics</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Profile Views</span>
-                  <span className="font-semibold text-gray-900">{user.profileViews.toLocaleString()}</span>
+                  <span className="text-gray-600">Project Ongoing</span>
+                  <span className="font-semibold text-gray-900">3</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Projects Completed</span>
@@ -228,26 +272,34 @@ const ProjectDashboard = () => {
             
 
             {/* About Me Section */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200  mb-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6 relative">
+              {/* Edit Icon - top right */}
+              <button 
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" 
+                onClick={handleEditAbout} // define this function
+                title="Edit About"
+              >
+                <Ellipsis  className="text-gray-500 hover:text-gray-800" />
+              </button>
+
               <h3 className="font-semibold text-xl mb-4 text-gray-900">About Me</h3>
-              <p className="text-gray-600 mb-4 leading-relaxed">{user.bio}</p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🎓</span>
-                  <span className="text-gray-600">Currently working as {user.role} at {user.company}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📈</span>
-                  <span className="text-gray-600">Specializing in project management, team leadership, and strategic planning</span>
-                </div>
-              </div>
+
+              {/* About text or fallback message */}
+              {user?.about ? (
+                <p className="text-gray-600 mb-4 leading-relaxed">{user.about}</p>
+              ) : (
+                <p className="text-gray-400 italic mb-4 leading-relaxed">No about information provided. Click ✏️ to add one.</p>
+              )}
+
+            
             </div>
 
-            {/* Fields of Interest */}
+
+            {/* Fields of Interest
             <div className="bg-white rounded-xl p-6 border border-gray-200  mb-6">
               <h3 className="font-semibold text-lg mb-4 text-gray-900">Fields of Interest</h3>
               <div className="flex flex-wrap gap-2">
-                {user.fieldsOfInterest.map((field, index) => (
+                {user?.fieldsOfInterest?.map((field, index) => (
                   <span
                     key={index}
                     className="px-4 py-2 bg-value3 text-primary rounded-full text-sm border border-value2 hover:bg-value3 transition-colors"
@@ -256,7 +308,7 @@ const ProjectDashboard = () => {
                   </span>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 mb-6">

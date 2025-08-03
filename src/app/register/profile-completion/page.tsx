@@ -174,6 +174,7 @@ const ProfileCompletion = () => {
     
     try {
       const accessToken = localStorage.getItem("accessToken");
+      console.log('Access Token:', accessToken);
       const role = userType || "";
       const userRole = role.replace(" ", "_")
       

@@ -9,6 +9,9 @@ type User = {
   email?: string;
   name?: string;
   user_role?: string;
+  about?: string;
+  profile_picture?: string;
+  
 } | null;
 
 type AuthContextType = {
