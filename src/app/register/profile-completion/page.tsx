@@ -225,7 +225,7 @@ const ProfileCompletion = () => {
       console.log('Sending JSON payload:', profilePayload);
 
       const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -400,7 +400,7 @@ const ProfileCompletion = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                           Date of Birth *
                         </label>
                         <input
@@ -437,7 +437,7 @@ const ProfileCompletion = () => {
                     </div>
 
                     <div className="mt-6">
-                      <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
                         Phone Number *
                       </label>
                       <input
@@ -458,7 +458,7 @@ const ProfileCompletion = () => {
                     </div>
 
                     <div className="mt-6">
-                      <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
                         City *
                       </label>
                       <input
@@ -481,11 +481,8 @@ const ProfileCompletion = () => {
 
                   {/* Academic/Professional Information */}
                   {userType === 'Project Member' && (
-                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
+                    <div className="p-6">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                          <GraduationCap className="w-5 h-5 text-white" />
-                        </div>
                         <h3 className="text-xl font-bold text-gray-800">Academic Information</h3>
                       </div>
 
