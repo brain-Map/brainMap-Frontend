@@ -11,7 +11,7 @@ import {
   Settings,
   Calendar,
   NotepadText,
-  ListChecks,
+  Star,
   ChevronUp, 
   ChevronDown,
 } from "lucide-react";
@@ -116,8 +116,8 @@ const visibleProjects = showAll
     { title: "Messages", icon: MessageSquare, url: "/project-member/chat" , pathname: "chat"},
     { title: "Calendar", icon: Calendar, url: "/project-member/calendar", pathname: "calendar" },
     { title: "Notes", icon: NotepadText , url: "/project-member/notes", pathname: "notes" },
+    { title: "Feedbacks", icon: Star, url: "/project-member/feedbacks", pathname: "feedbacks" },
     { title: "Settings", icon: Settings, url: "/project-member/settings", pathname: "settings" },
-
   ];
 
 
