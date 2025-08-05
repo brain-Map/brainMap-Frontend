@@ -32,7 +32,7 @@ const Alert = ({ message, type, onClose }: { message: string; type: 'success' | 
 const AccountCreation = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [userType, setUserType] = useState<string>();
+  const [userType, setUserType] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -69,7 +69,7 @@ const AccountCreation = () => {
   const validateForm = () => {
     const newErrors: FormErrors = {};
 
-    if (!accountData.userName.trim()) newErrors.userName = 'Full name is required';
+    if (!accountData.userName.trim()) newErrors.userName = 'Username is required';
     if (!accountData.email.trim()) newErrors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(accountData.email)) newErrors.email = 'Email is invalid';
     if (!accountData.password) newErrors.password = 'Password is required';
@@ -82,8 +82,6 @@ const AccountCreation = () => {
 
   const handleAccountCreation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // console.log("nigga");
-    
     if (!validateForm()) return;
     const userName = accountData.userName;
     const password = accountData.password;
@@ -105,11 +103,38 @@ const AccountCreation = () => {
       }
     })
 
+    if (error) {
+        setIsSubmitting(false);
+        setAlert({ message: error.message, type: 'error' });
+        return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+      }
+
+      const userRole = role.replace(" ", "_")
+      // Send user data to backend API
+      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: userName,
+          email: email,
+          userRole: userRole,
+          userId: data.user?.id
+        })
+      });
+
+      if (!backendResponse.ok) {
+        const errorData = await backendResponse.json();
+        setIsSubmitting(false);
+        setAlert({ message: errorData.error || 'Failed to create user profile', type: 'error' });
+        return;
+      }
+
+
     setIsSubmitting(false);
 
-    if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
-  }
+    
     
     setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
     router.push(`/register/profile-completion?role=${userType}`);
@@ -177,7 +202,7 @@ const AccountCreation = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                  Username *
                 </label>
                 <input
                   type="text"
