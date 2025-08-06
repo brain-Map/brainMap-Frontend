@@ -48,36 +48,48 @@ interface RecentActivity {
   type: "brain-map" | "analysis" | "collaboration" | "learning";
 }
 
+interface DashboardStatus {
+  userCount: number;
+  activeProjects: number;
+  pendingDomainExperts: number;
+  openIsquiries: number;
+}
+
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatus>({
+    userCount: 0,
+    activeProjects: 0,
+    pendingDomainExperts: 0,
+    openIsquiries: 0
+  });
 
-  // Mock data - in real app, this would come from API
   const dashboardCards: DashboardCard[] = [
     {
-      title: "Total Brain Maps",
-      value: "2544",
-      change: "+12%",
+      title: "Total Users",
+      value: dashboardStatus.userCount.toString(),
+      change: "N/A",
       icon: <Brain className="h-6 w-6" />,
       color: "bg-blue-500",
     },
     {
       title: "Active Projects",
-      value: "156",
-      change: "+8%",
+      value: dashboardStatus.activeProjects.toString(),
+      change: "N/A",
       icon: <FolderOpen className="h-6 w-6" />,
       color: "bg-green-500",
     },
     {
-      title: "Pending Expert Verfications",
-      value: "89",
-      change: "+15%",
+      title: "Pending Expert Verifications",
+      value: dashboardStatus.pendingDomainExperts.toString(),
+      change: "N/A",
       icon: <UserCheck className="h-6 w-6" />,
       color: "bg-purple-500",
     },
     {
       title: "Open Issues",
-      value: "12",
-      change: "+3%",
+      value: dashboardStatus.openIsquiries.toString(),
+      change: "N/A",
       icon: <AlertTriangle className="h-6 w-6" />,
       color: "bg-orange-500",
     },
@@ -115,10 +127,22 @@ export default function AdminDashboard() {
   ];
 
   useEffect(() => {
-    // Simulate loading user data
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const fetchDashboardStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/admin/dashboard/status`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard status');
+        }
+        const data = await response.json();
+        setDashboardStatus(data);
+      } catch (error) {
+        console.error('Error fetching dashboard status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardStatus();
   }, []);
 
   if (isLoading) {
