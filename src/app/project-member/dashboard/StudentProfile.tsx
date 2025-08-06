@@ -23,7 +23,7 @@ export interface User {
   username?: string;
   email: string;
   role: string;
-  about: string;
+  about?: string;
   location?: string;
   phone?: string;
   company?: string;
@@ -32,6 +32,11 @@ export interface User {
   following?: number;
   profileViews?: number;
   isVerified?: boolean;
+}
+
+export interface UserAbout {
+  id?: string;
+  about: string;
 }
 
 const userService = {
@@ -44,6 +49,17 @@ const userService = {
       console.error('Error fetching user:', error);
       throw error;
     }
+  },
+
+  updateAbout: async (Id: string, userData: Partial<UserAbout>): Promise<UserAbout> => {
+    try {
+      const response = await api.put(`/api/project-member/update-about/${Id}`, userData);
+      console.log('User updated successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
   }
 };
 
@@ -52,10 +68,28 @@ const ProjectDashboard = () => {
   const user1 = useAuth().user;
   // const user1 = auth.user;
   const [user, setUser] = useState<User | null>(null);
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [aboutText, setAboutText] = useState('');
+  const [userAbout, setUserAbout] = useState<UserAbout | null>(null);
 
   console.log('User in ProjectDashboard:', user1);
 
   const userId = user1?.id;
+
+  useEffect(() => {
+    const updateUserAbout = async () => {
+      if (!userAbout) return;
+
+      try {
+        await userService.updateAbout(userId ? userId : '', { about: userAbout.about });
+        console.log('User about updated successfully');
+      } catch (error) {
+        console.error('Error updating user about:', error);
+      }
+    };
+
+    updateUserAbout();
+  }, [userAbout]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -64,6 +98,7 @@ const ProjectDashboard = () => {
       try {
         const userData = await userService.getUser(userId);
         setUser(userData);
+        setAboutText(userData.about || '');
       } catch (error) {
         console.error('Failed to fetch user:', error);
       }
@@ -73,8 +108,24 @@ const ProjectDashboard = () => {
   }, [userId]);
 
   const handleEditAbout = () => {
-    // Logic to handle editing the about section
-    console.log('Edit About Clicked');
+    setIsEditingAbout(true);
+  };
+
+  const handleSaveAbout = () => {
+    // Update the user state with new about text
+    if (user) {
+      setUserAbout({ id:userId, about: aboutText });
+      // console.log('user', user);
+    }
+    // Here you can add API call to save to backend
+    // await userService.updateUser(userId, { about: aboutText });
+    setIsEditingAbout(false);
+  };
+
+  const handleCancelAbout = () => {
+    // Reset text to original value
+    setAboutText(user?.about || '');
+    setIsEditingAbout(false);
   };
 
   const currentProjects = [
@@ -274,24 +325,53 @@ const ProjectDashboard = () => {
             {/* About Me Section */}
             <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6 relative">
               {/* Edit Icon - top right */}
-              <button 
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" 
-                onClick={handleEditAbout} // define this function
-                title="Edit About"
-              >
-                <Ellipsis  className="text-gray-500 hover:text-gray-800" />
-              </button>
+              {!isEditingAbout && (
+                <button 
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" 
+                  onClick={handleEditAbout}
+                  title="Edit About"
+                >
+                  <Ellipsis className="text-gray-500 hover:text-gray-800" />
+                </button>
+              )}
 
               <h3 className="font-semibold text-xl mb-4 text-gray-900">About Me</h3>
 
-              {/* About text or fallback message */}
-              {user?.about ? (
-                <p className="text-gray-600 mb-4 leading-relaxed">{user.about}</p>
+              {/* About text or edit mode */}
+              {isEditingAbout ? (
+                <div className="space-y-4">
+                  <textarea
+                    value={aboutText}
+                    onChange={(e) => setAboutText(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={4}
+                    placeholder="Tell us about yourself..."
+                  />
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={handleCancelAbout}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveAbout}
+                      className="px-4 py-2 text-white bg-primary hover:bg-secondary hover:text-black rounded-lg transition-colors"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <p className="text-gray-400 italic mb-4 leading-relaxed">No about information provided. Click ✏️ to add one.</p>
+                <>
+                  {/* About text or fallback message */}
+                  {user?.about ? (
+                    <p className="text-gray-600 mb-4 leading-relaxed">{user.about}</p>
+                  ) : (
+                    <p className="text-gray-400 italic mb-4 leading-relaxed">No about information provided. Click the three dots to add one.</p>
+                  )}
+                </>
               )}
-
-            
             </div>
 
 
