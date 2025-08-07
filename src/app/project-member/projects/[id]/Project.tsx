@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Calendar, List, Video , Plus, Edit, MessageSquare, File, Clock, CheckCircle, SquareKanban  } from 'lucide-react';
+import { Calendar, List, Video , Plus, Edit, MessageSquare, Clock, CheckCircle, SquareKanban  } from 'lucide-react';
 // import projects from '@/data/projects/projects';
 import KanbanBoard from './Kanban';
-import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
+import { projectApi, ProjectResponse } from '@/services/projectApi';
 
 
 
@@ -240,35 +240,22 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
                 </p>
               </div>
 
-              {/* Custom Properties */}
-              <div className="mb-6 w-[60%]">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Properties</h3>
-
-                
-                <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-                <div className="text-sm font-medium text-gray-700">Priority</div>
-                <div className="text-red-600 font-medium">High</div>
-
-                <div className="text-sm font-medium text-gray-700">Client</div>
-                <div className="text-gray-900">TechCorp Inc.</div>
-
-                <div className="text-sm font-medium text-gray-700">Budget</div>
-                <div className="text-gray-900 font-medium">$50,000</div>
-
-                <div className="text-sm font-medium text-gray-700 whitespace-nowrap">Progress</div>
-                <div className="flex items-center gap-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <span className="text-sm text-gray-600 whitespace-nowrap">65%</span>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-medium text-gray-900">Priority</h3>
+                  <Edit className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
                 </div>
+                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                  project?.priority === 'High' ? 'bg-red-100 text-red-800' :
+                  project?.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                  project?.priority === 'Low' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {project ? project.priority : 'Priority Not Set'}
+                </span>
               </div>
 
-
-
-
-              </div>
-
+              
 
 
             </div>

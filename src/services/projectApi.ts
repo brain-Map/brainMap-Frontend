@@ -33,12 +33,20 @@ api.interceptors.response.use(
 );
 
 // Project related interfaces
+export interface TeamMember {
+  id?: number;
+  email: string;
+  role: string;
+}
+
 export interface CreateProjectRequest {
   title: string;
   description?: string;
   dueDate?: string;
   priority?: string;
   ownerId?: string; // Assuming ownerId is a string, adjust as necessary
+  teamMembers?: TeamMember[];
+  isPublic?: boolean;
 }
 
 export interface ProjectResponse {
