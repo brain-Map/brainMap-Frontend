@@ -169,74 +169,74 @@ interface DeleteConfirmationModalProps {
 //   );
 // };
 
-// const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ 
-//   isOpen, 
-//   onClose, 
-//   onConfirm, 
-//   projectName, 
-//   isDeleting 
-// }) => {
-//   if (!isOpen) return null;
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  projectName, 
+  isDeleting 
+}) => {
+  if (!isOpen) return null;
 
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center">
-//       {/* Backdrop */}
-//       <div 
-//         className="absolute inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm"
-//         onClick={!isDeleting ? onClose : undefined}
-//       />
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm"
+        onClick={!isDeleting ? onClose : undefined}
+      />
       
-//       {/* Modal */}
-//       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
-//         {/* Header */}
-//         <div className="flex items-center gap-3 mb-4">
-//           <div className="p-2 bg-red-100 rounded-full">
-//             <AlertTriangle className="w-5 h-5 text-red-600" />
-//           </div>
-//           <h2 className="text-lg font-semibold text-gray-900">Delete Project</h2>
-//         </div>
+      {/* Modal */}
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-100 rounded-full">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Delete Project</h2>
+        </div>
 
-//         {/* Content */}
-//         <div className="mb-6">
-//           <p className="text-gray-700 mb-2">
-//             Are you sure you want to delete <span className="font-medium">"{projectName}"</span>?
-//           </p>
-//           <p className="text-sm text-gray-500">
-//             This action cannot be undone. All project data will be permanently removed.
-//           </p>
-//         </div>
+        {/* Content */}
+        <div className="mb-6">
+          <p className="text-gray-700 mb-2">
+            Are you sure you want to delete <span className="font-medium">"{projectName}"</span>?
+          </p>
+          <p className="text-sm text-gray-500">
+            This action cannot be undone. All project data will be permanently removed.
+          </p>
+        </div>
 
-//         {/* Actions */}
-//         <div className="flex gap-3">
-//           <button
-//             onClick={onClose}
-//             disabled={isDeleting}
-//             className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={onConfirm}
-//             disabled={isDeleting}
-//             className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-//           >
-//             {isDeleting ? (
-//               <div className="flex items-center justify-center gap-2">
-//                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-//                 Deleting...
-//               </div>
-//             ) : (
-//               <>
-//                 <Trash2 className="w-4 h-4 inline mr-2" />
-//                 Delete Project
-//               </>
-//             )}
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Deleting...
+              </div>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4 inline mr-2" />
+                Delete Project
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ProjectsTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -310,38 +310,38 @@ const ProjectsTable: React.FC = () => {
     setDropdownOpenId(null);
   };
 
-  // const confirmDelete = async () => {
-  //   try {
-  //     // Set loading state
-  //     setDeletingProjectId(deleteConfirmation.projectId);
+  const confirmDelete = async () => {
+    try {
+      // Set loading state
+      setDeletingProjectId(deleteConfirmation.projectId);
       
-  //     // Call the delete API
-  //     await projectApi.deleteProject(deleteConfirmation.projectId);
+      // Call the delete API
+      await projectApi.deleteProject(deleteConfirmation.projectId);
       
-  //     // Success notification
-  //     alert('✅ Project deleted successfully!');
+      // Success notification
+      alert('✅ Project deleted successfully!');
       
-  //     // Refresh the projects list
-  //     await fetchProjects();
+      // Refresh the projects list
+      await fetchProjects();
       
-  //     console.log('Project deleted:', deleteConfirmation.projectId);
+      console.log('Project deleted:', deleteConfirmation.projectId);
       
-  //   } catch (error: any) {
-  //     console.error('Error deleting project:', error);
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
       
-  //     // Error notification
-  //     const errorMessage = error.response?.data?.message || error.message || 'Failed to delete project';
-  //     alert(`❌ Error: ${errorMessage}`);
-  //   } finally {
-  //     // Clear loading state and close modal
-  //     setDeletingProjectId(null);
-  //     setDeleteConfirmation({
-  //       isOpen: false,
-  //       projectId: '',
-  //       projectName: '',
-  //     });
-  //   }
-  // };
+      // Error notification
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete project';
+      alert(`❌ Error: ${errorMessage}`);
+    } finally {
+      // Clear loading state and close modal
+      setDeletingProjectId(null);
+      setDeleteConfirmation({
+        isOpen: false,
+        projectId: '',
+        projectName: '',
+      });
+    }
+  };
 
   const allProjects = showOnlyBackendProjects ? 
     backendProjects.map(project => ({
@@ -505,7 +505,7 @@ const ProjectsTable: React.FC = () => {
         
 
         {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg ">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -599,7 +599,7 @@ const ProjectsTable: React.FC = () => {
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                       {dropdownOpenId === project.id && (
-                        <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-100">
+                        <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                           <button
                             className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 text-left rounded-t-md transition duration-150 ease-in-out"
                             onClick={() => {
@@ -660,13 +660,13 @@ const ProjectsTable: React.FC = () => {
       /> */}
 
       {/* Delete Confirmation Modal */}
-      {/* <DeleteConfirmationModal
+      /* <DeleteConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false, projectId: '', projectName: '' })}
         onConfirm={confirmDelete}
         projectName={deleteConfirmation.projectName}
         isDeleting={deletingProjectId === deleteConfirmation.projectId}
-      /> */}
+      />
     </div>
   );
 };
