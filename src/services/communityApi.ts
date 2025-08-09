@@ -1,23 +1,43 @@
 import axios from 'axios';
 
-console.log("Port: ", process.env.E_PORT_BACKEND);
+// console.log("Port: ", process.env.E_PORT_BACKEND);
+
+// Get the API base URL with fallback
+const getApiBaseUrl = () => {
+  let baseUrl;
+  if (typeof window !== 'undefined') {
+    // Client-side: use environment variable or fallback to common development port
+    baseUrl = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT || '8080'}`;
+  } else {
+    // Server-side: use environment variable or fallback
+    baseUrl = process.env.API_URL || `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT || '8080'}`;
+  }
+  
+  console.log('API Base URL:', baseUrl);
+  return baseUrl;
+};
 
 const api = axios.create({
-  baseURL: `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}`,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -26,6 +46,20 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
+    
+    // Handle specific error cases
+    if (error.code === 'ECONNREFUSED') {
+      throw new Error('Unable to connect to server. Please check if the backend server is running.');
+    }
+    
+    if (error.response?.status === 404) {
+      throw new Error('API endpoint not found. Please check the server configuration.');
+    }
+    
+    if (error.response?.status >= 500) {
+      throw new Error('Server error. Please try again later.');
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -175,69 +209,69 @@ export const communityApi = {
   },
 
   // Get comments for a post
-  // getComments: async (postId: string): Promise<CommentResponse[]> => {
-  //   try {
-  //     const response = await api.get(`/api/v1/posts/${postId}/comments`);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error fetching comments:', error);
-  //     throw error;
-  //   }
-  // },
+  getComments: async (postId: string): Promise<CommentResponse[]> => {
+    try {
+      const response = await api.get(`/api/v1/posts/${postId}/comments`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      throw error;
+    }
+  },
 
   // Add comment to post
-  // addComment: async (postId: string, commentData: CommentRequest): Promise<CommentResponse> => {
-  //   try {
-  //     const response = await api.post(`/api/v1/posts/${postId}/comments`, commentData);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error adding comment:', error);
-  //     throw error;
-  //   }
-  // },
+  addComment: async (postId: string, commentData: CommentRequest): Promise<CommentResponse> => {
+    try {
+      const response = await api.post(`/api/v1/posts/${postId}/comments`, commentData);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  },
 
   // Update comment
-  // updateComment: async (postId: string, commentId: string, content: string): Promise<CommentResponse> => {
-  //   try {
-  //     const response = await api.put(`/api/v1/posts/${postId}/comments/${commentId}`, { content });
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error updating comment:', error);
-  //     throw error;
-  //   }
-  // },
+  updateComment: async (postId: string, commentId: string, content: string): Promise<CommentResponse> => {
+    try {
+      const response = await api.put(`/api/v1/posts/${postId}/comments/${commentId}`, { content });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      throw error;
+    }
+  },
 
   // Delete comment
-  // deleteComment: async (postId: string, commentId: string): Promise<void> => {
-  //   try {
-  //     await api.delete(`/api/v1/posts/${postId}/comments/${commentId}`);
-  //   } catch (error) {
-  //     console.error('Error deleting comment:', error);
-  //     throw error;
-  //   }
-  // },
+  deleteComment: async (postId: string, commentId: string): Promise<void> => {
+    try {
+      await api.delete(`/api/v1/posts/${postId}/comments/${commentId}`);
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      throw error;
+    }
+  },
 
   // Like/Unlike comment
-  // toggleCommentLike: async (postId: string, commentId: string): Promise<{ liked: boolean; likesCount: number }> => {
-  //   try {
-  //     const response = await api.post(`/api/v1/posts/${postId}/comments/${commentId}/like`);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error toggling comment like:', error);
-  //     throw error;
-  //   }
-  // },
+  toggleCommentLike: async (postId: string, commentId: string): Promise<{ liked: boolean; likesCount: number }> => {
+    try {
+      const response = await api.post(`/api/v1/posts/${postId}/comments/${commentId}/like`);
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      throw error;
+    }
+  },
 
   // Get popular tags
-  // getPopularTags: async (): Promise<string[]> => {
-  //   try {
-  //     const response = await api.get('/api/v1/tags/popular');
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error fetching popular tags:', error);
-  //     throw error;
-  //   }
-  // },
+  getPopularTags: async (): Promise<string[]> => {
+    try {
+      const response = await api.get('/api/v1/tags/popular');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching popular tags:', error);
+      throw error;
+    }
+  },
 
   // Search posts
   searchPosts: async (query: string, filters?: PostFilters): Promise<PostResponse[]> => {
