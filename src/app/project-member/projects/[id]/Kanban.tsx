@@ -921,7 +921,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
 
   return (
     <div className="max-h-screen w-full p-6">
-      <div className="min-w-full rounded-lg">
+      <div className="min-w-7xl rounded-lg">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
           <button
