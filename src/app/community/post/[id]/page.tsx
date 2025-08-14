@@ -12,16 +12,23 @@ import { useDeleteModal } from "@/hooks/useDeleteModal"
 interface Comment {
   id: string
   content: string
-  author: {
+  postId?: string
+  authorId?: string
+  authorName?: string
+  author?: {
+    id?: string
     name: string
-    avatar: string
-    role: string
-    verified: boolean
+    avatar?: string
+    role?: string
+    verified?: boolean
   }
-  likes: number
-  replies: Comment[]
+  likes?: number
+  replies: Comment[] | null
   createdAt: string
-  isLiked: boolean
+  updatedAt?: string
+  isLiked?: boolean
+  parentCommentId?: string | null
+  reply?: boolean
 }
 
 interface Post {
@@ -104,6 +111,143 @@ const formatDate = (dateString: string) => {
   }
 }
 
+// Recursive Comment Component
+const CommentComponent = ({ 
+  comment, 
+  onLike, 
+  onReply, 
+  replyingTo, 
+  replyForms, 
+  updateReplyForm, 
+  handleSubmitReply, 
+  router, 
+  postId, 
+  depth = 0 
+}: {
+  comment: Comment
+  onLike: (id: string) => void
+  onReply: (id: string) => void
+  replyingTo: string | null
+  replyForms: {[key: string]: string}
+  updateReplyForm: (id: string, content: string) => void
+  handleSubmitReply: (id: string) => void
+  router: any
+  postId: string
+  depth?: number
+}) => {
+  const maxDepth = 3 // Limit nesting depth
+
+  return (
+    <div className={`${depth > 0 ? 'ml-4 border-l-2 border-gray-200 pl-4' : ''} mb-4`}>
+      <div className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-medium text-gray-600">
+              {(comment.author?.name || comment.authorName || "A")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </span>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold text-gray-900 text-sm">
+                {comment.author?.name || comment.authorName || "Anonymous"}
+              </span>
+              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md font-normal">
+                {comment.author?.role || "Student"}
+              </span>
+              <span className="text-xs text-gray-500">{comment.createdAt}</span>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap mb-3">
+              {comment.content}
+            </p>
+            
+            {/* Comment Actions */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => onLike(comment.id)}
+                className={`flex items-center gap-1 text-xs h-7 px-2 rounded hover:bg-gray-100 transition-colors ${
+                  comment.isLiked ? "text-blue-600" : "text-gray-500"
+                }`}
+              >
+                <ThumbsUp className={`w-3 h-3 ${comment.isLiked ? "fill-current" : ""}`} />
+                {comment.likes || 0}
+              </button>
+              
+              {depth < maxDepth && (
+                <button
+                  onClick={() => onReply(comment.id)}
+                  className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                >
+                  <Reply className="w-3 h-3" />
+                  Reply
+                </button>
+              )}
+              
+              <button
+                onClick={() => router.push(`/community/post/${postId}/comment/${comment.id}`)}
+                className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              >
+                <MessageCircle className="w-3 h-3" />
+                Details
+              </button>
+            </div>
+
+            {/* Reply Form */}
+            {replyingTo === comment.id && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <textarea
+                  placeholder="Write your reply..."
+                  value={replyForms[comment.id] || ""}
+                  onChange={(e) => updateReplyForm(comment.id, e.target.value)}
+                  className="w-full min-h-[80px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                  <button
+                    onClick={() => onReply(comment.id)}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSubmitReply(comment.id)}
+                    disabled={!(replyForms[comment.id] || "").trim()}
+                    className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-md transition-colors"
+                  >
+                    Reply
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Nested Replies */}
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {comment.replies.map((reply) => (
+                  <CommentComponent
+                    key={reply.id}
+                    comment={reply}
+                    onLike={onLike}
+                    onReply={onReply}
+                    replyingTo={replyingTo}
+                    replyForms={replyForms}
+                    updateReplyForm={updateReplyForm}
+                    handleSubmitReply={handleSubmitReply}
+                    router={router}
+                    postId={postId}
+                    depth={depth + 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PostPage() {
   const params = useParams()
   const postId = params.id
@@ -117,6 +261,7 @@ export default function PostPage() {
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
+  const [replyForms, setReplyForms] = useState<{[key: string]: string}>({}) // For managing multiple reply forms
   const [sortBy, setSortBy] = useState("recent")
   const [showOptionsMenu, setShowOptionsMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -159,6 +304,45 @@ export default function PostPage() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showOptionsMenu])
+
+  // Transform CommentResponse to Comment interface
+  const transformComment = (comment: any): Comment => {
+    return {
+      id: comment.id,
+      content: comment.content,
+      postId: comment.postId,
+      authorId: comment.authorId,
+      authorName: comment.authorName,
+      author: {
+        id: comment.authorId,
+        name: comment.authorName || "Anonymous",
+        avatar: "/placeholder.svg?height=32&width=32",
+        role: "Student",
+        verified: false,
+      },
+      likes: comment.likes || 0,
+      replies: comment.replies ? comment.replies.map(transformComment) : null,
+      createdAt: formatDate(comment.createdAt) || "Unknown",
+      updatedAt: comment.updatedAt,
+      isLiked: comment.isLiked || false,
+      parentCommentId: comment.parentCommentId,
+      reply: comment.reply || false,
+    }
+  }
+
+  // Fetch comments separately 
+  const fetchComments = async () => {
+    if (!postId) return
+    
+    try {
+      const commentsData = await communityApi.getComments(postId as string)
+      console.log("Comments API response:", commentsData)
+      const transformedComments = commentsData.map(transformComment)
+      setComments(transformedComments || [])
+    } catch (err) {
+      console.error("Error fetching comments:", err)
+    }
+  }
 
   // Fetch post data from API
   useEffect(() => {
@@ -204,23 +388,9 @@ export default function PostPage() {
         // Transform and set comments if they exist
         const responseWithComments = data as any // Type assertion to access comments property
         if (responseWithComments.comments && Array.isArray(responseWithComments.comments)) {
-          const transformedComments: Comment[] = responseWithComments.comments.map((comment: any) => ({
-            id: comment.id,
-            content: comment.content || "",
-            author: {
-              name: comment.authorName || "Anonymous",
-              avatar: "/placeholder.svg?height=32&width=32",
-              role: "Student", // Default role, you can adjust this based on your API
-              verified: false,
-            },
-            likes: comment.likes || 0,
-            replies: [], // You can expand this if the API provides nested replies
-            createdAt: formatDate(comment.createdAt) || "Unknown",
-            isLiked: comment.isLiked || false,
-          }))
-          
-          setComments(transformedComments)
-          console.log("Transformed comments:", transformedComments)
+          // Use the comments directly from backend as they already have the correct structure
+          setComments(responseWithComments.comments)
+          console.log("Set comments:", responseWithComments.comments)
         }
         
       } catch (err) {
@@ -287,193 +457,124 @@ export default function PostPage() {
     }
   }
 
-  const handleCommentLike = (commentId: string, isReply = false, parentId?: string) => {
-    if (isReply && parentId) {
-      setComments(
-        comments.map((comment) =>
-          comment.id === parentId
-            ? {
-                ...comment,
-                replies: comment.replies.map((reply) =>
-                  reply.id === commentId
-                    ? { ...reply, isLiked: !reply.isLiked, likes: reply.isLiked ? reply.likes - 1 : reply.likes + 1 }
-                    : reply,
-                ),
-              }
-            : comment,
-        ),
-      )
-    } else {
-      setComments(
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, isLiked: !comment.isLiked, likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1 }
-            : comment,
-        ),
-      )
-    }
-  }
-
+  // Comment related functions
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !post) return
 
     try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/posts/${post.id}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: newComment }),
+      console.log("💬 Submitting new comment...")
+      
+      const response = await communityApi.addComment(post.id, {
+        content: newComment.trim()
       })
 
-      console.log(response);
+      console.log("💬 Comment API response:", response)
       
-      
-      if (response.ok) {
-        const comment: Comment = {
-          id: Date.now().toString(),
-          content: newComment,
-          author: {
-            name: "You",
-            avatar: "/placeholder.svg?height=32&width=32",
-            role: "Student",
-            verified: false,
-          },
-          likes: 0,
-          replies: [],
-          createdAt: "Just now",
-          isLiked: false,
-        }
-
-        setComments([comment, ...comments])
-        setNewComment("")
-        setPost({ ...post, comments: post.comments + 1 })
+      // Create local comment object
+      const newCommentObj: Comment = {
+        id: response.id || Date.now().toString(),
+        content: newComment.trim(),
+        author: {
+          name: response.author?.name || user?.name || "You",
+          avatar: response.author?.avatar || "/placeholder.svg?height=32&width=32",
+          role: user?.user_role || "Student",
+          verified: false,
+        },
+        likes: 0,
+        replies: [],
+        createdAt: "Just now",
+        isLiked: false,
       }
+
+      // Add to comments list
+      setComments([newCommentObj, ...comments])
+      setNewComment("")
+      
+      // Update post comment count
+      setPost({ ...post, comments: post.comments + 1 })
+      
+      console.log("💬 Comment added successfully")
+      
     } catch (err) {
-      console.error("Error submitting comment:", err)
+      console.error("💬 Error submitting comment:", err)
     }
   }
 
-  const handleSubmitReply = (parentId: string) => {
-    if (!replyContent.trim()) return
+  // Helper function to handle reply submission for any comment (nested support)
+  const handleSubmitReply = async (parentCommentId: string) => {
+    const replyText = replyForms[parentCommentId]
+    if (!replyText?.trim() || !post) return
 
-    const reply: Comment = {
-      id: `${parentId}-${Date.now()}`,
-      content: replyContent,
-      author: {
-        name: "You",
-        avatar: "/placeholder.svg?height=32&width=32",
-        role: "Student",
-        verified: false,
-      },
-      likes: 0,
-      replies: [],
-      createdAt: "Just now",
-      isLiked: false,
+    try {
+      console.log("💬 Submitting reply to comment:", parentCommentId)
+      
+      const response = await communityApi.addComment(post.id, {
+        content: replyText.trim(),
+        parentCommentId: parentCommentId
+      })
+
+      console.log("💬 Reply API response:", response)
+      
+      // Refresh comments to get updated structure from backend
+      fetchComments()
+      
+      // Clear reply form
+      setReplyForms(prev => ({
+        ...prev,
+        [parentCommentId]: ""
+      }))
+      setReplyingTo(null)
+      
+      console.log("💬 Reply added successfully")
+      
+    } catch (err) {
+      console.error("💬 Error submitting reply:", err)
     }
-
-    setComments(
-      comments.map((comment) =>
-        comment.id === parentId ? { ...comment, replies: [...comment.replies, reply] } : comment,
-      ),
-    )
-    setReplyContent("")
-    setReplyingTo(null)
   }
 
-  const CommentComponent = ({
-    comment,
-    isReply = false,
-    parentId,
-  }: { comment: Comment; isReply?: boolean; parentId?: string }) => (
-    <div className={`${isReply ? "ml-6 mt-3" : ""}`}>
-      <div className="flex gap-3">
-        <div className="relative flex-shrink-0">
-          <div className={`${isReply ? "w-7 h-7" : "w-9 h-9"} border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center`}>
-            <span className="text-xs font-medium text-gray-600">
-              {comment.author.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </span>
-          </div>
-          {comment.author.verified && (
-            <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 rounded-full p-0.5">
-              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-gray-900 text-sm">{comment.author.name}</span>
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md font-normal">
-                {comment.author.role}
-              </span>
-              <span className="text-xs text-gray-500">{comment.createdAt}</span>
-            </div>
-            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">{comment.content}</p>
-          </div>
-          <div className="flex items-center gap-4 mt-2 ml-2">
-            <button
-              onClick={() => handleCommentLike(comment.id, isReply, parentId)}
-              className={`flex items-center gap-1 text-xs h-7 px-2 rounded hover:bg-gray-100 transition-colors ${comment.isLiked ? "text-blue-600" : "text-gray-500"}`}
-            >
-              <ThumbsUp className={`w-3 h-3 ${comment.isLiked ? "fill-current" : ""}`} />
-              {comment.likes}
-            </button>
-            {!isReply && (
-              <button
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-              >
-                <Reply className="w-3 h-3" />
-                Reply
-              </button>
-            )}
-            <button className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded transition-colors">
-              <Flag className="w-3 h-3" />
-              Report
-            </button>
-          </div>
-          {replyingTo === comment.id && (
-            <div className="mt-3 ml-2">
-              <div className="space-y-2">
-                <textarea
-                  placeholder="Write a reply..."
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  className="w-full min-h-[70px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-                <div className="flex justify-end gap-2">
-                  <button 
-                    onClick={() => setReplyingTo(null)} 
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleSubmitReply(comment.id)}
-                    className="flex items-center px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                  >
-                    <Send className="w-3 h-3 mr-1" />
-                    Reply
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {comment.replies.length > 0 && (
-            <div className="mt-4 space-y-3">
-              {comment.replies.map((reply) => (
-                <CommentComponent key={reply.id} comment={reply} isReply={true} parentId={comment.id} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  // Helper function to toggle reply form for any comment
+  const toggleReplyForm = (commentId: string) => {
+    if (replyingTo === commentId) {
+      setReplyingTo(null)
+    } else {
+      setReplyingTo(commentId)
+      // Initialize reply form if not exists
+      if (!replyForms[commentId]) {
+        setReplyForms(prev => ({
+          ...prev,
+          [commentId]: ""
+        }))
+      }
+    }
+  }
+
+  // Helper function to update reply form content
+  const updateReplyForm = (commentId: string, content: string) => {
+    setReplyForms(prev => ({
+      ...prev,
+      [commentId]: content
+    }))
+  }
+
+  const handleCommentLike = async (commentId: string) => {
+    if (!post) return
+    
+    try {
+      console.log("💬 Toggling like for comment:", commentId)
+      
+      const response = await communityApi.toggleCommentLike(post.id, commentId)
+      
+      console.log("💬 Comment like response:", response)
+      
+      // Refresh comments to get updated structure from backend
+      fetchComments()
+      
+      console.log("💬 Comment like updated successfully")
+      
+    } catch (err) {
+      console.error("💬 Error toggling comment like:", err)
+    }
+  }
 
   // Loading state
   if (loading) {
@@ -776,7 +877,18 @@ export default function PostPage() {
                 {/* Comments List */}
                 <div className="space-y-4">
                   {comments.map((comment) => (
-                    <CommentComponent key={comment.id} comment={comment} />
+                    <CommentComponent
+                      key={comment.id}
+                      comment={comment}
+                      onLike={(id) => handleCommentLike(id)}
+                      onReply={toggleReplyForm}
+                      replyingTo={replyingTo}
+                      replyForms={replyForms}
+                      updateReplyForm={updateReplyForm}
+                      handleSubmitReply={handleSubmitReply}
+                      router={router}
+                      postId={postId as string}
+                    />
                   ))}
                 </div>
 
