@@ -866,7 +866,7 @@ export default function PostPage() {
                     </button>
                     <div className="flex items-center gap-2 text-gray-600">
                       <MessageCircle className="w-5 h-5" />
-                      {post.comments} comments
+                      {comments.length} comments
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
