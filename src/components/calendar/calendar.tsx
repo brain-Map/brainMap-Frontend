@@ -1,51 +1,346 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Search, Plus, Clock, MapPin, Users, X, Edit, Trash2 } from "lucide-react"
+import api from '@/utils/api'
 
 type ViewType = "month" | "week" | "day"
 type EventType = "meeting" | "standup" | "review" | "planning" | "demo" | "coffee" | "lunch" | "dinner"
 
 interface CalendarEvent {
-  id: string
+  eventId: string
   title: string
+  description?: string
+  createdDate: string // LocalDate from backend
+  dueDate: string // LocalDate from backend
+  dueTime: string // LocalTime from backend
+  createdTime: string // LocalTime from backend
+  userId: string
+  // UI-specific properties
   time: string
   endTime?: string
   type: EventType
   color: string
   date: Date
-  description?: string
   location?: string
   attendees?: string[]
 }
 
-interface CalendarProps {
-  events: CalendarEvent[]
+interface ApiEvent {
+  eventId: string
+  title: string
+  description?: string
+  createdDate: string
+  dueDate: string
+  dueTime: string
+  createdTime: string
+  userId: string
 }
 
-export default function Calendar({ events }: CalendarProps) {
+const eventFunction = {
+  getAllEvents: async () => {
+    try {
+      // Make sure we're using the correct port 8082
+      console.log('Attempting to fetch events from:', `${api.defaults.baseURL || 'http://localhost:8082'}/api/v1/events`)
+      const response = await api.get('/api/v1/events')
+      console.log('Events Data:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL
+      })
+      throw error
+    }
+  },
+
+  getEventById: async (eventId: string) => {
+    try {
+      const response = await api.get(`/api/v1/events/${eventId}`)
+      console.log('Event Data:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching event:', error)
+      throw error
+    }
+  },
+
+  getEventsByDate: async (date: string) => {
+    try {
+      const response = await api.get(`/api/v1/events/date/${date}`)
+      console.log('Events by Date:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching events by date:', error)
+      throw error
+    }
+  },
+
+  getEventsByDateRange: async (startDate: string, endDate: string) => {
+    try {
+      const response = await api.get(`/api/v1/events/range?startDate=${startDate}&endDate=${endDate}`)
+      console.log('Events by Date Range:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching events by date range:', error)
+      throw error
+    }
+  },
+
+  createEvent: async (eventData: {
+    title: string
+    description?: string
+    dueDate: string
+    dueTime: string
+  }) => {
+    try {
+      const currentDate = new Date()
+      const formattedDate = currentDate.toISOString().split('T')[0] // YYYY-MM-DD
+      const formattedTime = currentDate.toTimeString().split(' ')[0].substring(0, 5) // HH:MM
+      
+      const eventPayload = {
+        title: eventData.title,
+        description: eventData.description || '',
+        createdDate: formattedDate,
+        dueDate: eventData.dueDate,
+        dueTime: eventData.dueTime,
+        createdTime: formattedTime,
+        userId: 'current-user-id' // Replace with actual user ID from auth context
+      }
+      
+      const response = await api.post('/api/v1/events', eventPayload)
+      console.log('Created Event:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error creating event:', error)
+      throw error
+    }
+  },
+
+  updateEvent: async (eventId: string, eventData: {
+    title: string
+    description?: string
+    dueDate: string
+    dueTime: string
+  }) => {
+    try {
+      const response = await api.put(`/api/v1/events/${eventId}`, eventData)
+      console.log('Updated Event:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error updating event:', error)
+      throw error
+    }
+  },
+
+  deleteEvent: async (eventId: string) => {
+    try {
+      const response = await api.delete(`/api/v1/events/${eventId}`)
+      console.log('Deleted Event:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting event:', error)
+      throw error
+    }
+  },
+
+  getEventsCount: async () => {
+    try {
+      const response = await api.get('/api/v1/events/count')
+      console.log('Events Count:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching events count:', error)
+      throw error
+    }
+  },
+
+  getEventsCountByDate: async (date: string) => {
+    try {
+      const response = await api.get(`/api/v1/events/count/date/${date}`)
+      console.log('Events Count by Date:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching events count by date:', error)
+      throw error
+    }
+  }
+}
+
+// Helper function to transform API event to UI event
+const transformApiEventToCalendarEvent = (apiEvent: ApiEvent): CalendarEvent => {
+  // Convert time from HH:MM:SS to HH:MM AM/PM format
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':')
+    const hour = parseInt(hours)
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${displayHour}:${minutes} ${ampm}`
+  }
+
+  // Generate color based on event type or title
+  const generateColor = (title: string) => {
+    const colors = [
+      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 
+      'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'
+    ]
+    const hash = title.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    return colors[Math.abs(hash) % colors.length]
+  }
+
+  // Determine event type from title (basic heuristic)
+  const determineEventType = (title: string): EventType => {
+    const lowerTitle = title.toLowerCase()
+    if (lowerTitle.includes('meeting')) return 'meeting'
+    if (lowerTitle.includes('standup')) return 'standup'
+    if (lowerTitle.includes('review')) return 'review'
+    if (lowerTitle.includes('planning')) return 'planning'
+    if (lowerTitle.includes('demo')) return 'demo'
+    if (lowerTitle.includes('coffee')) return 'coffee'
+    if (lowerTitle.includes('lunch')) return 'lunch'
+    if (lowerTitle.includes('dinner')) return 'dinner'
+    return 'meeting' // default
+  }
+
+  return {
+    eventId: apiEvent.eventId,
+    title: apiEvent.title,
+    description: apiEvent.description,
+    createdDate: apiEvent.createdDate,
+    dueDate: apiEvent.dueDate,
+    dueTime: apiEvent.dueTime,
+    createdTime: apiEvent.createdTime,
+    userId: apiEvent.userId,
+    time: formatTime(apiEvent.dueTime),
+    endTime: undefined, // Can be calculated or set based on duration
+    type: determineEventType(apiEvent.title),
+    color: generateColor(apiEvent.title),
+    date: new Date(apiEvent.dueDate),
+    location: undefined, // Not available in current API
+    attendees: undefined // Not available in current API
+  }
+}
+
+export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<ViewType>("month")
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
   const [activeFilter, setActiveFilter] = useState("All events")
   const [showAddEvent, setShowAddEvent] = useState(false)
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [loading, setLoading] = useState(false)
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    type: "meeting" as EventType,
-    participant: "",
-    location: "",
-    attendees: [] as string[],
+    dueDate: "",
+    dueTime: "",
   })
 
   const today = new Date()
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
 
+  // Load events on component mount
+  useEffect(() => {
+    loadEvents()
+  }, [])
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true)
+      console.log('Loading events...')
+      const apiEvents: ApiEvent[] = await eventFunction.getAllEvents()
+      const transformedEvents = apiEvents.map(transformApiEventToCalendarEvent)
+      setEvents(transformedEvents)
+      console.log('Loaded events:', transformedEvents)
+    } catch (error: any) {
+      console.error('Error loading events:', error)
+      
+      // More detailed error handling
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        alert('Network Error: Please check if your backend server is running on the correct port and CORS is configured.')
+      } else if (error.response?.status === 404) {
+        alert('API endpoint not found. Please check if the backend server is running.')
+      } else if (error.response?.status >= 500) {
+        alert('Server Error: Please check your backend server.')
+      } else {
+        alert(`Failed to load events: ${error.message}`)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadEventsByDateRange = async (startDate: Date, endDate: Date) => {
+    try {
+      setLoading(true)
+      const startDateStr = startDate.toISOString().split('T')[0]
+      const endDateStr = endDate.toISOString().split('T')[0]
+      const apiEvents: ApiEvent[] = await eventFunction.getEventsByDateRange(startDateStr, endDateStr)
+      const transformedEvents = apiEvents.map(transformApiEventToCalendarEvent)
+      setEvents(transformedEvents)
+    } catch (error) {
+      console.error('Error loading events by date range:', error)
+      alert('Failed to load events. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddEvent = async () => {
+    if (newEvent.title && newEvent.dueDate && newEvent.dueTime) {
+      try {
+        setLoading(true)
+        await eventFunction.createEvent(newEvent)
+        setShowAddEvent(false)
+        setNewEvent({
+          title: "",
+          description: "",
+          dueDate: "",
+          dueTime: "",
+        })
+        // Reload events to show the new one
+        await loadEvents()
+      } catch (error) {
+        console.error('Error adding event:', error)
+        alert('Failed to add event. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  const handleEditEvent = async (event: CalendarEvent) => {
+    // Implementation for editing event
+    console.log("Editing event:", event)
+    // You can implement a similar modal for editing
+  }
+
+  const handleDeleteEvent = async (event: CalendarEvent) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      try {
+        setLoading(true)
+        await eventFunction.deleteEvent(event.eventId)
+        setShowEventModal(false)
+        // Reload events to reflect deletion
+        await loadEvents()
+      } catch (error) {
+        console.error('Error deleting event:', error)
+        alert('Failed to delete event. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
 
   const getMonthName = (date: Date) => {
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
@@ -243,7 +538,7 @@ export default function Calendar({ events }: CalendarProps) {
                 <div className="space-y-1">
                   {dayEvents.slice(0, 3).map((event) => (
                     <div
-                      key={event.id}
+                      key={event.eventId}
                       onClick={() => handleEventClick(event)}
                       className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${event.color} text-white truncate`}
                     >
@@ -317,7 +612,7 @@ export default function Calendar({ events }: CalendarProps) {
                     <div key={hour} className="h-16 p-1 border-b border-gray-100 relative">
                       {dayEvents.map((event) => (
                         <div
-                          key={event.id}
+                          key={event.eventId}
                           onClick={() => handleEventClick(event)}
                           className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${event.color} text-white truncate mb-1`}
                         >
@@ -392,7 +687,7 @@ export default function Calendar({ events }: CalendarProps) {
                   <div key={hour} className="h-16 p-2 border-b border-gray-100">
                     {hourEvents.map((event) => (
                       <div
-                        key={event.id}
+                        key={event.eventId}
                         onClick={() => handleEventClick(event)}
                         className={`p-2 rounded cursor-pointer hover:opacity-80 ${event.color} text-white mb-1`}
                       >
@@ -410,40 +705,6 @@ export default function Calendar({ events }: CalendarProps) {
         </div>
       </div>
     )
-  }
-
-  const handleAddEvent = () => {
-    if (newEvent.title && newEvent.date && newEvent.startTime && newEvent.endTime) {
-      // In a real app, this would save to backend
-      console.log("Adding event:", newEvent)
-      setShowAddEvent(false)
-      setNewEvent({
-        title: "",
-        description: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        type: "meeting",
-        participant: "",
-        location: "",
-        attendees: [] as string[],
-      })
-    }
-  }
-
-  const handleEditEvent = (event: CalendarEvent) => {
-    console.log("Editing event:", event)
-    // Handle edit logic
-  }
-
-  const handleDeleteEvent = (event: CalendarEvent) => {
-    console.log("Deleting event:", event)
-    // Handle delete logic
-  }
-
-  const handleEventAction = (event: CalendarEvent, action: string) => {
-    console.log("Event action:", action, event)
-    // Handle specific actions like join meeting
   }
 
   return (
@@ -502,18 +763,27 @@ export default function Calendar({ events }: CalendarProps) {
             <button
               className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer"
               onClick={() => setShowAddEvent(true)}
+              disabled={loading}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add event
+              {loading ? 'Loading...' : 'Add event'}
             </button>
           </div>
         </div>
 
         {/* Calendar Content */}
         <div className="mb-8">
-          {view === "month" && renderMonthView()}
-          {view === "week" && renderWeekView()}
-          {view === "day" && renderDayView()}
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-500">Loading events...</div>
+            </div>
+          ) : (
+            <>
+              {view === "month" && renderMonthView()}
+              {view === "week" && renderWeekView()}
+              {view === "day" && renderDayView()}
+            </>
+          )}
         </div>
 
         {/* Event Detail Modal */}
@@ -558,13 +828,21 @@ export default function Calendar({ events }: CalendarProps) {
                 )}
 
                 <div className="flex space-x-3 pt-4">
-                  <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
+                  <button 
+                    onClick={() => handleEditEvent(selectedEvent)}
+                    className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                    disabled={loading}
+                  >
                     <Edit className="mr-1 h-4 w-4" />
                     Edit
                   </button>
-                  <button className="flex items-center px-3 py-2 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50">
+                  <button 
+                    onClick={() => handleDeleteEvent(selectedEvent)}
+                    className="flex items-center px-3 py-2 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50"
+                    disabled={loading}
+                  >
                     <Trash2 className="mr-1 h-4 w-4" />
-                    Delete
+                    {loading ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -594,6 +872,7 @@ export default function Calendar({ events }: CalendarProps) {
                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Event title"
+                    disabled={loading}
                   />
                 </div>
 
@@ -605,90 +884,29 @@ export default function Calendar({ events }: CalendarProps) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                     rows={3}
                     placeholder="Event description"
+                    disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
                   <input
                     type="date"
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    value={newEvent.dueDate}
+                    onChange={(e) => setNewEvent({ ...newEvent, dueDate: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                    <input
-                      type="time"
-                      value={newEvent.startTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                    <input
-                      type="time"
-                      value={newEvent.endTime}
-                      onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <select
-                    value={newEvent.type}
-                    onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as EventType })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="meeting">Meeting</option>
-                    <option value="standup">Standup</option>
-                    <option value="review">Review</option>
-                    <option value="planning">Planning</option>
-                    <option value="demo">Demo</option>
-                    <option value="coffee">Coffee</option>
-                    <option value="lunch">Lunch</option>
-                    <option value="dinner">Dinner</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Participant (Optional)</label>
-                  <input
-                    type="text"
-                    value={newEvent.participant}
-                    onChange={(e) => setNewEvent({ ...newEvent, participant: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Participant name"
+                    disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Time</label>
                   <input
-                    type="text"
-                    value={newEvent.location}
-                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    type="time"
+                    value={newEvent.dueTime}
+                    onChange={(e) => setNewEvent({ ...newEvent, dueTime: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Meeting location or platform"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Attendees (Optional)</label>
-                  <input
-                    type="text"
-                    value={newEvent.attendees.join(", ")}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, attendees: e.target.value.split(", ").filter(Boolean) })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Attendees names"
+                    disabled={loading}
                   />
                 </div>
 
@@ -696,14 +914,16 @@ export default function Calendar({ events }: CalendarProps) {
                   <button
                     onClick={() => setShowAddEvent(false)}
                     className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
+                    disabled={loading}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAddEvent}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition-colors"
+                    disabled={loading || !newEvent.title || !newEvent.dueDate || !newEvent.dueTime}
                   >
-                    Add Event
+                    {loading ? 'Adding...' : 'Add Event'}
                   </button>
                 </div>
               </div>
