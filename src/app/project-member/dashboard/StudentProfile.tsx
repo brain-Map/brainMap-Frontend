@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/utils/api';
+import { useRouter } from 'next/navigation';
 
 
 export interface User {
@@ -64,6 +65,7 @@ const userService = {
 };
 
 const ProjectDashboard = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const user1 = useAuth().user;
   // const user1 = auth.user;
@@ -262,7 +264,9 @@ const ProjectDashboard = () => {
                 <p className="text-gray-600 text-sm">@{user?.username}</p>
               </div>
 
-              <button className="w-full bg-primary hover:bg-secondary hover:text-black text-white py-2.5 px-4 rounded-lg transition-colors duration-200 mb-6 flex items-center justify-center gap-2">
+              <button
+              onClick={() => router.push('/project-member/settings')}
+              className="w-full bg-primary hover:bg-secondary hover:text-black text-white py-2.5 px-4 rounded-lg transition-colors duration-200 mb-6 flex items-center justify-center gap-2">
                 <Edit3 className="w-4 h-4" />
                 Edit Profile
               </button>

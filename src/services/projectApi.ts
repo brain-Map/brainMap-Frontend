@@ -57,7 +57,7 @@ export interface ProjectResponse {
   priority?: string;
   type?: string;
   status?: string;
-  createdAt?: string;
+  createdAt: string;
   lead?: {
     id: string;
     name: string;

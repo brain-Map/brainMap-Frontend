@@ -135,7 +135,7 @@ const KanbanBoard: React.FC = () => {
           try {
             console.log('Fetching kanban data for projectId:', projectId);
             const data = await kanbanFunction.getKanban(projectId);
-            console.log('Raw API response:', data);
+            // console.log('Raw API response:', data);
             setKanbanId(data.kanbanId); // Assuming the API returns kanbanId
             
             // Check if data is an array (direct response) or has columns property
