@@ -122,10 +122,10 @@ export default function CommentPage() {
                 role: foundComment.author?.role || "Student",
                 verified: foundComment.author?.verified || false,
               },
-              likes: foundComment.likes || 0,
+              likes: foundComment.likesCount || 0,    // Backend returns likesCount
               replies: [],
               createdAt: formatDate(foundComment.createdAt) || "Unknown",
-              isLiked: foundComment.isLiked || false,
+              isLiked: foundComment.liked || false,   // Backend returns liked
             }
             
             setComment(transformedComment)
@@ -237,8 +237,8 @@ export default function CommentPage() {
       // Update local comment state
       setComment({
         ...comment,
-        isLiked: response.liked,
-        likes: response.likesCount
+        isLiked: response.liked,           // Backend returns 'liked'
+        likes: response.likesCount         // Backend returns 'likesCount'
       })
       
       console.log("💬 Comment like updated successfully")

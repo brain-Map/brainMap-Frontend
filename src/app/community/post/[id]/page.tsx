@@ -304,8 +304,8 @@ export default function PostPage() {
       // Update post state immediately for instant feedback
       setPost(prev => prev ? {
         ...prev,
-        isLiked: response.liked,
-        likes: response.likesCount
+        isLiked: response.liked,           // Backend returns 'liked'
+        likes: response.likesCount         // Backend returns 'likesCount'
       } : null)
       
       console.log("❤️ Post like updated successfully")
@@ -356,6 +356,17 @@ export default function PostPage() {
     }
   }, [showOptionsMenu])
 
+  // Test function to check comment like status manually
+  const testCommentLikeStatus = async (commentId: string) => {
+    try {
+      console.log("🧪 Testing comment like status for:", commentId)
+      const response = await communityApi.getCommentLikeStatus(commentId)
+      console.log("🧪 Comment like status response:", response)
+    } catch (error) {
+      console.error("🧪 Error testing comment like status:", error)
+    }
+  }
+
   // Transform CommentResponse to Comment interface
   const transformComment = (comment: any): Comment => {
     return {
@@ -371,11 +382,11 @@ export default function PostPage() {
         role: "Student",
         verified: false,
       },
-      likes: comment.likes || 0,
+      likes: comment.likesCount || 0,        // Backend returns likesCount
       replies: comment.replies ? comment.replies.map(transformComment) : null,
       createdAt: formatDate(comment.createdAt) || "Unknown",
       updatedAt: comment.updatedAt,
-      isLiked: comment.isLiked || false,
+      isLiked: comment.liked || false,       // Backend returns liked
       parentCommentId: comment.parentCommentId,
       reply: comment.reply || false,
     }
@@ -387,7 +398,6 @@ export default function PostPage() {
     
     try {
       const commentsData = await communityApi.getComments(postId as string)
-      console.log("Comments API response:", commentsData)
       const transformedComments = commentsData.map(transformComment)
       setComments(transformedComments || [])
     } catch (err) {
@@ -411,7 +421,6 @@ export default function PostPage() {
         const data = await communityApi.getPost(postId as string)
         
         console.log("Full API Response:", data); // Debug log
-        console.log("Comments in response:", (data as any).comments); // Check comments specifically
         
         
         // Transform API data to match our interface
@@ -431,11 +440,11 @@ export default function PostPage() {
             name: tag.name,
             id: tag.id
           })) || [],
-          likes: data.likes || 0,
-          comments: data.replies || 0, // Use replies field for comments count
+          likes: data.likesCount || 0,        // Backend returns likesCount
+          comments: data.replies || 0,        // Use replies field for comments count
           views: data.views || 0,
           createdAt: formatDate(data.createdAt) || "Unknown",
-          isLiked: data.isLiked || false,
+          isLiked: data.liked || false,       // Backend returns liked
           isBookmarked: false,
           type: (data.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
         }
@@ -445,9 +454,12 @@ export default function PostPage() {
         // Transform and set comments if they exist
         const responseWithComments = data as any // Type assertion to access comments property
         if (responseWithComments.comments && Array.isArray(responseWithComments.comments)) {
-          // Use the comments directly from backend as they already have the correct structure
-          setComments(responseWithComments.comments)
-          console.log("Set comments:", responseWithComments.comments)
+          // Transform comments to match frontend interface
+          const transformedComments = responseWithComments.comments.map(transformComment)
+          setComments(transformedComments)
+        } else {
+          // Fallback: fetch comments separately if not included in post response
+          fetchComments()
         }
         
       } catch (err) {
@@ -586,8 +598,8 @@ export default function PostPage() {
           if (comment.id === commentId) {
             return {
               ...comment,
-              isLiked: response.liked,
-              likes: response.likesCount
+              isLiked: response.liked,         // Backend returns 'liked'
+              likes: response.likesCount       // Backend returns 'likesCount'
             }
           }
           // Also check nested replies

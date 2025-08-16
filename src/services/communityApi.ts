@@ -147,10 +147,10 @@ export interface PostResponse {
     verified?: boolean;
   };
   type: "DISCUSSION" | "PROJECT" | "HELP";
-  likes?: number;
+  likesCount?: number;  // Backend returns likesCount (Long)
   replies?: number;
   views?: number;
-  isLiked?: boolean;
+  liked?: boolean;      // Backend returns liked (boolean)
 }
 
 export interface CommentRequest {
@@ -168,8 +168,8 @@ export interface CommentResponse {
   };
   createdAt: string;
   updatedAt?: string;
-  likes?: number;
-  isLiked?: boolean;
+  likesCount?: number;  // Backend returns likesCount (Long)
+  liked?: boolean;      // Backend returns liked (boolean)
   replies?: CommentResponse[];
   parentCommentId?: string;
 }

@@ -125,12 +125,12 @@ const formatDate = (dateString: string) => {
           },
           category: post.type?.toLowerCase() || "discussion",
           tags: post.tags?.map((tag: any) => tag.name) || [],
-          likes: post.likes || 0,
+          likes: post.likesCount || 0,        // Backend returns likesCount
           comments: post.replies || 0,
           views: post.views || 0,
           createdAt: formatDate(post.createdAt),
           originalCreatedAt: post.createdAt, // Keep original date for sorting
-          isLiked: post.isLiked || false,
+          isLiked: post.liked || false,       // Backend returns liked
           isBookmarked: false,
           type: (post.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
           featured: false,
