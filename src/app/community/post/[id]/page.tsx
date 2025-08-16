@@ -264,7 +264,9 @@ export default function PostPage() {
   const [replyForms, setReplyForms] = useState<{[key: string]: string}>({}) // For managing multiple reply forms
   const [sortBy, setSortBy] = useState("recent")
   const [showOptionsMenu, setShowOptionsMenu] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const emojiRef = useRef<HTMLDivElement>(null)
 
   const deleteModal = useDeleteModal({
     title: "Delete Post",
@@ -345,16 +347,19 @@ export default function PostPage() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowOptionsMenu(false)
       }
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false)
+      }
     }
 
-    if (showOptionsMenu) {
+    if (showOptionsMenu || showEmojiPicker) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showOptionsMenu])
+  }, [showOptionsMenu, showEmojiPicker])
 
   // Test function to check comment like status manually
   const testCommentLikeStatus = async (commentId: string) => {
@@ -365,6 +370,27 @@ export default function PostPage() {
     } catch (error) {
       console.error("🧪 Error testing comment like status:", error)
     }
+  }
+
+  // Emoji picker functionality
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+    '😉', '😍', '🥰', '😘', '😗', '😙', '😋', '😛', '😝', '😜',
+    '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞',
+    '😔', '😟', '😕', '🙁', '😣', '😖', '😫', '😩', '🥺', '😢',
+    '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱',
+    '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤐', '🥴',
+    '😵', '🤤', '😪', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧',
+    '🥳', '🤠', '🤡', '🥸', '🤑', '🤖', '👍', '👎', '👌', '✌️',
+    '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋',
+    '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏',
+    '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻',
+    '👃', '👣', '👁️', '👀', '🫀', '🫁', '🧠', '🗣️', '👤', '👥'
+  ]
+
+  const addEmoji = (emoji: string) => {
+    setNewComment(prev => prev + emoji)
+    setShowEmojiPicker(false)
   }
 
   // Transform CommentResponse to Comment interface
@@ -911,11 +937,36 @@ export default function PostPage() {
                         className="w-full min-h-[90px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                       />
                       <div className="flex justify-between items-center mt-3">
-                        <div className="flex items-center gap-2">
-                          <button className="flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        <div className="flex items-center gap-2 relative">
+                          <button 
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
                             <Smile className="w-4 h-4" />
                             Emoji
                           </button>
+                          
+                          {/* Emoji Picker */}
+                          {showEmojiPicker && (
+                            <div 
+                              ref={emojiRef}
+                              className="absolute bottom-full left-0 mb-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4"
+                            >
+                              <h4 className="text-sm font-medium text-gray-700 mb-3">Choose an emoji</h4>
+                              <div className="grid grid-cols-10 gap-2 max-h-48 overflow-y-auto">
+                                {commonEmojis.map((emoji, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => addEmoji(emoji)}
+                                    className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                    title={emoji}
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={handleSubmitComment}
