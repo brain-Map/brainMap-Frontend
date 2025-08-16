@@ -136,6 +136,49 @@ const CommentComponent = ({
   depth?: number
 }) => {
   const maxDepth = 3 // Limit nesting depth
+  const [showReplyEmojiPicker, setShowReplyEmojiPicker] = useState(false)
+  const replyEmojiRef = useRef<HTMLDivElement>(null)
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (replyEmojiRef.current && !replyEmojiRef.current.contains(event.target as Node)) {
+        setShowReplyEmojiPicker(false)
+      }
+    }
+
+    if (showReplyEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showReplyEmojiPicker])
+
+  // Common emojis for reply picker
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+    '😉', '😍', '🥰', '😘', '😗', '😙', '😋', '😛', '😝', '😜',
+    '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞',
+    '😔', '😟', '😕', '🙁', '😣', '😖', '😫', '😩', '🥺', '😢',
+    '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱',
+    '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤐', '🥴',
+    '😵', '🤤', '😪', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧',
+    '🥳', '🤠', '🤡', '🥸', '🤑', '🤖', '👍', '👎', '👌', '✌️',
+    '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋',
+    '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏',
+    '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻',
+    '👃', '👣', '👁️', '👀', '🫀', '🫁', '🧠', '🗣️', '👤', '👥'
+  ]
+
+  // Add emoji to reply
+  const addEmojiToReply = (emoji: string) => {
+    if (replyingTo === comment.id) {
+      updateReplyForm(comment.id, (replyForms[comment.id] || '') + emoji)
+      setShowReplyEmojiPicker(false)
+    }
+  }
 
   return (
     <div className={`${depth > 0 ? 'ml-4 border-l-2 border-gray-200 pl-4' : ''} mb-4`}>
@@ -203,20 +246,53 @@ const CommentComponent = ({
                   onChange={(e) => updateReplyForm(comment.id, e.target.value)}
                   className="w-full min-h-[80px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    onClick={() => onReply(comment.id)}
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleSubmitReply(comment.id)}
-                    disabled={!(replyForms[comment.id] || "").trim()}
-                    className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-md transition-colors"
-                  >
-                    Reply
-                  </button>
+                <div className="flex justify-between items-center mt-2">
+                  <div className="flex items-center gap-2 relative">
+                    <button 
+                      onClick={() => setShowReplyEmojiPicker(!showReplyEmojiPicker)}
+                      className="flex items-center gap-2 px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-sm"
+                    >
+                      <Smile className="w-3 h-3" />
+                      Emoji
+                    </button>
+                    
+                    {/* Reply Emoji Picker */}
+                    {showReplyEmojiPicker && (
+                      <div 
+                        ref={replyEmojiRef}
+                        className="absolute bottom-full left-0 mb-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4"
+                      >
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Choose an emoji</h4>
+                        <div className="grid grid-cols-10 gap-2 max-h-48 overflow-y-auto">
+                          {commonEmojis.map((emoji, index) => (
+                            <button
+                              key={index}
+                              onClick={() => addEmojiToReply(emoji)}
+                              className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                              title={emoji}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onReply(comment.id)}
+                      className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSubmitReply(comment.id)}
+                      disabled={!(replyForms[comment.id] || "").trim()}
+                      className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-md transition-colors"
+                    >
+                      Reply
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
