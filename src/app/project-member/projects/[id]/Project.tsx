@@ -7,6 +7,7 @@ import ProjectSettingsPage from './Settings';
 import { projectApi, ProjectResponse } from '@/services/projectApi';
 import api from '@/utils/api';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
@@ -62,6 +63,9 @@ const projectCollaborators ={
 
 
 export default function ProjectOverview({ params }: { params: { id: string } }) {
+  const user = useAuth().user;
+
+  console.log('Current user:', user);
   const projectId = params.id;
   const [activeTab, setActiveTab] = useState('Overview');
   const [collaborators, setCollaborators] = useState<collaborator[] | []>([]);
@@ -90,7 +94,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
           try {
             setIsLoadingProjects(true);
             setProjectsError(null);
-            const projects = await projectApi.getProjects();
+            const projects = await projectApi.getProjects(user?.id || '');
             setBackendProjects(projects);
             console.log('Fetched projects:', projects);
           } catch (error: any) {
