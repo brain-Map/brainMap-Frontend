@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2, Edit, Trash2 } from "lucide-react"
-import { communityApi, PopularTag } from "@/services/communityApi"
+import { communityApi, PopularTag, TopCommenter } from "@/services/communityApi"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import DeleteModal from "@/components/modals/DeleteModal"
@@ -55,13 +55,6 @@ interface Post {
   isBookmarked: boolean
   type: "discussion" | "project" | "help"
 }
-
-const topContributors = [
-  { name: "Alex Chen", avatar: "👨‍💻", points: 12450 },
-  { name: "Sarah Kim", avatar: "👩‍💻", points: 9876 },
-  { name: "Mike Rodriguez", avatar: "👨‍🎓", points: 8234 },
-  { name: "Emma Wilson", avatar: "👩‍🎓", points: 7654 },
-]
 
 const formatDate = (dateString: string) => {
   try {
@@ -335,6 +328,8 @@ export default function PostPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [popularTags, setPopularTags] = useState<PopularTag[]>([])
   const [tagsLoading, setTagsLoading] = useState(true)
+  const [topCommenters, setTopCommenters] = useState<TopCommenter[]>([])
+  const [commentersLoading, setCommentersLoading] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
 
@@ -368,6 +363,23 @@ export default function PostPage() {
       setPopularTags([])
     } finally {
       setTagsLoading(false)
+    }
+  }
+
+  // Fetch top commenters for this post from API
+  const fetchTopCommenters = async () => {
+    if (!postId) return
+    
+    try {
+      setCommentersLoading(true)
+      const data = await communityApi.getTopCommenters(postId as string)
+      setTopCommenters(data)
+    } catch (err) {
+      console.error("Error fetching top commenters:", err)
+      // Fallback to empty array if API fails
+      setTopCommenters([])
+    } finally {
+      setCommentersLoading(false)
     }
   }
 
@@ -604,6 +616,13 @@ export default function PostPage() {
     fetchPopularTags()
   }, [])
 
+  // Fetch top commenters when post is loaded
+  useEffect(() => {
+    if (postId) {
+      fetchTopCommenters()
+    }
+  }, [postId])
+
   const handleBack = () => {
     // In a real app, this would use router.back() or navigate to community page
     
@@ -647,6 +666,9 @@ export default function PostPage() {
       // Update post comment count
       setPost({ ...post, comments: post.comments + 1 })
       
+      // Refresh top commenters since a new comment was added
+      fetchTopCommenters()
+      
       console.log("💬 Comment added successfully")
       
     } catch (err) {
@@ -678,6 +700,9 @@ export default function PostPage() {
         [parentCommentId]: ""
       }))
       setReplyingTo(null)
+      
+      // Refresh top commenters since a new reply was added
+      fetchTopCommenters()
       
       console.log("💬 Reply added successfully")
       
@@ -876,19 +901,44 @@ export default function PostPage() {
               </div>
             </div>
 
-            {/* Top Contributors */}
+            {/* Top Commenters */}
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-              <h3 className="font-semibold text-gray-900 mb-3">Top Contributors</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Top Commenters</h3>
               <div className="space-y-3">
-                {topContributors.map((contributor) => (
-                  <div key={contributor.name} className="flex items-center space-x-3">
-                    <div className="text-2xl">{contributor.avatar}</div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 text-sm">{contributor.name}</div>
-                      <div className="text-xs text-gray-500">{contributor.points.toLocaleString()} points</div>
-                    </div>
+                {commentersLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Loading commenters...</span>
                   </div>
-                ))}
+                ) : topCommenters.length > 0 ? (
+                  topCommenters.map((commenter) => (
+                    <div key={commenter.id} className="flex items-center space-x-3">
+                      <div className="w-8 h-8 border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-gray-600">
+                          {commenter.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 text-sm">{commenter.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {commenter.commentCount} comment{commenter.commentCount !== 1 ? 's' : ''}
+                          {commenter.role && (
+                            <span className="ml-2 px-1 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                              {commenter.role}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="text-sm text-gray-500">No commenters yet</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

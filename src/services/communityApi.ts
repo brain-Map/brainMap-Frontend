@@ -159,6 +159,14 @@ export interface PopularTag {
   postCount: number;
 }
 
+export interface TopCommenter {
+  id: string;
+  name: string;
+  avatar?: string;
+  commentCount: number;
+  role?: string;
+}
+
 export interface CommentRequest {
   content: string;
   parentCommentId?: string; // For nested replies
@@ -480,6 +488,17 @@ export const communityApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching popular tags:', error);
+      throw error;
+    }
+  },
+
+  // Get top commenters for a specific post
+  getTopCommenters: async (postId: string): Promise<TopCommenter[]> => {
+    try {
+      const response = await api.get(`/api/v1/posts/${postId}/top-commenters`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching top commenters:', error);
       throw error;
     }
   },
