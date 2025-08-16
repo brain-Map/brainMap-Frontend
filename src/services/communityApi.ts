@@ -22,8 +22,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // Increased to 30 seconds for slower responses
 });
+
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 api.interceptors.request.use(
   (config) => {
@@ -32,8 +38,25 @@ api.interceptors.request.use(
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('🔑 Auth token added to request:', `Bearer ${token.substring(0, 20)}...`);
+      } else {
+        console.warn('⚠️ No auth token found in localStorage or sessionStorage');
       }
     }
+    
+    // Log the full request for debugging
+    if (config.url?.includes('/likes/toggle')) {
+      console.log('🔍 Full request config:', {
+        url: config.url,
+        method: config.method,
+        headers: {
+          'Content-Type': config.headers['Content-Type'],
+          'Authorization': config.headers.Authorization ? `${String(config.headers.Authorization).substring(0, 20)}...` : 'Not set'
+        },
+        data: config.data
+      });
+    }
+    
     return config;
   },
   (error) => {
@@ -44,7 +67,9 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const { config } = error;
+    
     console.error('API Error:', error.response?.data || error.message);
     
     // Handle specific error cases
@@ -59,6 +84,26 @@ api.interceptors.response.use(
     if (error.response?.status >= 500) {
       throw new Error('Server error. Please try again later.');
     }
+
+    // Retry logic for timeout and network errors
+    if (
+      (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR') &&
+      config &&
+      !config._retryCount
+    ) {
+      config._retryCount = 0;
+    }
+
+    if (
+      config &&
+      config._retryCount < MAX_RETRIES &&
+      (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR')
+    ) {
+      config._retryCount++;
+      console.log(`Retrying request... Attempt ${config._retryCount}/${MAX_RETRIES}`);
+      await sleep(RETRY_DELAY * config._retryCount); // Progressive delay
+      return api(config);
+    }
     
     return Promise.reject(error);
   }
@@ -70,6 +115,17 @@ export interface CreatePostRequest {
   content: string;
   // category: string;
   tags: string[]; // Changed from [] to string[]
+}
+
+export interface LikeRequest {
+  targetId: string;
+  targetType: 'post' | 'comment';
+  postId?: string; // Optional context for comments
+}
+
+export interface LikeResponse {
+  liked: boolean;
+  likesCount: number;
 }
 
 export interface PostResponse {
@@ -129,6 +185,55 @@ export interface PostFilters {
 }
 
 export const communityApi = {
+  // Test backend connection
+  testConnection: async (): Promise<boolean> => {
+    try {
+      // Use posts endpoint since health endpoint returns 500
+      const response = await api.get('/api/v1/posts', { timeout: 5000 });
+      return response.status === 200;
+    } catch (error) {
+      console.error('Backend connection test failed:', error);
+      return false;
+    }
+  },
+
+  // Test like endpoint with validation
+  testLikeEndpoint: async (targetId: string, targetType: 'post' | 'comment', postId?: string): Promise<any> => {
+    try {
+      console.log('🧪 Testing like endpoint...');
+      console.log('🧪 Target ID format check:', targetId);
+      console.log('🧪 Target ID length:', targetId.length);
+      console.log('🧪 Target type:', targetType);
+      console.log('🧪 Post ID (if comment):', postId);
+      
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(targetId)) {
+        throw new Error(`Invalid UUID format for targetId: ${targetId}`);
+      }
+      
+      if (postId && !uuidRegex.test(postId)) {
+        throw new Error(`Invalid UUID format for postId: ${postId}`);
+      }
+      
+      const payload: any = {
+        targetId: targetId.toLowerCase(), // Ensure lowercase
+        targetType: targetType
+      };
+      
+      if (targetType === 'comment' && postId) {
+        payload.postId = postId.toLowerCase();
+      }
+      
+      console.log('🧪 Final payload:', JSON.stringify(payload, null, 2));
+      
+      const response = await api.post('/api/v1/likes/toggle', payload);
+      return response.data;
+    } catch (error) {
+      console.error('🧪 Test failed:', error);
+      throw error;
+    }
+  },
 
   // Create a new post
   createPost: async (postData: CreatePostRequest): Promise<PostResponse> => {
@@ -168,10 +273,22 @@ export const communityApi = {
   // Get single post by ID
   getPost: async (id: string): Promise<PostResponse> => {
     try {
+      console.log(`Fetching post with ID: ${id}`);
       const response = await api.get(`/api/v1/posts/${id}`);
+      console.log(`Post fetch successful for ID: ${id}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching post:', error);
+      
+      // If timeout, try alternative endpoint or provide helpful error
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timed out. The server might be overloaded. Please try again in a moment.');
+      }
+      
+      if (error.response?.status === 404) {
+        throw new Error('Post not found. It may have been deleted or moved.');
+      }
+      
       throw error;
     }
   },
@@ -197,13 +314,112 @@ export const communityApi = {
     }
   },
 
-  // Like/Unlike post
-  toggleLike: async (id: string): Promise<{ liked: boolean; likesCount: number }> => {
+  // Unified Like/Unlike for posts, comments, and replies (matches backend)
+  toggleLike: async (targetId: string, targetType: 'post' | 'comment', postId?: string): Promise<LikeResponse> => {
     try {
-      const response = await api.post(`/api/v1/posts/${id}/like`);
+      // Validate UUID format before sending
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(targetId)) {
+        throw new Error(`Invalid UUID format for targetId: ${targetId}`);
+      }
+      
+      if (postId && !uuidRegex.test(postId)) {
+        throw new Error(`Invalid UUID format for postId: ${postId}`);
+      }
+      
+      const payload: any = {
+        targetId: targetId.toLowerCase(), // Ensure consistent case
+        targetType: targetType
+      };
+      
+      // If it's a comment/reply, include the postId for context
+      if (targetType === 'comment' && postId) {
+        payload.postId = postId.toLowerCase();
+      }
+      
+      console.log('🔍 Sending like request with payload:', JSON.stringify(payload, null, 2));
+      console.log('🔍 Request URL:', '/api/v1/likes/toggle');
+      console.log('🔍 Request method: POST');
+      
+      try {
+        // Try unified endpoint first
+        const response = await api.post('/api/v1/likes/toggle', payload);
+        console.log('✅ Like response received:', response.data);
+        return response.data;
+      } catch (unifiedError: any) {
+        // If unified endpoint fails with 401/400, fall back to old endpoints for testing
+        if (unifiedError.response?.status === 401 || unifiedError.response?.status === 400) {
+          console.warn('🔄 Unified endpoint failed, falling back to legacy endpoints...');
+          
+          if (targetType === 'post') {
+            const fallbackResponse = await api.post(`/api/v1/posts/${targetId}/like`);
+            return fallbackResponse.data;
+          } else if (targetType === 'comment' && postId) {
+            const fallbackResponse = await api.post(`/api/v1/posts/${postId}/comments/${targetId}/like`);
+            return fallbackResponse.data;
+          }
+        }
+        throw unifiedError;
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error toggling like:', error);
+      
+      // Log more details about the error
+      if (error.response) {
+        console.error('❌ Error response status:', error.response.status);
+        console.error('❌ Error response data:', error.response.data);
+        console.error('❌ Error response headers:', error.response.headers);
+        
+        // Check for specific validation errors
+        if (error.response.status === 400) {
+          const errorData = error.response.data;
+          let errorMessage = 'Bad request - please check the data format';
+          
+          if (typeof errorData === 'string') {
+            errorMessage = errorData;
+          } else if (errorData?.message) {
+            errorMessage = errorData.message;
+          } else if (errorData?.error) {
+            errorMessage = errorData.error;
+          } else if (errorData?.errors) {
+            // Handle validation errors array
+            const validationErrors = Array.isArray(errorData.errors) 
+              ? errorData.errors.map((e: any) => e.defaultMessage || e.message || e).join(', ')
+              : JSON.stringify(errorData.errors);
+            errorMessage = `Validation errors: ${validationErrors}`;
+          }
+          
+          throw new Error(`Validation error: ${errorMessage}`);
+        }
+        
+        if (error.response.status === 401) {
+          throw new Error('Authentication failed - please login again');
+        }
+      }
+      
+      throw error;
+    }
+  },
+
+  // Get post like status
+  getPostLikeStatus: async (postId: string): Promise<LikeResponse> => {
+    try {
+      const response = await api.get(`/api/v1/likes/post/${postId}/status`);
       return response.data;
-    } catch (error) {
-      console.error('Error toggling like:', error);
+    } catch (error: any) {
+      console.error('Error getting post like status:', error);
+      throw error;
+    }
+  },
+
+  // Get comment like status
+  getCommentLikeStatus: async (commentId: string): Promise<LikeResponse> => {
+    try {
+      const response = await api.get(`/api/v1/likes/comment/${commentId}/status`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error getting comment like status:', error);
       throw error;
     }
   },
@@ -247,17 +463,6 @@ export const communityApi = {
       await api.delete(`/api/v1/posts/${postId}/comments/${commentId}`);
     } catch (error) {
       console.error('Error deleting comment:', error);
-      throw error;
-    }
-  },
-
-  // Like/Unlike comment
-  toggleCommentLike: async (postId: string, commentId: string): Promise<{ liked: boolean; likesCount: number }> => {
-    try {
-      const response = await api.post(`/api/v1/posts/${postId}/comments/${commentId}/like`);
-      return response.data;
-    } catch (error) {
-      console.error('Error toggling comment like:', error);
       throw error;
     }
   },

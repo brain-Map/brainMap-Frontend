@@ -231,7 +231,8 @@ export default function CommentPage() {
     try {
       console.log("💬 Toggling like for comment:", comment.id)
       
-      const response = await communityApi.toggleCommentLike(post.id, comment.id)
+      // Use unified like API for comments
+      const response = await communityApi.toggleLike(comment.id, 'comment', post.id)
       
       // Update local comment state
       setComment({

@@ -288,6 +288,57 @@ export default function PostPage() {
       post?.title
     )
   }
+
+  // Handle post like/unlike
+  const handleLike = async () => {
+    if (!post) return
+    
+    try {
+      console.log("❤️ Toggling like for post:", post.id)
+      
+      // Use unified like API for post
+      const response = await communityApi.toggleLike(post.id, 'post')
+      
+      console.log("❤️ Post like response:", response)
+      
+      // Update post state immediately for instant feedback
+      setPost(prev => prev ? {
+        ...prev,
+        isLiked: response.liked,
+        likes: response.likesCount
+      } : null)
+      
+      console.log("❤️ Post like updated successfully")
+      
+    } catch (error: any) {
+      console.error("❤️ Error toggling post like:", error)
+      // You might want to show a toast notification here
+    }
+  }
+
+  // Handle bookmark toggle (placeholder for now)
+  const handleBookmark = async () => {
+    if (!post) return
+    
+    try {
+      console.log("🔖 Toggling bookmark for post:", post.id)
+      
+      // This would be implemented when bookmark API is ready
+      // const response = await communityApi.toggleBookmark(post.id)
+      
+      // For now, just toggle locally
+      setPost(prev => prev ? {
+        ...prev,
+        isBookmarked: !prev.isBookmarked
+      } : null)
+      
+      console.log("🔖 Bookmark toggled successfully")
+      
+    } catch (error: any) {
+      console.error("🔖 Error toggling bookmark:", error)
+    }
+  }
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -351,6 +402,12 @@ export default function PostPage() {
         setLoading(true)
         setError(null)
         
+        // Test backend connection first
+        const isConnected = await communityApi.testConnection()
+        if (!isConnected) {
+          throw new Error('Backend server is not responding. Please try again later.')
+        }
+        
         const data = await communityApi.getPost(postId as string)
         
         console.log("Full API Response:", data); // Debug log
@@ -411,50 +468,6 @@ export default function PostPage() {
     
     console.log("Navigate back to community")
     router.push("/community")
-  }
-
-  const handleLike = async () => {
-    if (!post) return
-    
-    try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ liked: !post.isLiked }),
-      })
-      
-      if (response.ok) {
-        setPost({ 
-          ...post, 
-          isLiked: !post.isLiked, 
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1 
-        })
-      }
-    } catch (err) {
-      console.error("Error liking post:", err)
-    }
-  }
-
-  const handleBookmark = async () => {
-    if (!post) return
-    
-    try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookmarked: !post.isBookmarked }),
-      })
-      
-      if (response.ok) {
-        setPost({ ...post, isBookmarked: !post.isBookmarked })
-      }
-    } catch (err) {
-      console.error("Error bookmarking post:", err)
-    }
   }
 
   // Comment related functions
@@ -562,17 +575,40 @@ export default function PostPage() {
     try {
       console.log("💬 Toggling like for comment:", commentId)
       
-      const response = await communityApi.toggleCommentLike(post.id, commentId)
+      // Use unified like API for comments/replies
+      const response = await communityApi.toggleLike(commentId, 'comment', post.id)
       
       console.log("💬 Comment like response:", response)
       
-      // Refresh comments to get updated structure from backend
-      fetchComments()
+      // Update the specific comment's like state locally for immediate feedback
+      const updateCommentLikes = (comments: Comment[]): Comment[] => {
+        return comments.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              isLiked: response.liked,
+              likes: response.likesCount
+            }
+          }
+          // Also check nested replies
+          if (comment.replies && comment.replies.length > 0) {
+            return {
+              ...comment,
+              replies: updateCommentLikes(comment.replies)
+            }
+          }
+          return comment
+        })
+      }
+
+      setComments(updateCommentLikes)
       
       console.log("💬 Comment like updated successfully")
       
     } catch (err) {
       console.error("💬 Error toggling comment like:", err)
+      // Fallback to refresh all comments if local update fails
+      fetchComments()
     }
   }
 
@@ -598,12 +634,20 @@ export default function PostPage() {
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to load post</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
+          <div className="space-y-2">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => router.push('/community')} 
+              className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Back to Community
+            </button>
+          </div>
         </div>
       </div>
     )

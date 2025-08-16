@@ -199,8 +199,8 @@ const formatDate = (dateString: string) => {
     )
 
     try {
-      // Make API call to toggle like
-      const response = await communityApi.toggleLike(postId)
+      // Make API call to toggle like using unified API
+      const response = await communityApi.toggleLike(postId, 'post')
       
       // Update with the actual response data from server
       setPosts(prevPosts =>
