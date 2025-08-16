@@ -148,9 +148,15 @@ export interface PostResponse {
   };
   type: "DISCUSSION" | "PROJECT" | "HELP";
   likesCount?: number;  // Backend returns likesCount (Long)
-  replies?: number;
+  comments?: number;    // Backend returns comments count directly
   views?: number;
   liked?: boolean;      // Backend returns liked (boolean)
+}
+
+export interface PopularTag {
+  id: string;
+  name: string;
+  postCount: number;
 }
 
 export interface CommentRequest {
@@ -468,7 +474,7 @@ export const communityApi = {
   },
 
   // Get popular tags
-  getPopularTags: async (): Promise<string[]> => {
+  getPopularTags: async (): Promise<PopularTag[]> => {
     try {
       const response = await api.get('/api/v1/tags/popular');
       return response.data;

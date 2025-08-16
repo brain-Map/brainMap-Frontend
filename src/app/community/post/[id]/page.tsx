@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2, Edit, Trash2 } from "lucide-react"
-import { communityApi } from "@/services/communityApi"
+import { communityApi, PopularTag } from "@/services/communityApi"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import DeleteModal from "@/components/modals/DeleteModal"
@@ -55,14 +55,6 @@ interface Post {
   isBookmarked: boolean
   type: "discussion" | "project" | "help"
 }
-
-const popularTags = [
-  { name: "JavaScript", count: 2345, color: "bg-yellow-100 text-yellow-800" },
-  { name: "React", count: 1890, color: "bg-blue-100 text-blue-800" },
-  { name: "Python", count: 1456, color: "bg-green-100 text-green-800" },
-  { name: "TypeScript", count: 987, color: "bg-blue-100 text-blue-800" },
-  { name: "Node.js", count: 876, color: "bg-green-100 text-green-800" },
-]
 
 const topContributors = [
   { name: "Alex Chen", avatar: "👨‍💻", points: 12450 },
@@ -341,6 +333,8 @@ export default function PostPage() {
   const [sortBy, setSortBy] = useState("recent")
   const [showOptionsMenu, setShowOptionsMenu] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [popularTags, setPopularTags] = useState<PopularTag[]>([])
+  const [tagsLoading, setTagsLoading] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
 
@@ -348,6 +342,34 @@ export default function PostPage() {
     title: "Delete Post",
     confirmText: "Delete Post"
   })
+
+  // Helper function to get tag color based on index
+  const getTagColor = (index: number) => {
+    const colors = [
+      'bg-yellow-100 text-yellow-800',
+      'bg-blue-100 text-blue-800', 
+      'bg-green-100 text-green-800',
+      'bg-purple-100 text-purple-800',
+      'bg-red-100 text-red-800',
+      'bg-indigo-100 text-indigo-800'
+    ]
+    return colors[index % colors.length]
+  }
+
+  // Fetch popular tags from API
+  const fetchPopularTags = async () => {
+    try {
+      setTagsLoading(true)
+      const data = await communityApi.getPopularTags()
+      setPopularTags(data)
+    } catch (err) {
+      console.error("Error fetching popular tags:", err)
+      // Fallback to empty array if API fails
+      setPopularTags([])
+    } finally {
+      setTagsLoading(false)
+    }
+  }
 
   const handleEditPost = () => {
     setShowOptionsMenu(false)
@@ -543,7 +565,7 @@ export default function PostPage() {
             id: tag.id
           })) || [],
           likes: data.likesCount || 0,        // Backend returns likesCount
-          comments: data.replies || 0,        // Use replies field for comments count
+          comments: data.comments || 0,       // Backend returns comments count directly
           views: data.views || 0,
           createdAt: formatDate(data.createdAt) || "Unknown",
           isLiked: data.liked || false,       // Backend returns liked
@@ -576,6 +598,11 @@ export default function PostPage() {
       fetchPost()
     }
   }, [postId])
+
+  // Fetch popular tags on component mount
+  useEffect(() => {
+    fetchPopularTags()
+  }, [])
 
   const handleBack = () => {
     // In a real app, this would use router.back() or navigate to community page
@@ -825,16 +852,27 @@ export default function PostPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
               <h3 className="font-semibold text-gray-900 mb-3">Popular Tags</h3>
               <div className="space-y-2">
-                {popularTags.map((tag) => (
-                  <div key={tag.name} className="flex items-center justify-between">
-                    <span className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
-                      {tag.name}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
-                    </span>
+                {tagsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Loading tags...</span>
                   </div>
-                ))}
+                ) : popularTags.length > 0 ? (
+                  popularTags.map((tag, index) => (
+                    <div key={tag.id || tag.name} className="flex items-center justify-between">
+                      <span className={`px-2 py-1 rounded-md text-sm font-medium ${getTagColor(index)}`}>
+                        {tag.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {tag.postCount > 1000 ? `${(tag.postCount / 1000).toFixed(1)}k` : tag.postCount}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="text-sm text-gray-500">No tags available</span>
+                  </div>
+                )}
               </div>
             </div>
 

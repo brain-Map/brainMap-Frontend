@@ -22,7 +22,7 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react"
-import { communityApi } from "@/services/communityApi"
+import { communityApi, PopularTag } from "@/services/communityApi"
 import { StaticImageData } from "next/image"
 
 
@@ -59,6 +59,8 @@ export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recent")
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set())
+  const [popularTags, setPopularTags] = useState<PopularTag[]>([])
+  const [tagsLoading, setTagsLoading] = useState(true)
 
   // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -126,7 +128,7 @@ const formatDate = (dateString: string) => {
           category: post.type?.toLowerCase() || "discussion",
           tags: post.tags?.map((tag: any) => tag.name) || [],
           likes: post.likesCount || 0,        // Backend returns likesCount
-          comments: post.replies || 0,
+          comments: post.comments || 0, // Backend returns 'comments' field directly
           views: post.views || 0,
           createdAt: formatDate(post.createdAt),
           originalCreatedAt: post.createdAt, // Keep original date for sorting
@@ -136,6 +138,8 @@ const formatDate = (dateString: string) => {
           featured: false,
           trending: false,
         }))
+        
+        console.log("Transformed Posts: ", transformedPosts) // Add debug log for transformed data
         
         setPosts(transformedPosts)
         
@@ -270,12 +274,38 @@ const formatDate = (dateString: string) => {
     }
   })
 
-  const popularTags = [
-    { name: 'javascript', count: 1200, color: 'bg-yellow-100 text-yellow-800' },
-    { name: 'react', count: 859, color: 'bg-blue-100 text-blue-800' },
-    { name: 'python', count: 743, color: 'bg-green-100 text-green-800' },
-    { name: 'css', count: 621, color: 'bg-purple-100 text-purple-800' }
-  ];
+  // Fetch popular tags from API
+  const fetchPopularTags = async () => {
+    try {
+      setTagsLoading(true)
+      const data = await communityApi.getPopularTags()
+      setPopularTags(data)
+    } catch (err) {
+      console.error("Error fetching popular tags:", err)
+      // Fallback to empty array if API fails
+      setPopularTags([])
+    } finally {
+      setTagsLoading(false)
+    }
+  }
+
+  // Fetch popular tags on component mount
+  useEffect(() => {
+    fetchPopularTags()
+  }, [])
+
+  // Helper function to get tag color based on index
+  const getTagColor = (index: number) => {
+    const colors = [
+      'bg-yellow-100 text-yellow-800',
+      'bg-blue-100 text-blue-800', 
+      'bg-green-100 text-green-800',
+      'bg-purple-100 text-purple-800',
+      'bg-red-100 text-red-800',
+      'bg-indigo-100 text-indigo-800'
+    ]
+    return colors[index % colors.length]
+  }
 
 
   return (
@@ -325,16 +355,27 @@ const formatDate = (dateString: string) => {
             <Card className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
               <CardTitle className="font-semibold text-gray-900 mb-3">Popular Tags</CardTitle>
               <div className="space-y-2">
-                {popularTags.map((tag) => (
-                  <div key={tag.name} className="flex items-center justify-between">
-                    <Badge className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
-                      {tag.name}
-                    </Badge>
-                    <span className="text-sm text-gray-500">
-                      {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
-                    </span>
+                {tagsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Loading tags...</span>
                   </div>
-                ))}
+                ) : popularTags.length > 0 ? (
+                  popularTags.map((tag, index) => (
+                    <div key={tag.id || tag.name} className="flex items-center justify-between">
+                      <Badge className={`px-2 py-1 rounded-md text-sm font-medium ${getTagColor(index)}`}>
+                        {tag.name}
+                      </Badge>
+                      <span className="text-sm text-gray-500">
+                        {tag.postCount > 1000 ? `${(tag.postCount / 1000).toFixed(1)}k` : tag.postCount}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="text-sm text-gray-500">No tags available</span>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -519,7 +560,7 @@ const formatDate = (dateString: string) => {
                                     post.isLiked ? "fill-current" : ""
                                   }`} />
                                 )}
-                                {likingPosts.has(post.id) ? "Updating..." : "Like"}
+                                {likingPosts.has(post.id) ? "Updating..." : `${post.likes}`}
                               </Button>
                               <Button
                                 variant="ghost"
@@ -528,8 +569,7 @@ const formatDate = (dateString: string) => {
                                 onClick={() => handlePostClick(post.id)}
                               >
                                 <MessageCircle className="w-4 h-4 mr-1" />
-                                Comment
-                                <span>{post.comments}</span>
+                                {post.comments}
                               </Button>
                             </div>
                             <div className="flex items-center space-x-2">
