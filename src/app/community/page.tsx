@@ -20,9 +20,9 @@ import {
   Clock,
   ChevronUp,
   ChevronDown,
+  Loader2,
 } from "lucide-react"
 import { communityApi } from "@/services/communityApi"
-import userPlaceholder from "@/../public/image/user_placeholder.jpg"
 import { StaticImageData } from "next/image"
 
 
@@ -42,6 +42,7 @@ interface Post {
   comments: number
   views: number
   createdAt: string
+  originalCreatedAt: string
   isLiked: boolean
   isBookmarked: boolean
   type: "discussion" | "project" | "help"
@@ -57,6 +58,7 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recent")
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set())
 
   // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -103,6 +105,9 @@ const formatDate = (dateString: string) => {
     const fetchPosts = async () => {
       try {
         setLoading(true)
+        setError(null)
+        
+        // Check if API endpoint is reachable
         const data = await communityApi.getPosts()
         
         console.log("Posts Data: ", data)
@@ -124,6 +129,7 @@ const formatDate = (dateString: string) => {
           comments: post.replies || 0,
           views: post.views || 0,
           createdAt: formatDate(post.createdAt),
+          originalCreatedAt: post.createdAt, // Keep original date for sorting
           isLiked: post.isLiked || false,
           isBookmarked: false,
           type: (post.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
@@ -134,8 +140,24 @@ const formatDate = (dateString: string) => {
         setPosts(transformedPosts)
         
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch posts")
         console.error("Error fetching posts:", err)
+        let errorMessage = "Failed to fetch posts"
+        
+        if (err instanceof Error) {
+          errorMessage = err.message
+          // Check for specific URL construction error
+          if (err.message.includes("Invalid URL")) {
+            errorMessage = "API configuration error. Please check your environment variables."
+          }
+        } else if (typeof err === 'object' && err !== null && 'response' in err) {
+          const axiosError = err as any
+          errorMessage = axiosError.response?.data?.message || axiosError.message || errorMessage
+        }
+        
+        setError(errorMessage)
+        
+        // Set empty posts array as fallback
+        setPosts([])
       } finally {
         setLoading(false)
       }
@@ -144,14 +166,78 @@ const formatDate = (dateString: string) => {
     fetchPosts()
   }, [])
 
-  const handleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) =>
+  const handleLike = async (postId: string) => {
+    // Prevent multiple simultaneous like requests for the same post
+    if (likingPosts.has(postId)) {
+      return
+    }
+
+    // Add post to liking set to prevent duplicate requests
+    setLikingPosts(prev => new Set(prev).add(postId))
+
+    // Find the current post to determine if we're liking or unliking
+    const currentPost = posts.find(post => post.id === postId)
+    if (!currentPost) {
+      setLikingPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
+      return
+    }
+
+    const wasLiked = currentPost.isLiked
+    const newLikeCount = wasLiked ? currentPost.likes - 1 : currentPost.likes + 1
+
+    // Optimistically update the UI
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
         post.id === postId
-          ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
-          : post,
-      ),
+          ? { ...post, isLiked: !wasLiked, likes: newLikeCount }
+          : post
+      )
     )
+
+    try {
+      // Make API call to toggle like
+      const response = await communityApi.toggleLike(postId)
+      
+      // Update with the actual response data from server
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, isLiked: response.liked, likes: response.likesCount }
+            : post
+        )
+      )
+      
+      // Optional: Show subtle feedback
+      console.log(`Post ${response.liked ? 'liked' : 'unliked'} successfully`)
+      
+    } catch (error) {
+      console.error('Error toggling like:', error)
+      
+      // Revert the optimistic update on error
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, isLiked: wasLiked, likes: currentPost.likes }
+            : post
+        )
+      )
+      
+      // Optional: Show error message to user
+      // You can replace this with a toast notification
+      console.warn('Failed to update like. Please try again.')
+      
+    } finally {
+      // Remove post from liking set
+      setLikingPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
+    }
   }
 
   const handleBookmark = (postId: string) => {
@@ -177,8 +263,10 @@ const formatDate = (dateString: string) => {
         return b.likes - a.likes
       case "trending":
         return (b.trending ? 1 : 0) - (a.trending ? 1 : 0)
+      case "recent":
       default:
-        return 0 // Keep original order for "recent"
+        // Sort by newest first (most recent dates first)
+        return new Date(b.originalCreatedAt).getTime() - new Date(a.originalCreatedAt).getTime()
     }
   })
 
@@ -325,14 +413,33 @@ const formatDate = (dateString: string) => {
                         {/* Vote/Stats Column */}
                         <div className="flex flex-col items-center space-y-2 text-sm text-gray-500 min-w-0">
                           <div className="flex flex-col items-center">
-                            <ChevronUp 
-                              className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleLike(post.id)
                               }}
-                            />
-                            <span className="font-medium text-gray-700">{post.likes}</span>
+                              disabled={likingPosts.has(post.id)}
+                              className={`p-1 rounded-full transition-all duration-200 ${
+                                post.isLiked 
+                                  ? 'text-red-500 hover:text-red-600' 
+                                  : 'text-gray-400 hover:text-red-500'
+                              } ${
+                                likingPosts.has(post.id) 
+                                  ? 'opacity-50 cursor-not-allowed' 
+                                  : 'cursor-pointer hover:bg-gray-100'
+                              }`}
+                            >
+                              {likingPosts.has(post.id) ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <ChevronUp className="w-5 h-5" />
+                              )}
+                            </button>
+                            <span className={`font-medium transition-colors duration-200 ${
+                              post.isLiked ? 'text-red-600' : 'text-gray-700'
+                            }`}>
+                              {post.likes}
+                            </span>
                             <ChevronDown className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
                           </div>
                         </div>
@@ -398,10 +505,21 @@ const formatDate = (dateString: string) => {
                                   e.stopPropagation()
                                   handleLike(post.id)
                                 }}
-                                className={`text-xs ${post.isLiked ? "text-red-600" : "text-gray-500"}`}
+                                disabled={likingPosts.has(post.id)}
+                                className={`text-xs transition-all duration-200 ${
+                                  post.isLiked ? "text-red-600 hover:text-red-700" : "text-gray-500 hover:text-red-500"
+                                } ${
+                                  likingPosts.has(post.id) ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
                               >
-                                <Heart className={`w-4 h-4 mr-1 ${post.isLiked ? "fill-current" : ""}`} />
-                                Like
+                                {likingPosts.has(post.id) ? (
+                                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                ) : (
+                                  <Heart className={`w-4 h-4 mr-1 transition-all duration-200 ${
+                                    post.isLiked ? "fill-current" : ""
+                                  }`} />
+                                )}
+                                {likingPosts.has(post.id) ? "Updating..." : "Like"}
                               </Button>
                               <Button
                                 variant="ghost"

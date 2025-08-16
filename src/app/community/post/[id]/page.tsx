@@ -169,8 +169,8 @@ export default function PostPage() {
         
         const data = await communityApi.getPost(postId as string)
         
-        console.log("Post Data: ", data);
-        console.log("Post Title: ", data.title);
+        console.log("Full API Response:", data); // Debug log
+        console.log("Comments in response:", (data as any).comments); // Check comments specifically
         
         
         // Transform API data to match our interface
@@ -200,6 +200,28 @@ export default function PostPage() {
         }
         
         setPost(transformedPost)
+        
+        // Transform and set comments if they exist
+        const responseWithComments = data as any // Type assertion to access comments property
+        if (responseWithComments.comments && Array.isArray(responseWithComments.comments)) {
+          const transformedComments: Comment[] = responseWithComments.comments.map((comment: any) => ({
+            id: comment.id,
+            content: comment.content || "",
+            author: {
+              name: comment.authorName || "Anonymous",
+              avatar: "/placeholder.svg?height=32&width=32",
+              role: "Student", // Default role, you can adjust this based on your API
+              verified: false,
+            },
+            likes: comment.likes || 0,
+            replies: [], // You can expand this if the API provides nested replies
+            createdAt: formatDate(comment.createdAt) || "Unknown",
+            isLiked: comment.isLiked || false,
+          }))
+          
+          setComments(transformedComments)
+          console.log("Transformed comments:", transformedComments)
+        }
         
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch post")
@@ -296,13 +318,16 @@ export default function PostPage() {
     if (!newComment.trim() || !post) return
 
     try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/comments`, {
+      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/posts/${post.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ content: newComment }),
       })
+
+      console.log(response);
+      
       
       if (response.ok) {
         const comment: Comment = {

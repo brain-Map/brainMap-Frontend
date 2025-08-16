@@ -1,19 +1,230 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, MoreHorizontal, User, X } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import api from '@/utils/api';
 
-const KanbanBoard: React.FC = () => {
-    const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
-  
 
-  type Task = {
-    id: number;
+interface ApiColumn {
+  columnId: string;
+  type: string;
+}
+
+interface ApiTask {
+  taskId: string;
+  kanbanId: string;
+  kanbanColumnId: string;
+  title: string;
+  description: string;
+  createdDate: string;
+  createdTime: string;
+}
+
+const kanbanFunction = {
+  getKanban: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/kanban-board/${projectId}`);
+      console.log('kanban Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching kanban:', error);
+      throw error;
+    }
+  },
+
+  addKanbanColumn: async (projectId: string, columnTitle: string) => {
+    try {
+      const columnData = { type: columnTitle };
+      const response = await api.put(`/project-member/projects/kanban-board/${projectId}`, columnData);
+      console.log('Added Kanban Column:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding kanban column:', error);
+      throw error;
+    }
+  },
+
+  deleteKanbanColumn: async (projectId: string, columnId: string) => {
+    try {
+      const columnData = { columnId: columnId };
+      const response = await api.delete(`/project-member/projects/kanban-board/${projectId}`, {
+        data: columnData
+      });
+      console.log('Deleted Kanban Column:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting kanban column:', error);
+      throw error;
+    }
+  },
+
+  addKanbanTask: async (kanbanId: string, taskData: {
+    kanbanColumnId: string;
     title: string;
     description: string;
-    priority: 'Low' | 'Medium' | 'High';
-    assignee: string;
-    dueDate: string;
-    progress: number;
+  }) => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const formattedTime = currentDate.toTimeString().split(' ')[0]; // HH:MM:SS
+      
+      const taskPayload = {
+        kanbanId: kanbanId,
+        kanbanColumnId: taskData.kanbanColumnId,
+        title: taskData.title,
+        description: taskData.description,
+        createdDate: formattedDate,
+        createdTime: formattedTime
+      };
+      
+      const response = await api.post(`/api/tasks`, taskPayload);
+      console.log('Added Kanban Task:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding kanban task:', error);
+      throw error;
+    }
+  },
+
+  getTasks: async (kanbanId: string) => {
+    try {
+      const response = await api.get(`/api/tasks/${kanbanId}`);
+      console.log('Tasks Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+  },
+
+  updateTask: async (taskId: string, taskData: { title: string; description: string }) => {
+    try {
+      const response = await api.put(`/api/tasks/${taskId}`, taskData);
+      console.log('Updated Task:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  },
+
+  deleteTask: async (taskId: string) => {
+    try {
+      const taskData = { taskId: taskId };
+      const response = await api.delete(`/api/tasks`, {
+        data: taskData
+      });
+      console.log('Deleted Task:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      throw error;
+    }
+  }
+
+};
+
+const KanbanBoard: React.FC = () => {
+    const params = useParams();
+    const projectId = params.id as string; // Get the project ID from URL
+    const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+    const [kanbanId, setKanbanId] = useState<string | null>(null);
+
+    useEffect(
+      () => {
+        const fetchKanbanData = async () => {
+          try {
+            console.log('Fetching kanban data for projectId:', projectId);
+            const data = await kanbanFunction.getKanban(projectId);
+            console.log('Raw API response:', data);
+            setKanbanId(data.kanbanId); // Assuming the API returns kanbanId
+            
+            // Check if data is an array (direct response) or has columns property
+            const columnsArray = Array.isArray(data) ? data : data.columns;
+            
+            if (!Array.isArray(columnsArray)) {
+              console.error('Expected array but got:', typeof columnsArray, columnsArray);
+              return;
+            }
+            
+            // Transform backend data to match our Column type
+            const transformedColumns = columnsArray.map((column: ApiColumn) => ({
+              id: column.columnId,
+              title: column.type,
+              count: 0, // Will be updated based on tasks
+              tasks: [] // Initialize with empty tasks array
+            }));
+            
+            setColumns(transformedColumns);
+            console.log('Fetched Kanban Data:', transformedColumns);
+          } catch (error: any) {
+            console.error('Error fetching kanban data:', error);
+            console.error('Error message:', error.message);
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+          }
+        };
+
+        if (projectId) {
+          fetchKanbanData();
+        }
+      },
+      [projectId]
+    );
+
+    // Fetch tasks when kanbanId is available
+    useEffect(() => {
+      const fetchTasksAndOrganize = async () => {
+        if (!kanbanId) return;
+        
+        try {
+          console.log('Fetching tasks for kanbanId:', kanbanId);
+          const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+          console.log('Fetched tasks:', tasks);
+
+          // Organize tasks by column
+          setColumns(prevColumns => 
+            prevColumns.map(column => {
+              const columnTasks = tasks
+                .filter(task => task.kanbanColumnId === column.id)
+                .map(task => ({
+                  id: task.taskId,
+                  title: task.title,
+                  description: task.description,
+                  createdDate: task.createdDate,
+                  createdTime: task.createdTime,
+                  priority: 'Medium' as const, // Default since API doesn't provide
+                  assignee: undefined,
+                  dueDate: undefined,
+                  progress: 0,
+                  completed: false
+                }));
+
+              return {
+                ...column,
+                tasks: columnTasks,
+                count: columnTasks.length
+              };
+            })
+          );
+        } catch (error) {
+          console.error('Error fetching and organizing tasks:', error);
+        }
+      };
+
+      fetchTasksAndOrganize();
+    }, [kanbanId]); // Fetch tasks when kanbanId changes
+
+  type Task = {
+    id: string; // Changed from number to string to match taskId
+    title: string;
+    description: string;
+    priority?: 'Low' | 'Medium' | 'High'; // Made optional since API doesn't provide it
+    assignee?: string; // Made optional since API doesn't provide it
+    dueDate?: string; // Made optional, we'll use createdDate
+    progress?: number; // Made optional since API doesn't provide it
     completed?: boolean;
+    createdDate: string; // Added from API
+    createdTime: string; // Added from API
   };
 
   type Column = {
@@ -33,113 +244,23 @@ const KanbanBoard: React.FC = () => {
     title: string;
   };
 
-  const [columns, setColumns] = useState<Column[]>([
-    {
-      id: 'todo',
-      title: 'To Do',
-      count: 3,
-      tasks: [
-        {
-          id: 1,
-          title: 'Design Homepage Layout',
-          description: 'Create wireframes and mockups for the new homepage design',
-          priority: 'High',
-          assignee: 'Jane Smith',
-          dueDate: 'Dec 15',
-          progress: 0
-        },
-        {
-          id: 2,
-          title: 'User Research',
-          description: 'Conduct user interviews for feature validation',
-          priority: 'Medium',
-          assignee: 'John Doe',
-          dueDate: 'Dec 20',
-          progress: 0
-        },
-        {
-          id: 3,
-          title: 'Database Schema',
-          description: 'Design database structure for new features',
-          priority: 'Low',
-          assignee: 'Mike Johnson',
-          dueDate: 'Dec 25',
-          progress: 0
-        }
-      ]
-    },
-    {
-      id: 'progress',
-      title: 'In Progress',
-      count: 2,
-      tasks: [
-        {
-          id: 4,
-          title: 'API Development',
-          description: 'Building REST API endpoints for user management',
-          priority: 'High',
-          assignee: 'Mike Johnson',
-          dueDate: 'Dec 18',
-          progress: 60
-        },
-        {
-          id: 5,
-          title: 'Mobile App Testing',
-          description: 'QA testing for iOS and Android applications',
-          priority: 'Medium',
-          assignee: 'Jane Smith',
-          dueDate: 'Dec 22',
-          progress: 40
-        }
-      ]
-    },
-    {
-      id: 'review',
-      title: 'Review',
-      count: 1,
-      tasks: [
-        {
-          id: 6,
-          title: 'Landing Page Copy',
-          description: 'Review and approve marketing copy for landing page',
-          priority: 'Medium',
-          assignee: 'Jane Smith',
-          dueDate: 'Dec 16',
-          progress: 100
-        }
-      ]
-    },
-    {
-      id: 'done',
-      title: 'Done',
-      count: 2,
-      tasks: [
-        {
-          id: 7,
-          title: 'Logo Design',
-          description: 'Create brand logo and style guide',
-          priority: 'Low',
-          assignee: 'John Doe',
-          dueDate: 'Completed',
-          progress: 100,
-          completed: true
-        },
-        {
-          id: 8,
-          title: 'User Authentication',
-          description: 'Implement secure login and registration system',
-          priority: 'High',
-          assignee: 'Mike Johnson',
-          dueDate: 'Completed',
-          progress: 100,
-          completed: true
-        }
-      ]
-    }
-  ]);
+  type EditTaskFormState = {
+    taskId: string | null;
+    isOpen: boolean;
+    title: string;
+    description: string;
+  };
+
+  const [columns, setColumns] = useState<Column[]>([]);
 
   const [newTaskForm, setNewTaskForm] = useState<NewTaskFormState>({ columnId: null, isOpen: false });
   const [newColumnForm, setNewColumnForm] = useState<NewColumnFormState>({ isOpen: false, title: '' });
+  const [editTaskForm, setEditTaskForm] = useState<EditTaskFormState>({ 
+    taskId: null, 
+    isOpen: false, 
+    title: '', 
+    description: '' 
+  });
 
   const getPriorityColor = (priority: 'Low' | 'Medium' | 'High') => {
     switch (priority) {
@@ -150,40 +271,267 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
-  const handleDeleteCol = (projectId:any) =>{
-
-    // Implement your delete logic here
-    alert(`Delete project ${projectId}`);
-    setDropdownOpenId(null);
-
-  }
-
-  const addTask = (columnId: string, taskData: Omit<Task, 'id' | 'progress'>) => {
-    const newTask: Task = {
-      id: Date.now(),
-      title: taskData.title,
-      description: taskData.description,
-      priority: taskData.priority,
-      assignee: taskData.assignee,
-      dueDate: taskData.dueDate,
-      progress: 0
-    };
-
-    setColumns(columns.map(col =>
-      col.id === columnId
-        ? { ...col, tasks: [...col.tasks, newTask], count: col.count + 1 }
-        : col
-    ));
+  const handleDeleteCol = async (columnId: string) => {
+    if (window.confirm('Are you sure you want to delete this column? This action cannot be undone.')) {
+      try {
+        await deleteColumn(columnId);
+        setDropdownOpenId(null);
+      } catch (error) {
+        console.error('Failed to delete column:', error);
+        alert('Failed to delete column. Please try again.');
+      }
+    }
   };
 
-  const addColumn = (title: string) => {
-    const newColumn: Column = {
-      id: Date.now().toString(),
-      title,
-      count: 0,
-      tasks: []
-    };
-    setColumns([...columns, newColumn]);
+  const addTask = async (columnId: string, taskData: {
+    title: string;
+    description: string;
+    priority?: 'Low' | 'Medium' | 'High';
+    assignee?: string;
+    dueDate?: string;
+  }) => {
+    try {
+      if (!kanbanId) {
+        alert('Kanban ID not available. Please try again.');
+        return;
+      }
+
+      await kanbanFunction.addKanbanTask(kanbanId, {
+        kanbanColumnId: columnId,
+        title: taskData.title,
+        description: taskData.description
+      });
+      
+      // Refresh tasks by fetching them again
+      const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+      
+      // Organize tasks by column
+      setColumns(prevColumns => 
+        prevColumns.map(column => {
+          const columnTasks = tasks
+            .filter(task => task.kanbanColumnId === column.id)
+            .map(task => ({
+              id: task.taskId,
+              title: task.title,
+              description: task.description,
+              createdDate: task.createdDate,
+              createdTime: task.createdTime,
+              priority: 'Medium' as const,
+              assignee: undefined,
+              dueDate: undefined,
+              progress: 0,
+              completed: false
+            }));
+
+          return {
+            ...column,
+            tasks: columnTasks,
+            count: columnTasks.length
+          };
+        })
+      );
+      
+      console.log('Task added successfully');
+    } catch (error) {
+      console.error('Error adding task:', error);
+      alert('Failed to add task. Please try again.');
+    }
+  };
+
+  const editTask = async (taskId: string, taskData: { title: string; description: string }) => {
+    try {
+      if (!kanbanId) {
+        alert('Kanban ID not available. Please try again.');
+        return;
+      }
+
+      await kanbanFunction.updateTask(taskId, taskData);
+      
+      // Refresh tasks by fetching them again
+      const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+      
+      // Organize tasks by column
+      setColumns(prevColumns => 
+        prevColumns.map(column => {
+          const columnTasks = tasks
+            .filter(task => task.kanbanColumnId === column.id)
+            .map(task => ({
+              id: task.taskId,
+              title: task.title,
+              description: task.description,
+              createdDate: task.createdDate,
+              createdTime: task.createdTime,
+              priority: 'Medium' as const,
+              assignee: undefined,
+              dueDate: undefined,
+              progress: 0,
+              completed: false
+            }));
+
+          return {
+            ...column,
+            tasks: columnTasks,
+            count: columnTasks.length
+          };
+        })
+      );
+      
+      console.log('Task updated successfully');
+    } catch (error) {
+      console.error('Error updating task:', error);
+      alert('Failed to update task. Please try again.');
+    }
+  };
+
+  const deleteTask = async (taskId: string) => {
+    try {
+      if (!kanbanId) {
+        alert('Kanban ID not available. Please try again.');
+        return;
+      }
+
+      await kanbanFunction.deleteTask(taskId);
+      
+      // Refresh tasks by fetching them again
+      const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+      
+      // Organize tasks by column
+      setColumns(prevColumns => 
+        prevColumns.map(column => {
+          const columnTasks = tasks
+            .filter(task => task.kanbanColumnId === column.id)
+            .map(task => ({
+              id: task.taskId,
+              title: task.title,
+              description: task.description,
+              createdDate: task.createdDate,
+              createdTime: task.createdTime,
+              priority: 'Medium' as const,
+              assignee: undefined,
+              dueDate: undefined,
+              progress: 0,
+              completed: false
+            }));
+
+          return {
+            ...column,
+            tasks: columnTasks,
+            count: columnTasks.length
+          };
+        })
+      );
+      
+      console.log('Task deleted successfully');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      alert('Failed to delete task. Please try again.');
+    }
+  };
+
+  const addColumn = async (title: string) => {
+    try {
+      await kanbanFunction.addKanbanColumn(projectId, title);
+      // Refresh the kanban data to get the updated columns
+      const data = await kanbanFunction.getKanban(projectId);
+      const columnsArray = Array.isArray(data) ? data : data.columns;
+      
+      const transformedColumns = columnsArray.map((column: ApiColumn) => ({
+        id: column.columnId,
+        title: column.type,
+        count: 0,
+        tasks: []
+      }));
+      
+      setColumns(transformedColumns);
+      
+      // Fetch tasks if kanbanId is available
+      if (kanbanId) {
+        const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+        
+        // Organize tasks by column
+        setColumns(prevColumns => 
+          prevColumns.map(column => {
+            const columnTasks = tasks
+              .filter(task => task.kanbanColumnId === column.id)
+              .map(task => ({
+                id: task.taskId,
+                title: task.title,
+                description: task.description,
+                createdDate: task.createdDate,
+                createdTime: task.createdTime,
+                priority: 'Medium' as const,
+                assignee: undefined,
+                dueDate: undefined,
+                progress: 0,
+                completed: false
+              }));
+
+            return {
+              ...column,
+              tasks: columnTasks,
+              count: columnTasks.length
+            };
+          })
+        );
+      }
+      
+      console.log('Column added successfully');
+    } catch (error) {
+      console.error('Error adding column:', error);
+    }
+  };
+
+  const deleteColumn = async (columnId: string) => {
+    try {
+      await kanbanFunction.deleteKanbanColumn(projectId, columnId);
+      // Refresh the kanban data to get the updated columns
+      const data = await kanbanFunction.getKanban(projectId);
+      const columnsArray = Array.isArray(data) ? data : data.columns;
+      
+      const transformedColumns = columnsArray.map((column: ApiColumn) => ({
+        id: column.columnId,
+        title: column.type,
+        count: 0,
+        tasks: []
+      }));
+      
+      setColumns(transformedColumns);
+      
+      // Fetch tasks if kanbanId is available
+      if (kanbanId) {
+        const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+        
+        // Organize tasks by column
+        setColumns(prevColumns => 
+          prevColumns.map(column => {
+            const columnTasks = tasks
+              .filter(task => task.kanbanColumnId === column.id)
+              .map(task => ({
+                id: task.taskId,
+                title: task.title,
+                description: task.description,
+                createdDate: task.createdDate,
+                createdTime: task.createdTime,
+                priority: 'Medium' as const,
+                assignee: undefined,
+                dueDate: undefined,
+                progress: 0,
+                completed: false
+              }));
+
+            return {
+              ...column,
+              tasks: columnTasks,
+              count: columnTasks.length
+            };
+          })
+        );
+      }
+      
+      console.log('Column deleted successfully');
+    } catch (error) {
+      console.error('Error deleting column:', error);
+    }
   };
 
   const getColumnTitle = (columnId: string) => {
@@ -191,49 +539,61 @@ const KanbanBoard: React.FC = () => {
     return column ? column.title : '';
   };
 
-  const moveTask = (taskId: number, fromColumnId: string, toColumnId: string) => {
-    let movedTask: Task | null = null;
+  // const moveTask = (taskId: number, fromColumnId: string, toColumnId: string) => {
+  //   let movedTask: Task | null = null;
 
-    const updatedColumns = columns.map((col) => {
-      if (col.id === fromColumnId) {
-        const taskIndex = col.tasks.findIndex((task) => task.id === taskId);
-        if (taskIndex !== -1) {
-          movedTask = col.tasks[taskIndex];
-          const updatedTasks = [...col.tasks];
-          updatedTasks.splice(taskIndex, 1);
-          return { ...col, tasks: updatedTasks, count: updatedTasks.length };
-        }
-      }
-      return col;
-    });
+  //   const updatedColumns = columns.map((col) => {
+  //     if (col.id === fromColumnId) {
+  //       const taskIndex = col.tasks.findIndex((task) => task.id === taskId);
+  //       if (taskIndex !== -1) {
+  //         movedTask = col.tasks[taskIndex];
+  //         const updatedTasks = [...col.tasks];
+  //         updatedTasks.splice(taskIndex, 1);
+  //         return { ...col, tasks: updatedTasks, count: updatedTasks.length };
+  //       }
+  //     }
+  //     return col;
+  //   });
 
-    if (movedTask) {
-      const finalColumns = updatedColumns.map((col) => {
-        if (col.id === toColumnId) {
-          return { ...col, tasks: [...col.tasks, movedTask!], count: col.tasks.length + 1 };
-        }
-        return col;
-      });
-      setColumns(finalColumns);
-    }
-  };
+  //   if (movedTask) {
+  //     const finalColumns = updatedColumns.map((col) => {
+  //       if (col.id === toColumnId) {
+  //         return { ...col, tasks: [...col.tasks, movedTask!], count: col.tasks.length + 1 };
+  //       }
+  //       return col;
+  //     });
+  //     setColumns(finalColumns);
+  //   }
+  // };
 
-  const deleteTask = (taskId: number) => {
+  // const deleteTask = (taskId: number) => {
 
-  };
+  // };
 
 const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, currentColumnId }) => {
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleMove = (targetColumnId: string) => {
-    if (targetColumnId !== currentColumnId) {
-      moveTask(task.id, currentColumnId, targetColumnId);
-    }
+  const handleEdit = () => {
+    setEditTaskForm({
+      taskId: task.id,
+      isOpen: true,
+      title: task.title,
+      description: task.description
+    });
     setShowMenu(false);
   };
 
+  // const handleMove = (targetColumnId: string) => {
+  //   if (targetColumnId !== currentColumnId) {
+  //     moveTask(task.id, currentColumnId, targetColumnId);
+  //   }
+  //   setShowMenu(false);
+  // };
+
   const handleDelete = () => {
-    deleteTask(task.id);
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteTask(task.id);
+    }
     setShowMenu(false);
   };
 
@@ -257,7 +617,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
                   .map((col) => (
                     <button
                       key={col.id}
-                      onClick={() => handleMove(col.id)}
+                      // onClick={() => handleMove(col.id)}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors duration-150"
                     >
                       {col.title}
@@ -265,6 +625,12 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
                   ))}
               </div>
               <div className="border-t border-gray-200">
+                <button
+                  onClick={handleEdit}
+                  className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-150"
+                >
+                  Edit Task
+                </button>
                 <button
                   onClick={handleDelete}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150"
@@ -277,18 +643,18 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
         </div>
       </div>
 
-      <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
-        {task.priority}
+      <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority || 'Medium')}`}>
+        {task.priority || 'Medium'}
       </span>
 
       <p className="text-gray-600 text-sm mb-3 mt-2">{task.description}</p>
 
-      {task.progress > 0 && (
+      {(task.progress || 0) > 0 && (
         <div className="mb-3">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${task.progress}%` }}
+              style={{ width: `${task.progress || 0}%` }}
             ></div>
           </div>
         </div>
@@ -299,10 +665,10 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
             <User className="w-3 h-3 text-white" />
           </div>
-          <span className="text-sm text-gray-700">{task.assignee}</span>
+          <span className="text-sm text-gray-700">{task.assignee || 'Unassigned'}</span>
         </div>
         <span className={`text-xs ${task.completed ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-          {task.dueDate}
+          {task.dueDate || task.createdDate}
         </span>
       </div>
     </div>
@@ -316,10 +682,22 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
   const TaskModalForm: React.FC<{
     columnId: string;
     columnTitle: string;
-    onSubmit: (columnId: string, task: Omit<Task, 'id' | 'progress'>) => void;
+    onSubmit: (columnId: string, task: {
+      title: string;
+      description: string;
+      priority?: 'Low' | 'Medium' | 'High';
+      assignee?: string;
+      dueDate?: string;
+    }) => void;
     onCancel: () => void;
   }> = ({ columnId, columnTitle, onSubmit, onCancel }) => {
-    const [formData, setFormData] = useState<Omit<Task, 'id' | 'progress'>>({
+    const [formData, setFormData] = useState<{
+      title: string;
+      description: string;
+      priority?: 'Low' | 'Medium' | 'High';
+      assignee?: string;
+      dueDate?: string;
+    }>({
       title: '',
       description: '',
       priority: 'Medium',
@@ -447,9 +825,103 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
     );
   };
 
+  const EditTaskModalForm: React.FC<{
+    onSubmit: (taskId: string, taskData: { title: string; description: string }) => void;
+    onCancel: () => void;
+    initialTitle: string;
+    initialDescription: string;
+  }> = ({ onSubmit, onCancel, initialTitle, initialDescription }) => {
+    const [title, setTitle] = useState(initialTitle);
+    const [description, setDescription] = useState(initialDescription);
+
+    const handleSubmit = () => {
+      if (title.trim() && editTaskForm.taskId) {
+        onSubmit(editTaskForm.taskId, {
+          title: title,
+          description: description
+        });
+        onCancel();
+      }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    const handleBackdropClick = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onCancel();
+      }
+    };
+
+    return (
+      <div 
+        className="fixed inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={handleBackdropClick}
+      >
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Edit Task
+            </h2>
+            <button
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+              <input
+                type="text"
+                placeholder="Enter task title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                autoFocus
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                placeholder="Enter task description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-24 resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={handleSubmit}
+              className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-secondary hover:text-black transition-colors font-medium"
+            >
+              Update Task
+            </button>
+            <button
+              onClick={onCancel}
+              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-h-screen w-full p-6">
-      <div className="min-w-full rounded-lg">
+      <div className="min-w-7xl rounded-lg">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
           <button
@@ -523,9 +995,9 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
                 />
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (newColumnForm.title.trim()) {
-                        addColumn(newColumnForm.title);
+                        await addColumn(newColumnForm.title);
                         setNewColumnForm({ isOpen: false, title: '' });
                       }
                     }}
@@ -553,6 +1025,16 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           columnTitle={getColumnTitle(newTaskForm.columnId)}
           onSubmit={addTask}
           onCancel={() => setNewTaskForm({ columnId: null, isOpen: false })}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {editTaskForm.isOpen && (
+        <EditTaskModalForm
+          onSubmit={editTask}
+          onCancel={() => setEditTaskForm({ taskId: null, isOpen: false, title: '', description: '' })}
+          initialTitle={editTaskForm.title}
+          initialDescription={editTaskForm.description}
         />
       )}
     </div>
