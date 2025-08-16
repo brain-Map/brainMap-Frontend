@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserX, Shield, Users, Eye, Code, X, Search } from 'lucide-react';
+import api from "@/utils/api";
+
 
 type MemberRole = 'viewer' | 'developer' | 'admin';
 type SupervisorRole = 'supervisor';
@@ -30,108 +32,76 @@ interface SearchUser {
   type: 'member' | 'supervisor';
 }
 
+
+const memberSearch = {
+  getUsers: async (query: string, type: 'member' | 'supervisor') => {
+    try {
+      const response = await api.get(
+        `/api/v1/users/searchcollaborator?query=${encodeURIComponent(query)}&type=${type}`
+      );
+      console.log("Search Users:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error searching users:", error);
+      throw error;
+    }
+  },
+};
+
+
+
 const MembersAndTeams = () => {
-  const [members, setMembers] = useState<Member[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john@company.com',
-      avatar: 'JS',
-      role: 'admin'
-    },
-    {
-      id: '2',
-      name: 'Sarah Wilson',
-      email: 'sarah@company.com',
-      avatar: 'SW',
-      role: 'developer'
-    },
-    {
-      id: '3',
-      name: 'Mike Johnson',
-      email: 'mike@company.com',
-      avatar: 'MJ',
-      role: 'viewer'
-    }
-  ]);
-
-  const [supervisors, setSupervisors] = useState<Supervisor[]>([
-    {
-      id: 's1',
-      name: 'Lisa Chen',
-      email: 'lisa.chen@company.com',
-      avatar: 'LC',
-      role: 'supervisor',
-      department: 'Engineering'
-    },
-    {
-      id: 's2',
-      name: 'David Brown',
-      email: 'david.brown@company.com',
-      avatar: 'DB',
-      role: 'supervisor',
-      department: 'Product'
-    }
-  ]);
-
+  const [members, setMembers] = useState<Member[]>([]);
+  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'member' | 'supervisor'>('member');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<SearchUser[]>([]);
+  const [searchUsers, setSearchUsers] = useState<SearchUser[]>([]);
 
-  // Mock search data
-  const searchUsers: SearchUser[] = [
-    {
-      id: 'u1',
-      name: 'Sachith',
-      username: 'sachithb',
-      email: 'sachithb@company.com',
-      avatar: 'S',
-      type: 'member'
-    },
-    {
-      id: 'u2',
-      name: 'sa',
-      username: 'sa_user',
-      email: 'sa@company.com',
-      avatar: 'S',
-      type: 'member'
-    },
-    {
-      id: 'u3',
-      name: 'P S C Nalindika',
-      username: 'SadeepChathushan',
-      email: 'sadeepchathushan@company.com',
-      avatar: 'P',
-      type: 'supervisor'
-    },
-    {
-      id: 'u4',
-      name: 'SaSa',
-      username: 'SasaXingXingHuang',
-      email: 'sasaxingxinghuang@company.com',
-      avatar: 'S',
-      type: 'member'
-    },
-    {
-      id: 'u5',
-      name: 'Alex Rodriguez',
-      username: 'alex_dev',
-      email: 'alex.rodriguez@company.com',
-      avatar: 'AR',
-      type: 'member'
-    },
-    {
-      id: 'u6',
-      name: 'Emma Thompson',
-      username: 'emma_sup',
-      email: 'emma.thompson@company.com',
-      avatar: 'ET',
-      type: 'supervisor'
+  // const [filteredUsers, setFilteredUsers] = useState<SearchUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+  if (!searchQuery) {
+    setSearchUsers([]);
+    return;
+  }
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await memberSearch.getUsers(searchQuery, modalType);
+
+      const mappedUsers: SearchUser[] = res.map((u: any) => {
+        const fullName = [u.firstName, u.lastName].filter(Boolean).join(" ");
+        return {
+          id: u.id,
+          name: fullName || u.username || u.email,
+          username: u.username || u.email.split("@")[0],
+          email: u.email,
+          avatar: (u.firstName?.charAt(0) || u.username?.charAt(0) || u.email.charAt(0)).toUpperCase(),
+          type: modalType,  // ✅ set type according to modal
+        };
+      });
+
+      setSearchUsers(mappedUsers);
+    } catch (err) {
+      console.error("Search failed", err);
+      setSearchUsers([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredUsers = searchUsers.filter(user =>
+  const delayDebounce = setTimeout(() => {
+    fetchUsers();
+  }, 500);
+
+  return () => clearTimeout(delayDebounce);
+}, [searchQuery, modalType]); // ✅ added modalType
+
+
+  const filteredUsers = searchUsers.filter((user: SearchUser) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
