@@ -212,14 +212,6 @@ const CommentComponent = ({
                   Reply
                 </button>
               )}
-              
-              <button
-                onClick={() => router.push(`/community/post/${postId}/comment/${comment.id}`)}
-                className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-              >
-                <MessageCircle className="w-3 h-3" />
-                Details
-              </button>
             </div>
 
             {/* Reply Form */}
