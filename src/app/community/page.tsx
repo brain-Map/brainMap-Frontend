@@ -319,11 +319,7 @@ const formatDate = (dateString: string) => {
               <MessageCircle className="w-6 h-6 text-blue-600" />
               <span className="text-xl font-semibold text-gray-900">Community</span>
             </div>
-            <nav className="flex space-x-6">
-              <button className="text-blue-600 font-medium">Questions</button>
-              <button className="text-gray-600 hover:text-gray-900">Tags</button>
-              <button className="text-gray-600 hover:text-gray-900">Users</button>
-            </nav>
+            
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
