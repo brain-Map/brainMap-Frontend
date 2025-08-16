@@ -5,6 +5,9 @@ import { Calendar, List, Video , Plus, Edit, MessageSquare, Clock, CheckCircle, 
 import KanbanBoard from './Kanban';
 import ProjectSettingsPage from './Settings';
 import { projectApi, ProjectResponse } from '@/services/projectApi';
+import api from '@/utils/api';
+import { useParams } from 'next/navigation';
+
 
 
 
@@ -34,9 +37,46 @@ interface Activity {
   color: 'blue' | 'green' | 'yellow';
 }
 
+interface collaborator {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  status: 'Lead' | 'Active' | 'Inactive';
+}
+
+const projectCollaborators ={
+
+  getProjectMember: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborators/${projectId}`);
+      console.log('Collaborators data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
+      throw error;
+    }
+  },
+
+}
+
 
 export default function ProjectOverview({ params }: { params: { id: string } }) {
+  const projectId = params.id;
   const [activeTab, setActiveTab] = useState('Overview');
+  const [collaborators, setCollaborators] = useState<collaborator[] | []>([]);
+
+
+
+  useEffect(()=>{
+    const fetchProjectMembers = async () => {
+      const members = await projectCollaborators.getProjectMember(projectId);
+      console.log('Project members:', members);
+      setCollaborators(members);
+    };
+
+    fetchProjectMembers();
+  },[projectId])
 
   
     // Backend data states
@@ -122,29 +162,29 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
     }
   ];
 
-  const teamMembers: TeamMember[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      role: 'UI/UX Designer',
-      avatar: '/api/placeholder/40/40',
-      status: 'Lead'
-    },
-    {
-      id: '2',
-      name: 'Mike Chen',
-      role: 'Frontend Developer',
-      avatar: '/api/placeholder/40/40',
-      status: 'Active'
-    },
-    {
-      id: '3',
-      name: 'Alex Rodriguez',
-      role: 'Backend Developer',
-      avatar: '/api/placeholder/40/40',
-      status: 'Active'
-    }
-  ];
+  // const teamMembers: TeamMember[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Sarah Johnson',
+  //     role: 'UI/UX Designer',
+  //     avatar: '/api/placeholder/40/40',
+  //     status: 'Lead'
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Mike Chen',
+  //     role: 'Frontend Developer',
+  //     avatar: '/api/placeholder/40/40',
+  //     status: 'Active'
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Alex Rodriguez',
+  //     role: 'Backend Developer',
+  //     avatar: '/api/placeholder/40/40',
+  //     status: 'Active'
+  //   }
+  // ];
 
   const activities: Activity[] = [
     {
@@ -235,7 +275,6 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-medium text-gray-900">Description</h3>
-            <Edit className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
           </div>
           <p className="text-gray-700 leading-relaxed">
             {project ? project.description : "No description available"}
@@ -252,44 +291,76 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">Team Members</h3>
-            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1">
-              <Plus className="w-4 h-4" />
-              <span>Add Member</span>
-            </button>
+            
           </div>
-          <div className="space-y-3">
-            {teamMembers.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-700">
-                      {member.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{member.name}</p>
-                    <p className="text-sm text-gray-500">{member.role}</p>
-                  </div>
+          <div className="space-y-3  flex flex-col justify-center">
+            {collaborators.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 px-6 ">
+                <div className="w-14 h-14 mb-3 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center ">
+                  {/* User icon SVG */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.8}
+                    stroke="currentColor"
+                    className="w-8 h-8 text-gray-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 9A3.75 3.75 0 1 1 8.25 9a3.75 3.75 0 0 1 7.5 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 19.5a7.5 7.5 0 0 1 15 0v.75A1.75 1.75 0 0 1 18.25 22H5.75A1.75 1.75 0 0 1 4 20.25v-.75z"
+                    />
+                  </svg>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    member.status === "Lead"
-                      ? "bg-blue-100 text-blue-800"
-                      : member.status === "Active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {member.status}
-                </span>
+                <p className="text-gray-600 text-sm font-medium">No collaborators found</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Invite team members to start collaborating.
+                </p>
+                <button className="mt-4 px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-medium shadow hover:bg-indigo-600 transition">
+                  Invite Collaborators
+                </button>
               </div>
-            ))}
+
+            ) : (
+              collaborators.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-700">
+                        {member.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{member.name}</p>
+                      <p className="text-sm text-gray-500">{member.role}</p>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      member.status === "Lead"
+                        ? "bg-blue-100 text-blue-800"
+                        : member.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {member.status}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

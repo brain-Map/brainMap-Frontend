@@ -14,6 +14,7 @@ import {
   UserX,
   Crown,
 } from "lucide-react";
+import MembersAndTeams from "./MemberSupervisorAdd";
 
 // ---------------- Types ----------------
 type ProjectData = {
@@ -315,64 +316,7 @@ const ProjectSettingsPage: React.FC = () => {
 
           {/* === MEMBERS SECTION === */}
           {activeSection === "members" && (
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Members & Teams</h1>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Invite Members
-                </button>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Project Members</h3>
-                  <p className="text-sm text-gray-600 mt-1">Manage who has access to this project</p>
-                </div>
-                <div className="divide-y divide-gray-200">
-                  {members.map((member) => (
-                    <div key={member.id} className="p-6 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                          {member.avatar}
-                        </div>
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                          <p className="text-sm text-gray-600">{member.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <select
-                          value={member.role}
-                          onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                            changeMemberRole(member.id, e.target.value as MemberRole)
-                          }
-                          className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="viewer">Viewer</option>
-                          <option value="developer">Developer</option>
-                          <option value="supervisor">Supervisor</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(
-                            member.role
-                          )}`}
-                        >
-                          {getRoleIcon(member.role)}
-                          <span className="ml-1">{member.role}</span>
-                        </span>
-                        <button
-                          onClick={() => removeMember(member.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <UserX className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <MembersAndTeams/>
           )}
 
           {/* === SECURITY SECTION === */}
