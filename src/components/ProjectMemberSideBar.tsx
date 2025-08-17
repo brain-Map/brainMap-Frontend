@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 // import projects from "@/data/projects/projects"; // Assuming you have a projects data file
 import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
+import { useAuth } from "@/contexts/AuthContext";
 
 
 interface MenuItem {
@@ -37,6 +38,7 @@ interface AdminSideBarProps {
 function StudentSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const [isUsersDropdownOpen, setIsUsersDropdownOpen] = React.useState(false);
   const [showAll, setShowAll] = React.useState(false);
+  const user = useAuth().user;
 
   // Backend data states
     const [backendProjects, setBackendProjects] = useState<ProjectResponse[]>([]);
@@ -49,7 +51,7 @@ function StudentSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
         try {
           setIsLoadingProjects(true);
           setProjectsError(null);
-          const projects = await projectApi.getProjects();
+          const projects = await projectApi.getProjects(user?.id || '');
           setBackendProjects(projects);
           console.log('Fetched projects:', projects);
         } catch (error: any) {
