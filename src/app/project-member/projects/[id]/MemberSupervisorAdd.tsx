@@ -3,7 +3,7 @@ import { UserX, Shield, Users, Eye, Code, X, Search } from 'lucide-react';
 import api from "@/utils/api";
 
 
-type MemberRole = 'viewer' | 'developer' | 'admin';
+type MemberRole = 'MEMBER' | 'OWNER';
 type SupervisorRole = 'supervisor';
 
 interface Member {
@@ -30,6 +30,9 @@ interface SearchUser {
   email: string;
   avatar: string;
   type: 'member' | 'supervisor';
+  projectId?: string;
+  position?: string;
+  status?: string;
 }
 
 
@@ -46,6 +49,17 @@ const memberSearch = {
       throw error;
     }
   },
+
+  addUser: async (user: SearchUser) => {
+    try {
+      const response = await api.post('/api/v1/users/addcollaborator', user);
+      console.log("Add User:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding user:", error);
+      throw error;
+    }
+  }
 };
 
 
@@ -144,7 +158,7 @@ const MembersAndTeams = () => {
   };
 
   const addSelectedUsersToProject = () => {
-    selectedUsers.forEach(user => {
+    selectedUsers.forEach(async (user) => {
       if (modalType === 'supervisor') {
         const newSupervisor: Supervisor = {
           id: user.id,
@@ -161,9 +175,32 @@ const MembersAndTeams = () => {
           name: user.name,
           email: user.email,
           avatar: user.avatar,
-          role: 'viewer'
+          role: 'MEMBER'
         };
         setMembers(prev => [...prev, newMember]);
+
+        // Send to backend with required info
+        const url = window.location.pathname;
+        const match = url.match(/project-member\/projects\/(.*?)\//);
+        const projectId = match ? match[1] : null;
+        if (projectId) {
+          try {
+            await memberSearch.addUser({
+              id: user.id,
+              name: user.name,
+              username: user.username,
+              email: user.email,
+              avatar: user.avatar,
+              type: user.type,
+              projectId: projectId,
+              position: 'MEMBER',
+              status: 'PENDING',
+            });
+            console.log('User added to backend successfully:', user);
+          } catch (error) {
+            console.error('Error adding user to backend:', error);
+          }
+        }
       }
     });
     closeModal();
@@ -171,11 +208,11 @@ const MembersAndTeams = () => {
 
   const getMemberRoleColor = (role: MemberRole) => {
     switch (role) {
-      case 'admin':
+      case 'OWNER':
         return 'bg-red-100 text-red-800';
-      case 'developer':
-        return 'bg-blue-100 text-blue-800';
-      case 'viewer':
+      // case 'developer':
+      //   return 'bg-blue-100 text-blue-800';
+      case 'MEMBER':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -184,12 +221,12 @@ const MembersAndTeams = () => {
 
   const getMemberRoleIcon = (role: MemberRole) => {
     switch (role) {
-      case 'admin':
+      case 'OWNER':
         return <Shield className="w-3 h-3" />;
-      case 'developer':
+      case 'MEMBER':
         return <Code className="w-3 h-3" />;
-      case 'viewer':
-        return <Eye className="w-3 h-3" />;
+      // case 'VIEWER':
+      //   return <Eye className="w-3 h-3" />;
       default:
         return <Users className="w-3 h-3" />;
     }
@@ -290,9 +327,8 @@ const MembersAndTeams = () => {
                     onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
                     className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="viewer">Viewer</option>
-                    <option value="developer">Developer</option>
-                    <option value="admin">Admin</option>
+                    <option value="MEMBER">member</option>
+                    <option value="OWNER">Owner</option>
                   </select>
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMemberRoleColor(
