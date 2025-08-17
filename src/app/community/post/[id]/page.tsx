@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import { ArrowLeft, Heart, MessageCircle, Share2, Bookmark, Eye, Calendar, Tag, Code, HelpCircle, Reply, MoreHorizontal, ThumbsUp, Flag, Send, Smile, Loader2, Edit, Trash2 } from "lucide-react"
-import { communityApi } from "@/services/communityApi"
+import { communityApi, PopularTag, TopCommenter } from "@/services/communityApi"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import DeleteModal from "@/components/modals/DeleteModal"
@@ -12,16 +12,23 @@ import { useDeleteModal } from "@/hooks/useDeleteModal"
 interface Comment {
   id: string
   content: string
-  author: {
+  postId?: string
+  authorId?: string
+  authorName?: string
+  author?: {
+    id?: string
     name: string
-    avatar: string
-    role: string
-    verified: boolean
+    avatar?: string
+    role?: string
+    verified?: boolean
   }
-  likes: number
-  replies: Comment[]
+  likes?: number
+  replies: Comment[] | null
   createdAt: string
-  isLiked: boolean
+  updatedAt?: string
+  isLiked?: boolean
+  parentCommentId?: string | null
+  reply?: boolean
 }
 
 interface Post {
@@ -48,21 +55,6 @@ interface Post {
   isBookmarked: boolean
   type: "discussion" | "project" | "help"
 }
-
-const popularTags = [
-  { name: "JavaScript", count: 2345, color: "bg-yellow-100 text-yellow-800" },
-  { name: "React", count: 1890, color: "bg-blue-100 text-blue-800" },
-  { name: "Python", count: 1456, color: "bg-green-100 text-green-800" },
-  { name: "TypeScript", count: 987, color: "bg-blue-100 text-blue-800" },
-  { name: "Node.js", count: 876, color: "bg-green-100 text-green-800" },
-]
-
-const topContributors = [
-  { name: "Alex Chen", avatar: "👨‍💻", points: 12450 },
-  { name: "Sarah Kim", avatar: "👩‍💻", points: 9876 },
-  { name: "Mike Rodriguez", avatar: "👨‍🎓", points: 8234 },
-  { name: "Emma Wilson", avatar: "👩‍🎓", points: 7654 },
-]
 
 const formatDate = (dateString: string) => {
   try {
@@ -104,6 +96,211 @@ const formatDate = (dateString: string) => {
   }
 }
 
+// Recursive Comment Component
+const CommentComponent = ({ 
+  comment, 
+  onLike, 
+  onReply, 
+  replyingTo, 
+  replyForms, 
+  updateReplyForm, 
+  handleSubmitReply, 
+  router, 
+  postId, 
+  depth = 0 
+}: {
+  comment: Comment
+  onLike: (id: string) => void
+  onReply: (id: string) => void
+  replyingTo: string | null
+  replyForms: {[key: string]: string}
+  updateReplyForm: (id: string, content: string) => void
+  handleSubmitReply: (id: string) => void
+  router: any
+  postId: string
+  depth?: number
+}) => {
+  const maxDepth = 3 // Limit nesting depth
+  const [showReplyEmojiPicker, setShowReplyEmojiPicker] = useState(false)
+  const replyEmojiRef = useRef<HTMLDivElement>(null)
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (replyEmojiRef.current && !replyEmojiRef.current.contains(event.target as Node)) {
+        setShowReplyEmojiPicker(false)
+      }
+    }
+
+    if (showReplyEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showReplyEmojiPicker])
+
+  // Common emojis for reply picker
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+    '😉', '😍', '🥰', '😘', '😗', '😙', '😋', '😛', '😝', '😜',
+    '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞',
+    '😔', '😟', '😕', '🙁', '😣', '😖', '😫', '😩', '🥺', '😢',
+    '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱',
+    '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤐', '🥴',
+    '😵', '🤤', '😪', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧',
+    '🥳', '🤠', '🤡', '🥸', '🤑', '🤖', '👍', '👎', '👌', '✌️',
+    '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋',
+    '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏',
+    '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻',
+    '👃', '👣', '👁️', '👀', '🫀', '🫁', '🧠', '🗣️', '👤', '👥'
+  ]
+
+  // Add emoji to reply
+  const addEmojiToReply = (emoji: string) => {
+    if (replyingTo === comment.id) {
+      updateReplyForm(comment.id, (replyForms[comment.id] || '') + emoji)
+      setShowReplyEmojiPicker(false)
+    }
+  }
+
+  return (
+    <div className={`${depth > 0 ? 'ml-4 border-l-2 border-gray-200 pl-4' : ''} mb-4`}>
+      <div className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-medium text-gray-600">
+              {(comment.author?.name || comment.authorName || "A")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </span>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold text-gray-900 text-sm">
+                {comment.author?.name || comment.authorName || "Anonymous"}
+              </span>
+              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md font-normal">
+                {comment.author?.role || "Student"}
+              </span>
+              <span className="text-xs text-gray-500">{comment.createdAt}</span>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap mb-3">
+              {comment.content}
+            </p>
+            
+            {/* Comment Actions */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => onLike(comment.id)}
+                className={`flex items-center gap-1 text-xs h-7 px-2 rounded hover:bg-gray-100 transition-colors ${
+                  comment.isLiked ? "text-blue-600" : "text-gray-500"
+                }`}
+              >
+                <ThumbsUp className={`w-3 h-3 ${comment.isLiked ? "fill-current" : ""}`} />
+                {comment.likes || 0}
+              </button>
+              
+              {depth < maxDepth && (
+                <button
+                  onClick={() => onReply(comment.id)}
+                  className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                >
+                  <Reply className="w-3 h-3" />
+                  Reply
+                </button>
+              )}
+            </div>
+
+            {/* Reply Form */}
+            {replyingTo === comment.id && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <textarea
+                  placeholder="Write your reply..."
+                  value={replyForms[comment.id] || ""}
+                  onChange={(e) => updateReplyForm(comment.id, e.target.value)}
+                  className="w-full min-h-[80px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="flex items-center gap-2 relative">
+                    <button 
+                      onClick={() => setShowReplyEmojiPicker(!showReplyEmojiPicker)}
+                      className="flex items-center gap-2 px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-sm"
+                    >
+                      <Smile className="w-3 h-3" />
+                      Emoji
+                    </button>
+                    
+                    {/* Reply Emoji Picker */}
+                    {showReplyEmojiPicker && (
+                      <div 
+                        ref={replyEmojiRef}
+                        className="absolute bottom-full left-0 mb-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-4"
+                      >
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Choose an emoji</h4>
+                        <div className="grid grid-cols-10 gap-2 max-h-48 overflow-y-auto">
+                          {commonEmojis.map((emoji, index) => (
+                            <button
+                              key={index}
+                              onClick={() => addEmojiToReply(emoji)}
+                              className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                              title={emoji}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onReply(comment.id)}
+                      className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSubmitReply(comment.id)}
+                      disabled={!(replyForms[comment.id] || "").trim()}
+                      className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-md transition-colors"
+                    >
+                      Reply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Nested Replies */}
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {comment.replies.map((reply) => (
+                  <CommentComponent
+                    key={reply.id}
+                    comment={reply}
+                    onLike={onLike}
+                    onReply={onReply}
+                    replyingTo={replyingTo}
+                    replyForms={replyForms}
+                    updateReplyForm={updateReplyForm}
+                    handleSubmitReply={handleSubmitReply}
+                    router={router}
+                    postId={postId}
+                    depth={depth + 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PostPage() {
   const params = useParams()
   const postId = params.id
@@ -117,14 +314,66 @@ export default function PostPage() {
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
+  const [replyForms, setReplyForms] = useState<{[key: string]: string}>({}) // For managing multiple reply forms
   const [sortBy, setSortBy] = useState("recent")
   const [showOptionsMenu, setShowOptionsMenu] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [popularTags, setPopularTags] = useState<PopularTag[]>([])
+  const [tagsLoading, setTagsLoading] = useState(true)
+  const [topCommenters, setTopCommenters] = useState<TopCommenter[]>([])
+  const [commentersLoading, setCommentersLoading] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
+  const emojiRef = useRef<HTMLDivElement>(null)
 
   const deleteModal = useDeleteModal({
     title: "Delete Post",
     confirmText: "Delete Post"
   })
+
+  // Helper function to get tag color based on index
+  const getTagColor = (index: number) => {
+    const colors = [
+      'bg-yellow-100 text-yellow-800',
+      'bg-blue-100 text-blue-800', 
+      'bg-green-100 text-green-800',
+      'bg-purple-100 text-purple-800',
+      'bg-red-100 text-red-800',
+      'bg-indigo-100 text-indigo-800'
+    ]
+    return colors[index % colors.length]
+  }
+
+  // Fetch popular tags from API
+  const fetchPopularTags = async () => {
+    try {
+      setTagsLoading(true)
+      const data = await communityApi.getPopularTags()
+      setPopularTags(data)
+    } catch (err) {
+      console.error("Error fetching popular tags:", err)
+      // Fallback to empty array if API fails
+      setPopularTags([])
+    } finally {
+      setTagsLoading(false)
+    }
+  }
+
+  // Fetch top commenters for this post from API
+  const fetchTopCommenters = async () => {
+    if (!postId) return
+    
+    try {
+      setCommentersLoading(true)
+      const data = await communityApi.getTopCommenters(postId as string)
+      setTopCommenters(data)
+    } catch (err) {
+      console.error("Error fetching top commenters:", err)
+      // Fallback to empty array if API fails
+      setTopCommenters([])
+    } finally {
+      setCommentersLoading(false)
+    }
+  }
 
   const handleEditPost = () => {
     setShowOptionsMenu(false)
@@ -143,22 +392,146 @@ export default function PostPage() {
       post?.title
     )
   }
+
+  // Handle post like/unlike
+  const handleLike = async () => {
+    if (!post) return
+    
+    try {
+      console.log("❤️ Toggling like for post:", post.id)
+      
+      // Use unified like API for post
+      const response = await communityApi.toggleLike(post.id, 'post')
+      
+      console.log("❤️ Post like response:", response)
+      
+      // Update post state immediately for instant feedback
+      setPost(prev => prev ? {
+        ...prev,
+        isLiked: response.liked,           // Backend returns 'liked'
+        likes: response.likesCount         // Backend returns 'likesCount'
+      } : null)
+      
+      console.log("❤️ Post like updated successfully")
+      
+    } catch (error: any) {
+      console.error("❤️ Error toggling post like:", error)
+      // You might want to show a toast notification here
+    }
+  }
+
+  // Handle bookmark toggle (placeholder for now)
+  const handleBookmark = async () => {
+    if (!post) return
+    
+    try {
+      console.log("🔖 Toggling bookmark for post:", post.id)
+      
+      // This would be implemented when bookmark API is ready
+      // const response = await communityApi.toggleBookmark(post.id)
+      
+      // For now, just toggle locally
+      setPost(prev => prev ? {
+        ...prev,
+        isBookmarked: !prev.isBookmarked
+      } : null)
+      
+      console.log("🔖 Bookmark toggled successfully")
+      
+    } catch (error: any) {
+      console.error("🔖 Error toggling bookmark:", error)
+    }
+  }
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowOptionsMenu(false)
       }
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false)
+      }
     }
 
-    if (showOptionsMenu) {
+    if (showOptionsMenu || showEmojiPicker) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showOptionsMenu])
+  }, [showOptionsMenu, showEmojiPicker])
+
+  // Test function to check comment like status manually
+  const testCommentLikeStatus = async (commentId: string) => {
+    try {
+      console.log("🧪 Testing comment like status for:", commentId)
+      const response = await communityApi.getCommentLikeStatus(commentId)
+      console.log("🧪 Comment like status response:", response)
+    } catch (error) {
+      console.error("🧪 Error testing comment like status:", error)
+    }
+  }
+
+  // Emoji picker functionality
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+    '😉', '😍', '🥰', '😘', '😗', '😙', '😋', '😛', '😝', '😜',
+    '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞',
+    '😔', '😟', '😕', '🙁', '😣', '😖', '😫', '😩', '🥺', '😢',
+    '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱',
+    '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤐', '🥴',
+    '😵', '🤤', '😪', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧',
+    '🥳', '🤠', '🤡', '🥸', '🤑', '🤖', '👍', '👎', '👌', '✌️',
+    '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋',
+    '🤚', '🖐️', '🖖', '👋', '🤏', '💪', '🦾', '🖕', '✍️', '🙏',
+    '🦶', '🦵', '🦿', '💄', '💋', '👄', '🦷', '👅', '👂', '🦻',
+    '👃', '👣', '👁️', '👀', '🫀', '🫁', '🧠', '🗣️', '👤', '👥'
+  ]
+
+  const addEmoji = (emoji: string) => {
+    setNewComment(prev => prev + emoji)
+    setShowEmojiPicker(false)
+  }
+
+  // Transform CommentResponse to Comment interface
+  const transformComment = (comment: any): Comment => {
+    return {
+      id: comment.id,
+      content: comment.content,
+      postId: comment.postId,
+      authorId: comment.authorId,
+      authorName: comment.authorName,
+      author: {
+        id: comment.authorId,
+        name: comment.authorName || "Anonymous",
+        avatar: "/placeholder.svg?height=32&width=32",
+        role: "Student",
+        verified: false,
+      },
+      likes: comment.likesCount || 0,        // Backend returns likesCount
+      replies: comment.replies ? comment.replies.map(transformComment) : null,
+      createdAt: formatDate(comment.createdAt) || "Unknown",
+      updatedAt: comment.updatedAt,
+      isLiked: comment.liked || false,       // Backend returns liked
+      parentCommentId: comment.parentCommentId,
+      reply: comment.reply || false,
+    }
+  }
+
+  // Fetch comments separately 
+  const fetchComments = async () => {
+    if (!postId) return
+    
+    try {
+      const commentsData = await communityApi.getComments(postId as string)
+      const transformedComments = commentsData.map(transformComment)
+      setComments(transformedComments || [])
+    } catch (err) {
+      console.error("Error fetching comments:", err)
+    }
+  }
 
   // Fetch post data from API
   useEffect(() => {
@@ -167,10 +540,15 @@ export default function PostPage() {
         setLoading(true)
         setError(null)
         
+        // Test backend connection first
+        const isConnected = await communityApi.testConnection()
+        if (!isConnected) {
+          throw new Error('Backend server is not responding. Please try again later.')
+        }
+        
         const data = await communityApi.getPost(postId as string)
         
-        console.log("Post Data: ", data);
-        console.log("Post Title: ", data.title);
+        console.log("Full API Response:", data); // Debug log
         
         
         // Transform API data to match our interface
@@ -190,16 +568,27 @@ export default function PostPage() {
             name: tag.name,
             id: tag.id
           })) || [],
-          likes: data.likes || 0,
-          comments: data.replies || 0, // Use replies field for comments count
+          likes: data.likesCount || 0,        // Backend returns likesCount
+          comments: data.comments || 0,       // Backend returns comments count directly
           views: data.views || 0,
           createdAt: formatDate(data.createdAt) || "Unknown",
-          isLiked: data.isLiked || false,
+          isLiked: data.liked || false,       // Backend returns liked
           isBookmarked: false,
           type: (data.type?.toLowerCase() as "discussion" | "project" | "help") || "discussion",
         }
         
         setPost(transformedPost)
+        
+        // Transform and set comments if they exist
+        const responseWithComments = data as any // Type assertion to access comments property
+        if (responseWithComments.comments && Array.isArray(responseWithComments.comments)) {
+          // Transform comments to match frontend interface
+          const transformedComments = responseWithComments.comments.map(transformComment)
+          setComments(transformedComments)
+        } else {
+          // Fallback: fetch comments separately if not included in post response
+          fetchComments()
+        }
         
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch post")
@@ -214,6 +603,18 @@ export default function PostPage() {
     }
   }, [postId])
 
+  // Fetch popular tags on component mount
+  useEffect(() => {
+    fetchPopularTags()
+  }, [])
+
+  // Fetch top commenters when post is loaded
+  useEffect(() => {
+    if (postId) {
+      fetchTopCommenters()
+    }
+  }, [postId])
+
   const handleBack = () => {
     // In a real app, this would use router.back() or navigate to community page
     
@@ -221,234 +622,153 @@ export default function PostPage() {
     router.push("/community")
   }
 
-  const handleLike = async () => {
-    if (!post) return
-    
-    try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ liked: !post.isLiked }),
-      })
-      
-      if (response.ok) {
-        setPost({ 
-          ...post, 
-          isLiked: !post.isLiked, 
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1 
-        })
-      }
-    } catch (err) {
-      console.error("Error liking post:", err)
-    }
-  }
-
-  const handleBookmark = async () => {
-    if (!post) return
-    
-    try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bookmarked: !post.isBookmarked }),
-      })
-      
-      if (response.ok) {
-        setPost({ ...post, isBookmarked: !post.isBookmarked })
-      }
-    } catch (err) {
-      console.error("Error bookmarking post:", err)
-    }
-  }
-
-  const handleCommentLike = (commentId: string, isReply = false, parentId?: string) => {
-    if (isReply && parentId) {
-      setComments(
-        comments.map((comment) =>
-          comment.id === parentId
-            ? {
-                ...comment,
-                replies: comment.replies.map((reply) =>
-                  reply.id === commentId
-                    ? { ...reply, isLiked: !reply.isLiked, likes: reply.isLiked ? reply.likes - 1 : reply.likes + 1 }
-                    : reply,
-                ),
-              }
-            : comment,
-        ),
-      )
-    } else {
-      setComments(
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, isLiked: !comment.isLiked, likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1 }
-            : comment,
-        ),
-      )
-    }
-  }
-
+  // Comment related functions
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !post) return
 
     try {
-      const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/posts/${post.id}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: newComment }),
-      })
+      console.log("💬 Submitting new comment...")
       
-      if (response.ok) {
-        const comment: Comment = {
-          id: Date.now().toString(),
-          content: newComment,
-          author: {
-            name: "You",
-            avatar: "/placeholder.svg?height=32&width=32",
-            role: "Student",
-            verified: false,
-          },
-          likes: 0,
-          replies: [],
-          createdAt: "Just now",
-          isLiked: false,
-        }
+      const response = await communityApi.addComment(post.id, {
+        content: newComment.trim()
+      })
 
-        setComments([comment, ...comments])
-        setNewComment("")
-        setPost({ ...post, comments: post.comments + 1 })
+      console.log("💬 Comment API response:", response)
+      
+      // Create local comment object
+      const newCommentObj: Comment = {
+        id: response.id || Date.now().toString(),
+        content: newComment.trim(),
+        author: {
+          name: response.author?.name || user?.name || "You",
+          avatar: response.author?.avatar || "/placeholder.svg?height=32&width=32",
+          role: user?.user_role || "Student",
+          verified: false,
+        },
+        likes: 0,
+        replies: [],
+        createdAt: "Just now",
+        isLiked: false,
       }
+
+      // Add to comments list
+      setComments([newCommentObj, ...comments])
+      setNewComment("")
+      
+      // Update post comment count
+      setPost({ ...post, comments: post.comments + 1 })
+      
+      // Refresh top commenters since a new comment was added
+      fetchTopCommenters()
+      
+      console.log("💬 Comment added successfully")
+      
     } catch (err) {
-      console.error("Error submitting comment:", err)
+      console.error("💬 Error submitting comment:", err)
     }
   }
 
-  const handleSubmitReply = (parentId: string) => {
-    if (!replyContent.trim()) return
+  // Helper function to handle reply submission for any comment (nested support)
+  const handleSubmitReply = async (parentCommentId: string) => {
+    const replyText = replyForms[parentCommentId]
+    if (!replyText?.trim() || !post) return
 
-    const reply: Comment = {
-      id: `${parentId}-${Date.now()}`,
-      content: replyContent,
-      author: {
-        name: "You",
-        avatar: "/placeholder.svg?height=32&width=32",
-        role: "Student",
-        verified: false,
-      },
-      likes: 0,
-      replies: [],
-      createdAt: "Just now",
-      isLiked: false,
+    try {
+      console.log("💬 Submitting reply to comment:", parentCommentId)
+      
+      const response = await communityApi.addComment(post.id, {
+        content: replyText.trim(),
+        parentCommentId: parentCommentId
+      })
+
+      console.log("💬 Reply API response:", response)
+      
+      // Refresh comments to get updated structure from backend
+      fetchComments()
+      
+      // Clear reply form
+      setReplyForms(prev => ({
+        ...prev,
+        [parentCommentId]: ""
+      }))
+      setReplyingTo(null)
+      
+      // Refresh top commenters since a new reply was added
+      fetchTopCommenters()
+      
+      console.log("💬 Reply added successfully")
+      
+    } catch (err) {
+      console.error("💬 Error submitting reply:", err)
     }
-
-    setComments(
-      comments.map((comment) =>
-        comment.id === parentId ? { ...comment, replies: [...comment.replies, reply] } : comment,
-      ),
-    )
-    setReplyContent("")
-    setReplyingTo(null)
   }
 
-  const CommentComponent = ({
-    comment,
-    isReply = false,
-    parentId,
-  }: { comment: Comment; isReply?: boolean; parentId?: string }) => (
-    <div className={`${isReply ? "ml-6 mt-3" : ""}`}>
-      <div className="flex gap-3">
-        <div className="relative flex-shrink-0">
-          <div className={`${isReply ? "w-7 h-7" : "w-9 h-9"} border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center`}>
-            <span className="text-xs font-medium text-gray-600">
-              {comment.author.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </span>
-          </div>
-          {comment.author.verified && (
-            <div className="absolute -bottom-0.5 -right-0.5 bg-blue-500 rounded-full p-0.5">
-              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-gray-900 text-sm">{comment.author.name}</span>
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md font-normal">
-                {comment.author.role}
-              </span>
-              <span className="text-xs text-gray-500">{comment.createdAt}</span>
-            </div>
-            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">{comment.content}</p>
-          </div>
-          <div className="flex items-center gap-4 mt-2 ml-2">
-            <button
-              onClick={() => handleCommentLike(comment.id, isReply, parentId)}
-              className={`flex items-center gap-1 text-xs h-7 px-2 rounded hover:bg-gray-100 transition-colors ${comment.isLiked ? "text-blue-600" : "text-gray-500"}`}
-            >
-              <ThumbsUp className={`w-3 h-3 ${comment.isLiked ? "fill-current" : ""}`} />
-              {comment.likes}
-            </button>
-            {!isReply && (
-              <button
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-              >
-                <Reply className="w-3 h-3" />
-                Reply
-              </button>
-            )}
-            <button className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded transition-colors">
-              <Flag className="w-3 h-3" />
-              Report
-            </button>
-          </div>
-          {replyingTo === comment.id && (
-            <div className="mt-3 ml-2">
-              <div className="space-y-2">
-                <textarea
-                  placeholder="Write a reply..."
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  className="w-full min-h-[70px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-                <div className="flex justify-end gap-2">
-                  <button 
-                    onClick={() => setReplyingTo(null)} 
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleSubmitReply(comment.id)}
-                    className="flex items-center px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                  >
-                    <Send className="w-3 h-3 mr-1" />
-                    Reply
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {comment.replies.length > 0 && (
-            <div className="mt-4 space-y-3">
-              {comment.replies.map((reply) => (
-                <CommentComponent key={reply.id} comment={reply} isReply={true} parentId={comment.id} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  // Helper function to toggle reply form for any comment
+  const toggleReplyForm = (commentId: string) => {
+    if (replyingTo === commentId) {
+      setReplyingTo(null)
+    } else {
+      setReplyingTo(commentId)
+      // Initialize reply form if not exists
+      if (!replyForms[commentId]) {
+        setReplyForms(prev => ({
+          ...prev,
+          [commentId]: ""
+        }))
+      }
+    }
+  }
+
+  // Helper function to update reply form content
+  const updateReplyForm = (commentId: string, content: string) => {
+    setReplyForms(prev => ({
+      ...prev,
+      [commentId]: content
+    }))
+  }
+
+  const handleCommentLike = async (commentId: string) => {
+    if (!post) return
+    
+    try {
+      console.log("💬 Toggling like for comment:", commentId)
+      
+      // Use unified like API for comments/replies
+      const response = await communityApi.toggleLike(commentId, 'comment', post.id)
+      
+      console.log("💬 Comment like response:", response)
+      
+      // Update the specific comment's like state locally for immediate feedback
+      const updateCommentLikes = (comments: Comment[]): Comment[] => {
+        return comments.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              isLiked: response.liked,         // Backend returns 'liked'
+              likes: response.likesCount       // Backend returns 'likesCount'
+            }
+          }
+          // Also check nested replies
+          if (comment.replies && comment.replies.length > 0) {
+            return {
+              ...comment,
+              replies: updateCommentLikes(comment.replies)
+            }
+          }
+          return comment
+        })
+      }
+
+      setComments(updateCommentLikes)
+      
+      console.log("💬 Comment like updated successfully")
+      
+    } catch (err) {
+      console.error("💬 Error toggling comment like:", err)
+      // Fallback to refresh all comments if local update fails
+      fetchComments()
+    }
+  }
 
   // Loading state
   if (loading) {
@@ -472,12 +792,20 @@ export default function PostPage() {
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to load post</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
+          <div className="space-y-2">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => router.push('/community')} 
+              className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+            >
+              Back to Community
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -541,32 +869,68 @@ export default function PostPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
               <h3 className="font-semibold text-gray-900 mb-3">Popular Tags</h3>
               <div className="space-y-2">
-                {popularTags.map((tag) => (
-                  <div key={tag.name} className="flex items-center justify-between">
-                    <span className={`px-2 py-1 rounded-md text-sm font-medium ${tag.color}`}>
-                      {tag.name}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {tag.count > 1000 ? `${(tag.count / 1000).toFixed(1)}k` : tag.count}
-                    </span>
+                {tagsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Loading tags...</span>
                   </div>
-                ))}
+                ) : popularTags.length > 0 ? (
+                  popularTags.map((tag, index) => (
+                    <div key={tag.id || tag.name} className="flex items-center justify-between">
+                      <span className={`px-2 py-1 rounded-md text-sm font-medium ${getTagColor(index)}`}>
+                        {tag.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {tag.postCount > 1000 ? `${(tag.postCount / 1000).toFixed(1)}k` : tag.postCount}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="text-sm text-gray-500">No tags available</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Top Contributors */}
+            {/* Top Commenters */}
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-none">
-              <h3 className="font-semibold text-gray-900 mb-3">Top Contributors</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Top Commenters</h3>
               <div className="space-y-3">
-                {topContributors.map((contributor) => (
-                  <div key={contributor.name} className="flex items-center space-x-3">
-                    <div className="text-2xl">{contributor.avatar}</div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 text-sm">{contributor.name}</div>
-                      <div className="text-xs text-gray-500">{contributor.points.toLocaleString()} points</div>
-                    </div>
+                {commentersLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-500">Loading commenters...</span>
                   </div>
-                ))}
+                ) : topCommenters.length > 0 ? (
+                  topCommenters.map((commenter) => (
+                    <div key={commenter.id} className="flex items-center space-x-3">
+                      <div className="w-8 h-8 border-2 border-gray-100 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-gray-600">
+                          {commenter.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 text-sm">{commenter.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {commenter.commentCount} comment{commenter.commentCount !== 1 ? 's' : ''}
+                          {commenter.role && (
+                            <span className="ml-2 px-1 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                              {commenter.role}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="text-sm text-gray-500">No commenters yet</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -684,7 +1048,7 @@ export default function PostPage() {
                     </button>
                     <div className="flex items-center gap-2 text-gray-600">
                       <MessageCircle className="w-5 h-5" />
-                      {post.comments} comments
+                      {comments.length} comments
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -729,11 +1093,36 @@ export default function PostPage() {
                         className="w-full min-h-[90px] p-3 border border-gray-200 rounded-md resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                       />
                       <div className="flex justify-between items-center mt-3">
-                        <div className="flex items-center gap-2">
-                          <button className="flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        <div className="flex items-center gap-2 relative">
+                          <button 
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          >
                             <Smile className="w-4 h-4" />
                             Emoji
                           </button>
+                          
+                          {/* Emoji Picker */}
+                          {showEmojiPicker && (
+                            <div 
+                              ref={emojiRef}
+                              className="absolute bottom-full left-0 mb-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4"
+                            >
+                              <h4 className="text-sm font-medium text-gray-700 mb-3">Choose an emoji</h4>
+                              <div className="grid grid-cols-10 gap-2 max-h-48 overflow-y-auto">
+                                {commonEmojis.map((emoji, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => addEmoji(emoji)}
+                                    className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                    title={emoji}
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={handleSubmitComment}
@@ -751,7 +1140,18 @@ export default function PostPage() {
                 {/* Comments List */}
                 <div className="space-y-4">
                   {comments.map((comment) => (
-                    <CommentComponent key={comment.id} comment={comment} />
+                    <CommentComponent
+                      key={comment.id}
+                      comment={comment}
+                      onLike={(id) => handleCommentLike(id)}
+                      onReply={toggleReplyForm}
+                      replyingTo={replyingTo}
+                      replyForms={replyForms}
+                      updateReplyForm={updateReplyForm}
+                      handleSubmitReply={handleSubmitReply}
+                      router={router}
+                      postId={postId as string}
+                    />
                   ))}
                 </div>
 
