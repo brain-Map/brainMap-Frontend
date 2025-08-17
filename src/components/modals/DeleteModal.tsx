@@ -54,12 +54,12 @@ export default function DeleteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 bg-opacity-50 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
         onClick={handleClose}
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 z-[51] top-[80%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         {/* Close button */}
         <button
           onClick={handleClose}

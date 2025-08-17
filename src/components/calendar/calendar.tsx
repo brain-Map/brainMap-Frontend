@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Search, Plus, Clock, MapPin, Users, X, Edit, Trash2, AlertCircle, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, Plus, Clock, Calendar as CalendarIcon, MapPin, Users, X, Edit, Trash2, AlertCircle, CheckCircle2 } from "lucide-react"
 import api from '@/utils/api'
 import { useAuth } from "@/contexts/AuthContext"
 import toast, { Toaster } from 'react-hot-toast'
@@ -12,62 +12,113 @@ interface CalendarEvent {
   eventId: string
   title: string
   description?: string
-  createdDate: string // LocalDate from backend
-  dueDate: string // LocalDate from backend
-  dueTime: string // LocalTime from backend
-  createdTime: string // LocalTime from backend
+  createdDate: string // LocalDate from backend (YYYY-MM-DD)
+  dueDate: string // LocalDate from backend (YYYY-MM-DD)
+  dueTime: string // LocalTime from backend (HH:mm)
+  createdTime: string // LocalTime from backend (HH:mm)
   userId: string
 }
 
-interface ApiEvent {
-  eventId: string
-  title: string
-  description?: string
-  createdDate: string
-  dueDate: string
-  dueTime: string
-  createdTime: string
-  userId: string
-}
+interface ApiEvent extends CalendarEvent {} // ApiEvent now shares the same structure
 
 // Notification helpers
-const showSuccess = (message: string) => {
-  toast.success(message, {
+// Enhanced notification helpers with beautiful styling and animations
+const showSuccess = (message: string, details?: string) => {
+  toast.custom((t) => (
+    <div className={`${t.visible ? 'animate-enter scale-100 opacity-100' : 'animate-leave scale-95 opacity-0'} 
+      transform transition-all duration-300 ease-in-out
+      max-w-md w-full bg-gradient-to-r from-emerald-50 to-teal-50 
+      shadow-lg rounded-xl pointer-events-auto border border-emerald-100/50`}
+    >
+      <div className="flex p-4">
+        <div className="flex-shrink-0 pt-0.5">
+          <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg shadow-sm">
+            <CheckCircle2 className="h-5 w-5 text-white" />
+          </div>
+        </div>
+        <div className="ml-4 flex-1">
+          <p className="text-base font-semibold text-emerald-900">{message}</p>
+          {details && (
+            <p className="mt-1 text-sm text-emerald-700 leading-relaxed opacity-90">
+              {details}
+            </p>
+          )}
+        </div>
+        <div className="ml-4 flex-shrink-0 flex">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-emerald-100 rounded-lg p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-200 transition-colors duration-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  ), {
     duration: 3000,
     position: 'top-right',
-    icon: '✅',
-    style: {
-      background: '#10B981',
-      color: 'white',
-      padding: '16px',
-      borderRadius: '8px',
-    },
   });
 };
 
-const showError = (message: string) => {
-  toast.error(message, {
-    duration: 4000,
+const showError = (message: string, details?: string) => {
+  toast.custom((t) => (
+    <div className={`${t.visible ? 'animate-enter scale-100 opacity-100' : 'animate-leave scale-95 opacity-0'} 
+      transform transition-all duration-300 ease-in-out
+      max-w-md w-full bg-gradient-to-r from-rose-50 to-red-50 
+      shadow-lg rounded-xl pointer-events-auto border border-rose-100/50`}
+    >
+      <div className="flex p-4">
+        <div className="flex-shrink-0 pt-0.5">
+          <div className="p-2 bg-gradient-to-br from-rose-500 to-red-500 rounded-lg shadow-sm">
+            <AlertCircle className="h-5 w-5 text-white" />
+          </div>
+        </div>
+        <div className="ml-4 flex-1">
+          <p className="text-base font-semibold text-rose-900">{message}</p>
+          {details && (
+            <p className="mt-1 text-sm text-rose-700 leading-relaxed opacity-90">
+              {details}
+            </p>
+          )}
+        </div>
+        <div className="ml-4 flex-shrink-0 flex">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-rose-100 rounded-lg p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-200 transition-colors duration-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  ), {
+    duration: 5000,
     position: 'top-right',
-    icon: '❌',
-    style: {
-      background: '#EF4444',
-      color: 'white',
-      padding: '16px',
-      borderRadius: '8px',
-    },
   });
 };
 
 const showLoading = (message: string) => {
-  return toast.loading(message, {
+  return toast.custom((
+    <div className="max-w-md w-full bg-gradient-to-r from-blue-50 to-indigo-50 
+      shadow-lg rounded-xl pointer-events-auto border border-blue-100/50 p-4"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          <div className="relative">
+            <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-8 h-8 border-2 border-transparent border-t-indigo-500 rounded-full animate-spin" style={{ animationDuration: '1.5s' }}></div>
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            {message}
+          </p>
+        </div>
+      </div>
+    </div>
+  ), {
+    duration: Infinity,
     position: 'top-right',
-    style: {
-      background: '#3B82F6',
-      color: 'white',
-      padding: '16px',
-      borderRadius: '8px',
-    },
   });
 };
 
@@ -83,10 +134,21 @@ function formatTimeString(time: string): string {
 }
 
 const eventFunction = {
-  getAllEvents: async () => {
+  getAllEvents: async (currentUser: { id: string } | null = null) => {
     try {
-      // Make sure we're using the correct endpoint
-      const response = await api.get('/api/v1/events')
+      if (!currentUser?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Make sure we're using the correct endpoint with user context
+      const response = await api.get('/api/v1/events', {
+        headers: {
+          'user-id': currentUser.id
+        },
+        params: {
+          userId: currentUser.id
+        }
+      })
       console.log('Events Data:', response.data)
       
       // Validate response data
@@ -151,9 +213,13 @@ const eventFunction = {
     dueTime: string
     createdDate: string
     createdTime: string
-    userId: string
+    userId?: string
   }, currentUser: { id: string } | null = null) => {
-    // Initialize formattedData with default values
+    if (!currentUser?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    // Initialize formattedData with default values and ensure userId is set
     let formattedData: {
       title: string
       description: string
@@ -169,7 +235,7 @@ const eventFunction = {
       dueTime: '',
       createdDate: '',
       createdTime: '',
-      userId: ''
+      userId: currentUser.id
     }
 
     try {
@@ -186,7 +252,7 @@ const eventFunction = {
         dueTime: eventData.dueTime,
         createdDate: eventData.createdDate,
         createdTime: eventData.createdTime,
-        userId: currentUser?.id || eventData.userId
+        userId: currentUser?.id || ''
       }
 
       // Validate date formats
@@ -248,8 +314,19 @@ const eventFunction = {
     description?: string
     dueDate: string
     dueTime: string
-  }) => {
+    userId: string
+  }, currentUser: { id: string } | null = null) => {
     try {
+      // Validate user authentication
+      if (!currentUser?.id) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Ensure userId matches the authenticated user
+      if (currentUser.id !== eventData.userId) {
+        throw new Error('Unauthorized: User ID mismatch');
+      }
+
       // Validate input
       if (!eventId) {
         throw new Error('Event ID is required')
@@ -281,8 +358,15 @@ const eventFunction = {
         throw new Error('Invalid time format. Expected HH:mm')
       }
 
-      // Make API call
-      const response = await api.put(`/api/v1/events/${eventId}`, formattedData)
+      // Make API call with user ID
+      const response = await api.put(`/api/v1/events/${eventId}`, {
+        ...formattedData,
+        userId: currentUser.id
+      }, {
+        headers: {
+          'user-id': currentUser.id
+        }
+      })
 
       // Validate response
       if (!response.data) {
@@ -316,9 +400,15 @@ const eventFunction = {
     }
   },
 
-  deleteEvent: async (eventId: string) => {
+  deleteEvent: async (eventId: string, currentUser: { id: string } | null = null) => {
     try {
-      const response = await api.delete(`/api/v1/events/${eventId}`)
+      if (!currentUser?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const response = await api.delete(`/api/v1/events/${eventId}`, {
+        data: { userId: currentUser.id }
+      });
       console.log('Deleted Event:', response.data)
       return response.data
     } catch (error) {
@@ -400,10 +490,20 @@ export default function Calendar() {
 
   const loadEvents = async () => {
     try {
+      if (!user?.id) {
+        showError(
+          'Authentication Required',
+          'Please log in to view your events.'
+        );
+        return;
+      }
+
       setLoading(true)
       console.log('Loading events...')
-      const apiEvents: ApiEvent[] = await eventFunction.getAllEvents()
-      const transformedEvents = apiEvents.map(transformApiEventToCalendarEvent)
+      const apiEvents: ApiEvent[] = await eventFunction.getAllEvents(user)
+      const transformedEvents = apiEvents
+        .map(transformApiEventToCalendarEvent)
+        .filter(event => event.userId === user.id) // Only show user's events
       setEvents(transformedEvents)
       console.log('Loaded events:', transformedEvents)
     } catch (error: any) {
@@ -411,13 +511,35 @@ export default function Calendar() {
       
       // More detailed error handling
       if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
-        alert('Network Error: Please check if your backend server is running on the correct port and CORS is configured.')
+        showError(
+          'Connection Error',
+          'Unable to reach the server. Please check your internet connection and try again.'
+        );
       } else if (error.response?.status === 404) {
-        alert('API endpoint not found. Please check if the backend server is running.')
+        showError(
+          'Service Unavailable',
+          'The calendar service is currently unavailable. Please try again later.'
+        );
       } else if (error.response?.status >= 500) {
-        alert('Server Error: Please check your backend server.')
+        showError(
+          'Server Error',
+          'An unexpected error occurred on our servers. Our team has been notified and is working on it.'
+        );
+      } else if (error.response?.status === 403) {
+        showError(
+          'Access Denied',
+          'You do not have permission to view these events. Please contact your administrator.'
+        );
+      } else if (error.response?.status === 401) {
+        showError(
+          'Authentication Required',
+          'Please log in again to view your calendar events.'
+        );
       } else {
-        alert(`Failed to load events: ${error.message}`)
+        showError(
+          'Calendar Error',
+          `Unable to load events: ${error.message}`
+        );
       }
     } finally {
       setLoading(false)
@@ -441,17 +563,46 @@ export default function Calendar() {
   }
 
   const handleAddEvent = async () => {
-    // Input validation
+    // Enhanced input validation with detailed messages
     if (!newEvent.title?.trim()) {
-      showError('Please enter a title for the event');
+      showError(
+        'Title Required',
+        'Please enter a descriptive title for your event to help you identify it later.'
+      );
       return;
     }
     if (!newEvent.dueDate) {
-      showError('Please select a due date');
+      showError(
+        'Date Required',
+        'Please select the date when this event is scheduled to occur.'
+      );
       return;
     }
     if (!newEvent.dueTime) {
-      showError('Please select a due time');
+      showError(
+        'Time Required',
+        'Please specify the time when this event will take place.'
+      );
+      return;
+    }
+    
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(newEvent.dueDate)) {
+      showError(
+        'Invalid Date Format',
+        'The date format appears to be incorrect. Please use the date picker to select a valid date.'
+      );
+      return;
+    }
+    
+    // Validate time format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(newEvent.dueTime)) {
+      showError(
+        'Invalid Time Format',
+        'The time format appears to be incorrect. Please use the time picker to select a valid time.'
+      );
       return;
     }
 
@@ -478,6 +629,10 @@ export default function Calendar() {
         throw new Error(`Invalid due time format: ${newEvent.dueTime}. Expected HH:mm`)
       }
       
+      if (!user?.id) {
+        throw new Error('User ID is required');
+      }
+
       // Format the event data with proper time padding
       eventData = {
         title: newEvent.title.trim(),
@@ -486,7 +641,7 @@ export default function Calendar() {
         dueTime: formatTimeString(newEvent.dueTime),
         createdDate: createdDate,
         createdTime: formatTimeString(createdTime),
-        userId: "00000000-0000-0000-0000-000000000001" // Simple test UUID
+        userId: user.id
       }
 
       console.log('Prepared event data:', JSON.stringify(eventData, null, 2))
@@ -499,6 +654,14 @@ export default function Calendar() {
       }
       const loadingToast = showLoading('Creating event...');
       
+      if (!user || !user.id) {
+        showError(
+          'Authentication Required',
+          'Please log in to create events.'
+        );
+        return;
+      }
+
       const result = await eventFunction.createEvent(eventData, user)
       toast.dismiss(loadingToast);
       showSuccess('Event created successfully!');
@@ -567,9 +730,18 @@ export default function Calendar() {
   }
 
   const handleSaveEdit = async () => {
+    // Check for valid event and user
     if (!editingEvent) {
-      alert('No event selected for editing')
-      return
+      showError('Error', 'No event selected for editing');
+      return;
+    }
+
+    if (!user?.id) {
+      showError(
+        'Authentication Required',
+        'Please log in to edit events.'
+      );
+      return;
     }
 
     try {
@@ -585,17 +757,42 @@ export default function Calendar() {
       if (!editingEvent.dueTime) {
         throw new Error('Please select a due time')
       }
+      if (!user?.id) {
+        throw new Error('User authentication required')
+      }
 
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(editingEvent.dueDate)) {
+        throw new Error('Invalid date format. Please use the date picker.')
+      }
+
+      // Validate time format
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(editingEvent.dueTime)) {
+        throw new Error('Invalid time format. Please use the time picker.')
+      }
+
+      // Create event data with user ID
       const eventData = {
         title: editingEvent.title.trim(),
         description: editingEvent.description?.trim() || '',
         dueDate: editingEvent.dueDate,
         dueTime: editingEvent.dueTime,
+        userId: user.id  // Explicitly set the user ID
       }
       
+      if (!user || !user.id) {
+        showError(
+          'Authentication Required',
+          'Please log in to update events.'
+        );
+        return;
+      }
+
       // Attempt to update the event
       const loadingToast = showLoading('Updating event...');
-      await eventFunction.updateEvent(editingEvent.eventId, eventData)
+      await eventFunction.updateEvent(editingEvent.eventId, eventData, user)
       toast.dismiss(loadingToast);
       showSuccess('Event updated successfully!');
       
@@ -620,57 +817,40 @@ export default function Calendar() {
     }
   }
 
-  const handleDeleteEvent = async (event: CalendarEvent) => {
-    const confirmDelete = () => {
-      return new Promise((resolve) => {
-        toast((t) => (
-          <div className="flex flex-col gap-2">
-            <p className="font-medium text-gray-900">Delete Event?</p>
-            <p className="text-sm text-gray-600">This action cannot be undone.</p>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(true);
-                }}
-                className="px-3 py-1 text-sm text-white bg-red-500 rounded-md hover:bg-red-600"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(false);
-                }}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ), {
-          duration: Infinity,
-          position: 'top-center',
-        });
-      });
-    };
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(null);
 
-    const confirmed = await confirmDelete();
-    if (confirmed) {
-      try {
-        setLoading(true);
-        const loadingToast = showLoading('Deleting event...');
-        await eventFunction.deleteEvent(event.eventId);
-        toast.dismiss(loadingToast);
-        showSuccess('Event deleted successfully');
-        setShowEventModal(false);
-        await loadEvents();
-      } catch (error) {
-        console.error('Error deleting event:', error);
-        showError('Failed to delete event. Please try again.');
-      } finally {
-        setLoading(false);
+  const handleDeleteEvent = async (event: CalendarEvent) => {
+    setEventToDelete(event);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!eventToDelete) return;
+
+    try {
+      if (!user || !user.id) {
+        showError(
+          'Authentication Required',
+          'Please log in to delete events.'
+        );
+        return;
       }
+
+      setLoading(true);
+      const loadingToast = showLoading('Deleting event...');
+      await eventFunction.deleteEvent(eventToDelete.eventId, user);
+      toast.dismiss(loadingToast);
+      showSuccess('Event deleted successfully');
+      setShowEventModal(false);
+      setShowDeleteConfirm(false);
+      setEventToDelete(null);
+      await loadEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      showError('Failed to delete event. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -853,7 +1033,7 @@ export default function Calendar() {
             return (
               <div
                 key={index}
-                className={`min-h-[130px] p-3 border-r border-b border-gray-200 last:border-r-0 transition-all duration-200 ${
+                className={`min-h-[100px] px-3 py-2 border-r border-b border-gray-200 last:border-r-0 transition-all duration-200 ${
                   !day.isCurrentMonth ? "bg-slate-50" : "bg-white hover:bg-slate-50"
                 }`}
               >
@@ -877,13 +1057,17 @@ export default function Calendar() {
                     <div
                       key={event.eventId}
                       onClick={() => handleEventClick(event)}
-                      className="text-xs px-2.5 py-1.5 rounded-md cursor-pointer bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 transition-all duration-200 truncate shadow-sm"
+                      className="text-xs px-2.5 py-1.5 rounded-md cursor-pointer bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-blue-200 transition-all duration-200 truncate shadow-sm group flex items-center gap-1.5"
                     >
-                      <span className="font-medium">{event.dueTime}</span> {event.title}
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-blue-600 transition-colors"></div>
+                      <span className="truncate">{event.title}</span>
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div className="text-xs text-blue-600 pl-2 font-medium mt-1">+{dayEvents.length - 3} more events</div>
+                    <div className="text-xs bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md mt-1 font-medium hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                      +{dayEvents.length - 3} more events
+                    </div>
                   )}
                 </div>
               </div>
@@ -922,12 +1106,12 @@ export default function Calendar() {
         </div>
 
         {/* Week grid */}
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           <div className="grid grid-cols-8">
             {/* Time column */}
             <div className="border-r border-gray-200">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 p-2 border-b border-gray-100 text-xs text-gray-500">
+                <div key={hour} className="h-12 p-2 border-b border-gray-100 text-xs text-gray-500">
                   {hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`}
                 </div>
               ))}
@@ -948,9 +1132,10 @@ export default function Calendar() {
                         <div
                           key={event.eventId}
                           onClick={() => handleEventClick(event)}
-                          className="text-xs p-1 rounded cursor-pointer hover:opacity-80 bg-blue-500 text-white truncate mb-1"
+                          className="text-xs px-2 py-1.5 rounded-md cursor-pointer bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-blue-200 transition-all duration-200 truncate shadow-sm group flex items-center gap-1.5"
                         >
-                          {event.title}
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-blue-600 transition-colors"></div>
+                          <span className="truncate">{event.title}</span>
                         </div>
                       ))}
                     </div>
@@ -989,12 +1174,12 @@ export default function Calendar() {
         </div>
 
         {/* Day schedule */}
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto">
           <div className="grid grid-cols-12">
             {/* Time column */}
             <div className="col-span-2 border-r border-gray-200">
               {hours.map((hour) => (
-                <div key={hour} className="h-16 p-2 border-b border-gray-100 text-xs text-gray-500">
+                <div key={hour} className="h-12 px-4 py-2 border-b border-gray-100 text-xs text-gray-500">
                   {hour === 0
                     ? "12:00 AM"
                     : hour < 12
@@ -1015,16 +1200,16 @@ export default function Calendar() {
                 })
 
                 return (
-                  <div key={hour} className="h-16 p-2 border-b border-gray-100">
+                  <div key={hour} className="h-12 p-2 border-b border-gray-100">
                     {hourEvents.map((event: CalendarEvent) => (
                       <div
                         key={event.eventId}
                         onClick={() => handleEventClick(event)}
-                        className="p-2 rounded cursor-pointer hover:opacity-80 bg-blue-500 text-white mb-1"
+                        className="p-2.5 rounded-md cursor-pointer bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 hover:from-blue-100 hover:to-blue-200 transition-all duration-200 mb-1.5 shadow-sm group"
                       >
-                        <div className="font-medium">{event.title}</div>
-                        <div className="text-xs opacity-90">
-                          {event.dueTime}
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-blue-600 transition-colors"></div>
+                          <div className="font-medium truncate">{event.title}</div>
                         </div>
                       </div>
                     ))}
@@ -1041,17 +1226,17 @@ export default function Calendar() {
   return (
     <div className="flex-1 overflow-auto bg-slate-50">
       <Toaster />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-4">
         {/* Header */}
-        <div className="mb-6">
-          <div className="p-6">
+        <div className="mb-4">
+          <div className="p-4">
             <h1 className="text-2xl font-semibold text-gray-800 tracking-tight mb-1">Calendar</h1>
             <p className="text-gray-500 text-sm">Plan, schedule, and manage your events efficiently</p>
           </div>
         </div>
 
         {/* Calendar Controls */}
-        <div className="mb-6 flex items-center justify-between bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        <div className="mb-4 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
               <button 
@@ -1117,31 +1302,58 @@ export default function Calendar() {
 
         {/* Event Detail Modal */}
         {showEventModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Event Details</h3>
-                <button onClick={() => setShowEventModal(false)} className="bg-gray-500 text-white p-1.5 rounded-lg flex items-center hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-indigo-500 to-indigo-600 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Event Details</h3>
+                </div>
+                <button 
+                  onClick={() => setShowEventModal(false)} 
+                  className="bg-gray-100 text-gray-500 p-2 rounded-lg flex items-center hover:bg-gray-200 hover:text-gray-700 transition-all duration-200"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-900">{selectedEvent.title}</h4>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Clock className="mr-1 h-4 w-4" />
-                    {selectedEvent.dueTime}
+                <div className="space-y-4">
+                {/* Title Section */}
+                <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/50 rounded-lg p-4 border border-indigo-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <h4 className="font-medium text-gray-900 text-lg">{selectedEvent.title}</h4>
                   </div>
                 </div>
 
-                {selectedEvent.description && (
-                  <div>
-                    <p className="text-sm text-gray-600">{selectedEvent.description}</p>
+                {/* Date & Time Section */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+                    <CalendarIcon className="h-5 w-5 text-indigo-500" />
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">Due Date</span>
+                      <span className="font-medium text-gray-900">{selectedEvent.dueDate}</span>
+                    </div>
                   </div>
-                )}
+                  <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+                    <Clock className="h-5 w-5 text-indigo-500" />
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">Due Time</span>
+                      <span className="font-medium text-gray-900">{selectedEvent.dueTime}</span>
+                    </div>
+                  </div>
+                </div>
 
-                <div className="flex space-x-3 pt-4">
+                {/* Description Section */}
+                {selectedEvent.description && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="h-4 w-4 text-indigo-500" />
+                      <span className="text-sm font-medium text-gray-700">Description</span>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed pl-6">{selectedEvent.description}</p>
+                  </div>
+                )}                <div className="flex space-x-3 pt-4">
                   <button 
                     onClick={() => handleEditEvent(selectedEvent)}
                     className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
@@ -1165,83 +1377,163 @@ export default function Calendar() {
         )}
 
         {/* Edit Event Modal */}
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && eventToDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)}></div>
+            <div className="relative bg-white rounded-xl overflow-hidden shadow-xl border border-red-100 w-full max-w-md mx-4 z-[61]">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-rose-500 to-red-600 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                    <Trash2 className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Confirm Deletion</h3>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 bg-gradient-to-b from-rose-50 to-white">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-rose-100 rounded-full">
+                    <AlertCircle className="h-5 w-5 text-rose-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-medium text-gray-900 mb-2">
+                      Are you sure you want to delete this event?
+                    </h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      This action will permanently remove "{eventToDelete.title}" from your calendar. 
+                      This cannot be undone.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 
+                      rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                      focus:ring-gray-500 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-rose-500 
+                      to-red-600 rounded-lg hover:from-rose-600 hover:to-red-700 focus:outline-none 
+                      focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200
+                      flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Event
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showEditModal && editingEvent && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 mt-8">
-            <div className="bg-white rounded-lg p-6 w-[650px] max-h-[80vh] mx-4 overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Edit Event</h3>
-                <button onClick={() => setShowEditModal(false)} className="bg-gray-500 text-white p-1.5 rounded-lg flex items-center hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
+            <div className="bg-white rounded-xl p-6 w-[650px] max-h-[80vh] mx-4 overflow-y-auto shadow-xl border border-gray-200/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Edit Event</h3>
+                </div>
+                <button 
+                  onClick={() => setShowEditModal(false)} 
+                  className="bg-gray-100 text-gray-500 p-2 rounded-lg flex items-center hover:bg-gray-200 hover:text-gray-700 transition-all duration-200"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Title</label>
                   <input
                     type="text"
                     value={editingEvent.title}
                     onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Event title"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200"
+                    placeholder="Enter event title"
                     disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                   <textarea
                     value={editingEvent.description || ''}
                     onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200"
                     rows={3}
-                    placeholder="Event description"
+                    placeholder="Add event description (optional)"
                     disabled={loading}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={editingEvent.dueDate}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={editingEvent.dueDate}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, dueDate: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200"
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Time</label>
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={editingEvent.dueTime}
+                        onChange={(e) => {
+                          const formattedTime = formatTimeString(e.target.value);
+                          setEditingEvent({ ...editingEvent, dueTime: formattedTime });
+                        }}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all duration-200"
+                        pattern="[0-2][0-9]:[0-5][0-9]"
+                        placeholder="HH:mm"
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Time</label>
-                  <input
-                    type="time"
-                    value={editingEvent.dueTime}
-                    onChange={(e) => {
-                      const formattedTime = formatTimeString(e.target.value);
-                      setEditingEvent({ ...editingEvent, dueTime: formattedTime });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    pattern="[0-2][0-9]:[0-5][0-9]"
-                    placeholder="HH:mm"
-                    disabled={loading}
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end items-center space-x-3 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => setShowEditModal(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-gray-600 transition-all duration-200 transform hover:scale-105"
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
                     disabled={loading}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-primary/90 transition-all duration-200 transform hover:scale-105"
+                    className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-sm font-medium shadow-sm transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading || !editingEvent.title || !editingEvent.dueDate || !editingEvent.dueTime}
                   >
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="w-4 h-4" />
+                        Save Changes
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1252,83 +1544,103 @@ export default function Calendar() {
         {/* Add Event Modal */}
         {showAddEvent && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 mt-8">
-            <div className="bg-white rounded-lg p-6 w-[650px] max-h-[80vh] mx-4 overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Add New Event</h3>
-                <button onClick={() => setShowAddEvent(false)} className="bg-gray-500 text-white p-1.5 rounded-lg flex items-center hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+            <div className="bg-white rounded-xl p-6 w-[650px] max-h-[80vh] mx-4 overflow-y-auto shadow-xl border border-gray-200/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Add New Event</h3>
+                </div>
+                <button 
+                  onClick={() => setShowAddEvent(false)} 
+                  className="bg-gray-100 text-gray-500 p-2 rounded-lg flex items-center hover:bg-gray-200 hover:text-gray-700 transition-all duration-200"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Title</label>
                   <input
                     type="text"
                     value={newEvent.title}
                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Event title"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                    placeholder="Enter event title"
                     disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                   <textarea
                     value={newEvent.description}
                     onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                     rows={3}
-                    placeholder="Event description"
+                    placeholder="Add event description (optional)"
                     disabled={loading}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={newEvent.dueDate}
-                    onChange={(e) => setNewEvent({ ...newEvent, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        value={newEvent.dueDate}
+                        onChange={(e) => setNewEvent({ ...newEvent, dueDate: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Time</label>
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={newEvent.dueTime}
+                        onChange={(e) => {
+                          const formattedTime = formatTimeString(e.target.value);
+                          setNewEvent({ ...newEvent, dueTime: formattedTime });
+                        }}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                        pattern="[0-2][0-9]:[0-5][0-9]"
+                        placeholder="HH:mm"
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Time</label>
-                  <input
-                    type="time"
-                    value={newEvent.dueTime}
-                    onChange={(e) => {
-                      const formattedTime = formatTimeString(e.target.value);
-                      setNewEvent({ ...newEvent, dueTime: formattedTime });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    pattern="[0-2][0-9]:[0-5][0-9]"
-                    placeholder="HH:mm"
-                    disabled={loading}
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end items-center space-x-3 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => setShowAddEvent(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-gray-600 transition-all duration-200 transform hover:scale-105"
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
                     disabled={loading}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAddEvent}
-                    className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-primary/90 transition-all duration-200 transform hover:scale-105"
+                    className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-medium shadow-sm transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading || !newEvent.title || !newEvent.dueDate || !newEvent.dueTime}
                   >
-                    {loading ? 'Adding...' : 'Add Event'}
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        Add Event
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
