@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserX, Shield, Users, Eye, Code, X, Search } from 'lucide-react';
 import api from "@/utils/api";
+import { useParams } from 'next/navigation';
 
 
 type MemberRole = 'MEMBER' | 'OWNER';
@@ -12,6 +13,7 @@ interface Member {
   email: string;
   avatar: string;
   role: MemberRole;
+  status?: 'ACCEPTED' | 'PENDING';
 }
 
 interface Supervisor {
@@ -31,12 +33,13 @@ interface SearchUser {
   avatar: string;
   type: 'member' | 'supervisor';
   projectId?: string;
-  position?: string;
+  role: string;
   status?: string;
 }
 
 
 const memberSearch = {
+  
   getUsers: async (query: string, type: 'member' | 'supervisor') => {
     try {
       const response = await api.get(
@@ -59,12 +62,43 @@ const memberSearch = {
       console.error("Error adding user:", error);
       throw error;
     }
-  }
+  },
+
+
+  getProjectMember: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborators/${projectId}`);
+      console.log('Collaborators data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
+      throw error;
+    }
+  },
+
+  removeProjectMember: async (projectId: string, userId: string) => {
+    try {
+      const response = await api.post(`/project-member/projects/remove-collaborator`, {
+        projectId,
+        userId,
+      });
+      console.log('Removed collaborator:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing collaborator:', error);
+      throw error;
+    }
+  },
+
 };
 
 
 
 const MembersAndTeams = () => {
+
+  const params = useParams();
+  const projectId = String(params?.id);
+  // console.log('Project ID:', projectId);
   const [members, setMembers] = useState<Member[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,20 +149,42 @@ const MembersAndTeams = () => {
 }, [searchQuery, modalType]); // ✅ added modalType
 
 
+useEffect(() => {
+  const fetchProjectMembers = async () => {
+    try {
+      const members = await memberSearch.getProjectMember(projectId ? projectId : '');
+      console.log('Project Members:', members);
+      setMembers(members);
+    } catch (error) {
+      console.error('Error fetching project members:', error);
+    }
+  };
+
+  fetchProjectMembers();
+}, []);
+
+
   const filteredUsers = searchUsers.filter((user: SearchUser) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const changeMemberRole = (id: string, newRole: MemberRole) => {
-    setMembers(members.map(member => 
-      member.id === id ? { ...member, role: newRole } : member
-    ));
-  };
+  // const changeMemberRole = (id: string, newRole: MemberRole) => {
+  //   setMembers(members.map(member => 
+  //     member.id === id ? { ...member, role: newRole } : member
+  //   ));
+  // };
 
   const removeMember = (id: string) => {
-    setMembers(members.filter(member => member.id !== id));
+    // Remove from backend
+    memberSearch.removeProjectMember(projectId, id)
+      .then(() => {
+        setMembers(members.filter(member => member.id !== id));
+      })
+      .catch((error) => {
+        console.error('Error removing member from backend:', error);
+      });
   };
 
   const removeSupervisor = (id: string) => {
@@ -179,10 +235,10 @@ const MembersAndTeams = () => {
         };
         setMembers(prev => [...prev, newMember]);
 
-        // Send to backend with required info
-        const url = window.location.pathname;
-        const match = url.match(/project-member\/projects\/(.*?)\//);
-        const projectId = match ? match[1] : null;
+        // // Send to backend with required info
+        // const url = window.location.pathname;
+        // const match = url.match(/project-member\/projects\/(.*?)\//);
+        // const projectId = match ? match[1] : null;
         if (projectId) {
           try {
             await memberSearch.addUser({
@@ -193,7 +249,7 @@ const MembersAndTeams = () => {
               avatar: user.avatar,
               type: user.type,
               projectId: projectId,
-              position: 'MEMBER',
+              role: 'MEMBER',
               status: 'PENDING',
             });
             console.log('User added to backend successfully:', user);
@@ -321,30 +377,54 @@ const MembersAndTeams = () => {
                     <p className="text-sm text-gray-600">{member.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <select
-                    value={member.role}
-                    onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="MEMBER">member</option>
-                    <option value="OWNER">Owner</option>
-                  </select>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMemberRoleColor(
-                      member.role
-                    )}`}
-                  >
-                    {getMemberRoleIcon(member.role)}
-                    <span className="ml-1 capitalize">{member.role}</span>
-                  </span>
-                  <button
-                    onClick={() => removeMember(member.id)}
-                    className="text-red-600 hover:text-red-800 transition-colors"
-                  >
-                    <UserX className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg transition">
+                    {/* Role dropdown + badge */}
+                    <div className="flex items-center space-x-3">
+                      {/* Dropdown
+                      <select
+                        value={member.role}
+                        onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
+                        className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="MEMBER">Member</option>
+                        <option value="OWNER">Owner</option>
+                      </select> */}
+
+                      {/* Role Badge */}
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium shadow-sm ${getMemberRoleColor(
+                          member.role
+                        )}`}
+                      >
+                        {getMemberRoleIcon(member.role)}
+                        <span className="ml-1 capitalize">{member.role.toLowerCase()}</span>
+                      </span>
+                    </div>
+
+                    {/* Status + Actions */}
+                    <div className="flex items-center space-x-3">
+                      {/* Status Badge */}
+                      {member.status && (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm
+                            ${member.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                        >
+                          {member.status === 'ACCEPTED' ? 'Approved' : 'Pending'}
+                        </span>
+                      )}
+
+                      {/* Remove Button */}
+                     {member.role !== 'OWNER' && (
+                       <button
+                         onClick={() => removeMember(member.id)}
+                         className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition"
+                       >
+                         <UserX className="w-4 h-4" />
+                       </button>
+                     )}
+                    </div>
+                  </div>
+
               </div>
             ))
           )}
