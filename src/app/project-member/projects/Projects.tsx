@@ -18,15 +18,6 @@ import Pagination from '@/components/Pagination';
 import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
 import { useAuth } from '@/contexts/AuthContext';
 
-
-
-// interface CreateProjectModalProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   onSubmit: (formData: { title: string; description: string; dueDate: string; priority: string}) => void;
-//   isLoading?: boolean;
-// }
-
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,140 +25,6 @@ interface DeleteConfirmationModalProps {
   projectName: string;
   isDeleting: boolean;
 }
-
-// const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     description: '',
-//     dueDate: '',
-//     priority: '',
-//   });
-
-//   const handleSubmit = () => {
-//     if (!formData.title.trim()) {
-//       alert('Project name is required');
-//       return;
-//     }
-//     onSubmit(formData);
-//     // Don't clear form here - let parent handle it after successful submission
-//   };
-
-//   const handleChange = (field: string, value: string) => {
-//     setFormData(prev => ({ ...prev, [field]: value }));
-//   };
-
-//   if (!isOpen) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center">
-//       {/* Backdrop */}
-//       <div 
-//         className="absolute inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm"
-//         onClick={onClose}
-//       />
-      
-//       {/* Modal */}
-//       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
-//         {/* Header */}
-//         <div className="flex items-center justify-between mb-6">
-//           <h2 className="text-xl font-semibold text-gray-900">Create New Project</h2>
-//           <button
-//             onClick={onClose}
-//             className="text-gray-400 hover:text-gray-600 transition-colors"
-//           >
-//             <X className="w-5 h-5" />
-//           </button>
-//         </div>
-
-//         {/* Form */}
-//         <div className="space-y-4">
-//           {/* Project Name */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Project Name *
-//             </label>
-//             <input
-//               type="text"
-//               value={formData.title}
-//               onChange={(e) => handleChange('title', e.target.value)}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-//               placeholder="Enter project name"
-//             />
-//           </div>
-
-//           {/* Description */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Description
-//             </label>
-//             <textarea
-//               value={formData.description}
-//               onChange={(e) => handleChange('description', e.target.value)}
-//               rows={3}
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-//               placeholder="Describe your project..."
-//             />
-//           </div>
-
-//           {/* Deadline */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Deadline
-//             </label>
-//             <div className="relative">
-//               <input
-//                 type="date"
-//                 value={formData.dueDate}
-//                 onChange={(e) => handleChange('dueDate', e.target.value)}
-//                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-//               />
-//               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-//             </div>
-//           </div>
-
-//           {/* Priority */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Priority (Optional)
-//             </label>
-//             <div className="relative">
-//               <select
-//                 value={formData.priority}
-//                 onChange={(e) => handleChange('priority', e.target.value)}
-//                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white"
-//               >
-//                 <option value="">Select priority</option>
-//                 <option value="LOW">Low</option>
-//                 <option value="MEDIUM">Medium</option>
-//                 <option value="HIGH">High</option>
-//                 <option value="urgent">Urgent</option>
-//               </select>
-//               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-//             </div>
-//           </div>
-
-//           {/* Form Actions */}
-//           <div className="flex gap-3 pt-4">
-//             <button
-//               onClick={onClose}
-//               disabled={isLoading}
-//               className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               onClick={handleSubmit}
-//               disabled={isLoading}
-//               className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-//             >
-//               {isLoading ? 'Creating...' : 'Create Project'}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ 
   isOpen, 
@@ -277,7 +134,7 @@ const ProjectsTable: React.FC = () => {
     try {
       setIsLoadingProjects(true);
       setProjectsError(null);
-      const projects = await projectApi.getProjects();
+      const projects = await projectApi.getProjects(user?.id || '');
       setBackendProjects(projects);
       console.log('Fetched projects:', projects);
     } catch (error: any) {
