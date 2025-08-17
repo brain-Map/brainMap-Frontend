@@ -225,34 +225,38 @@ const MembersAndTeams = () => {
           <p className="text-sm text-gray-600 mt-1">Supervisors who oversee project progress and team management</p>
         </div>
         <div className="divide-y divide-gray-200">
-          {supervisors.map((supervisor) => (
-            <div key={supervisor.id} className="p-6 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-medium">
-                  {supervisor.avatar}
+          {supervisors.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">No supervisor available</div>
+          ) : (
+            supervisors.map((supervisor) => (
+              <div key={supervisor.id} className="p-6 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-medium">
+                    {supervisor.avatar}
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">{supervisor.name}</p>
+                    <p className="text-sm text-gray-600">{supervisor.email}</p>
+                    {supervisor.department && (
+                      <p className="text-xs text-gray-500 mt-1">Department: {supervisor.department}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">{supervisor.name}</p>
-                  <p className="text-sm text-gray-600">{supervisor.email}</p>
-                  {supervisor.department && (
-                    <p className="text-xs text-gray-500 mt-1">Department: {supervisor.department}</p>
-                  )}
+                <div className="flex items-center space-x-3">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Supervisor
+                  </span>
+                  <button
+                    onClick={() => removeSupervisor(supervisor.id)}
+                    className="text-red-600 hover:text-red-800 transition-colors"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Supervisor
-                </span>
-                <button
-                  onClick={() => removeSupervisor(supervisor.id)}
-                  className="text-red-600 hover:text-red-800 transition-colors"
-                >
-                  <UserX className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -266,44 +270,48 @@ const MembersAndTeams = () => {
           <p className="text-sm text-gray-600 mt-1">Team members with different access levels to this project</p>
         </div>
         <div className="divide-y divide-gray-200">
-          {members.map((member) => (
-            <div key={member.id} className="p-6 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                  {member.avatar}
+          {members.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">No member available</div>
+          ) : (
+            members.map((member) => (
+              <div key={member.id} className="p-6 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                    {member.avatar}
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">{member.name}</p>
+                    <p className="text-sm text-gray-600">{member.email}</p>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                  <p className="text-sm text-gray-600">{member.email}</p>
+                <div className="flex items-center space-x-3">
+                  <select
+                    value={member.role}
+                    onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
+                    className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="viewer">Viewer</option>
+                    <option value="developer">Developer</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMemberRoleColor(
+                      member.role
+                    )}`}
+                  >
+                    {getMemberRoleIcon(member.role)}
+                    <span className="ml-1 capitalize">{member.role}</span>
+                  </span>
+                  <button
+                    onClick={() => removeMember(member.id)}
+                    className="text-red-600 hover:text-red-800 transition-colors"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <select
-                  value={member.role}
-                  onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="viewer">Viewer</option>
-                  <option value="developer">Developer</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMemberRoleColor(
-                    member.role
-                  )}`}
-                >
-                  {getMemberRoleIcon(member.role)}
-                  <span className="ml-1 capitalize">{member.role}</span>
-                </span>
-                <button
-                  onClick={() => removeMember(member.id)}
-                  className="text-red-600 hover:text-red-800 transition-colors"
-                >
-                  <UserX className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
