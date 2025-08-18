@@ -61,7 +61,7 @@ export default function AdminDashboard() {
     userCount: 0,
     activeProjects: 0,
     pendingDomainExperts: 0,
-    openIsquiries: 0
+    openIsquiries: 0,
   });
 
   const dashboardCards: DashboardCard[] = [
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/admin/dashboard/status`);
+        const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/admin/dashboard/overview`);
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard status');
         }

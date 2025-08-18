@@ -23,86 +23,74 @@ import {
 const registrationData = [
   {
     month: "Jan 2024",
-    students: 45,
+    members: 45,
     experts: 8,
-    moderators: 1,
     total: 54,
   },
   {
     month: "Feb 2024",
-    students: 62,
+    members: 62,
     experts: 12,
-    moderators: 0,
     total: 74,
   },
   {
     month: "Mar 2024",
-    students: 78,
+    members: 78,
     experts: 15,
-    moderators: 2,
     total: 95,
   },
   {
     month: "Apr 2024",
-    students: 89,
+    members: 89,
     experts: 18,
-    moderators: 1,
     total: 108,
   },
   {
     month: "May 2024",
-    students: 134,
+    members: 134,
     experts: 22,
-    moderators: 3,
     total: 159,
   },
   {
     month: "Jun 2024",
-    students: 156,
+    members: 156,
     experts: 19,
-    moderators: 1,
     total: 176,
   },
   {
     month: "Jul 2024",
-    students: 142,
+    members: 142,
     experts: 25,
-    moderators: 2,
     total: 169,
   },
   {
     month: "Aug 2024",
-    students: 178,
+    members: 178,
     experts: 28,
-    moderators: 1,
     total: 207,
   },
   {
     month: "Sep 2024",
-    students: 195,
+    members: 195,
     experts: 31,
-    moderators: 2,
     total: 228,
   },
   {
     month: "Oct 2024",
-    students: 167,
+    members: 167,
     experts: 24,
-    moderators: 1,
     total: 192,
   },
   {
     month: "Nov 2024",
-    students: 189,
+    members: 189,
     experts: 29,
-    moderators: 3,
     total: 221,
   },
   {
     month: "Dec 2024",
-    students: 203,
+    members: 203,
     experts: 33,
-    moderators: 2,
     total: 238,
   },
 ];
@@ -200,15 +188,15 @@ export class CountChart extends Component {
                     name="Total Registrations"
                   />
 
-                  {/* Students line */}
+                  {/* members line */}
                   <Line
                     type="monotone"
-                    dataKey="students"
+                    dataKey="members"
                     stroke="#7091E6"
                     strokeWidth={2}
                     dot={{ fill: "#7091E6", strokeWidth: 2, r: 3 }}
                     activeDot={{ r: 5, stroke: "#7091E6", strokeWidth: 2 }}
-                    name="Students"
+                    name="Project Memberss"
                   />
 
                   {/* Domain Experts line */}
@@ -220,17 +208,6 @@ export class CountChart extends Component {
                     dot={{ fill: "#F4D06F", strokeWidth: 2, r: 3 }}
                     activeDot={{ r: 5, stroke: "#F4D06F", strokeWidth: 2 }}
                     name="Domain Experts"
-                  />
-
-                  {/* Moderators line */}
-                  <Line
-                    type="monotone"
-                    dataKey="moderators"
-                    stroke="#FF6B6B"
-                    strokeWidth={2}
-                    dot={{ fill: "#FF6B6B", strokeWidth: 2, r: 3 }}
-                    activeDot={{ r: 5, stroke: "#FF6B6B", strokeWidth: 2 }}
-                    name="Moderators"
                   />
                 </LineChart>
               </ResponsiveContainer>

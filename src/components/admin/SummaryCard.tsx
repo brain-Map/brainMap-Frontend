@@ -20,10 +20,6 @@ const SummaryCard: React.FC<DashboardCardProps> = ({ title, value, change, icon,
           {icon}
         </div>
       </div>
-      <div className="mt-4">
-        <span className="text-sm font-medium text-green-600">{change}</span>
-        <span className="text-sm text-gray-600"> from last month</span>
-      </div>
     </div>
   );
 };
