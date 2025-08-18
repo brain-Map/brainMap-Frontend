@@ -298,22 +298,21 @@ export default function FeedbackPage() {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen max-w-7xl mx-auto">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between mb-8">
+      {/* Simple Notes-style Header */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l2.036 6.29a1 1 0 00.95.69h6.631c.969 0 1.371 1.24.588 1.81l-5.37 3.905a1 1 0 00-.364 1.118l2.036 6.29c.3.921-.755 1.688-1.538 1.118l-5.37-3.905a1 1 0 00-1.175 0l-5.37 3.905c-.783.57-1.838-.197-1.538-1.118l2.036-6.29a1 1 0 00-.364-1.118L2.293 11.717c-.783-.57-.38-1.81.588-1.81h6.631a1 1 0 00.95-.69l2.036-6.29z" /></svg>
-            Mentor Feedback & Ratings
-          </h1>
-          <p className="text-gray-600 mt-1">View, add, and manage your feedbacks for hired domain experts</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Mentor Feedback & Ratings</h1>
+          <p className="text-gray-500 text-sm">View, add, and manage your feedbacks for hired domain experts</p>
         </div>
-        <input
-          type="text"
-          placeholder="Search reviews..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border border-slate-300 rounded px-3 py-2 w-64 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
-        />
+        <div className="mt-2 md:mt-0">
+          <input
+            type="text"
+            placeholder="Search reviews..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="border border-slate-300 rounded px-3 py-2 w-full md:w-64 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-gray-900 bg-white"
+          />
+        </div>
       </div>
       {message && (
         <div className={`mb-4 px-4 py-2 rounded ${message.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{message.text}</div>

@@ -57,7 +57,7 @@ export interface ProjectResponse {
   priority?: string;
   type?: string;
   status?: string;
-  createdAt?: string;
+  createdAt: string;
   lead?: {
     id: string;
     name: string;
@@ -66,13 +66,13 @@ export interface ProjectResponse {
   userName?: string; // Assuming this is the name of the user who created the project
 }
 
-// Project API functions
+
 export const projectApi = {
 
   // Create a new project
   createProject: async (projectData: CreateProjectRequest): Promise<ProjectResponse> => {
     try {
-      const response = await api.post('/project-member/projects', projectData);
+      const response = await api.post('/project-member/projects/', projectData);
       return response.data;
     } catch (error) {
       console.error('Error creating project:', error);
@@ -81,9 +81,9 @@ export const projectApi = {
   },
 
   // Get all projects
-  getProjects: async (): Promise<ProjectResponse[]> => {
+  getProjects: async (userId: string): Promise<ProjectResponse[]> => {
     try {
-      const response = await api.get('/project-member/projects');
+      const response = await api.get(`/project-member/projects/all/${userId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching projects:', error);

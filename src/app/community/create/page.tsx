@@ -29,6 +29,8 @@ import {
   ListOrdered,
   Quote,
   Hash,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react"
 import { title } from "process"
 import { communityApi, CreatePostRequest } from "@/services/communityApi"
@@ -82,6 +84,8 @@ export default function BrainMapCommunityPost() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showNotification, setShowNotification] = useState(false)
 
 
   const handleAddTag = (tag: string) => {
@@ -105,10 +109,13 @@ export default function BrainMapCommunityPost() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     setError('')
+    setSuccessMessage('')
 
     try {
       if (!post.title.trim() || !post.content.trim()) {
         setError("All required fields must be filled")
+        setShowNotification(true)
+        setTimeout(() => setShowNotification(false), 5000)
         setIsSubmitting(false)
         return
       }
@@ -125,11 +132,21 @@ export default function BrainMapCommunityPost() {
       const response = await communityApi.createPost(postData)
       
       console.log('Post Created Successfully:', response)
-      router.push(`/community/post/${response.communityPostId}`)
+      
+      // Show success message
+      setSuccessMessage('Post published successfully!')
+      setShowNotification(true)
+      
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        router.push(`/community/post/${response.communityPostId}`)
+      }, 2000)
       
     } catch (err: any) {
       console.error("Error creating post:", err)
-      setError(err.response?.data?.message || 'An error occurred while creating the post. Please try again.')
+      setError(err.response?.data?.message || 'Failed to publish post. Please check your connection and try again.')
+      setShowNotification(true)
+      setTimeout(() => setShowNotification(false), 5000)
     } finally {
       setIsSubmitting(false)
     }
@@ -244,9 +261,38 @@ export default function BrainMapCommunityPost() {
 
   return (
     <div className="min-h-screen bg-white mt-5">
-      
-
-
+      {/* Notification Toast */}
+      {showNotification && (successMessage || error) && (
+        <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-md ${
+            successMessage 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            {successMessage ? (
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className="font-medium text-sm">
+                {successMessage || error}
+              </p>
+              {successMessage && (
+                <p className="text-xs mt-1 opacity-75">
+                  Redirecting to your post...
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setShowNotification(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center">
@@ -507,15 +553,38 @@ Be descriptive and helpful to get the best engagement from the community!"
             </Card>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                onClick={() => handleSubmit()}
-                disabled={isSubmitting || !post.title.trim() || !post.content.trim()}
-                className="bg-primary hover:bg-secondary text-white hover:text-black gap-2"
-              >
-                <Send className="w-4 h-4" />
-                {isSubmitting ? "Publishing..." : "Publish Post"}
-              </Button>
+            <div className="space-y-4">
+              {/* Error Display */}
+              {error && !showNotification && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">Publishing Failed</p>
+                        <p className="text-sm text-red-700 mt-1">{error}</p>
+                      </div>
+                      <button
+                        onClick={() => setError('')}
+                        className="text-red-400 hover:text-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  onClick={() => handleSubmit()}
+                  disabled={isSubmitting || !post.title.trim() || !post.content.trim()}
+                  className="bg-primary hover:bg-secondary text-white hover:text-black gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  {isSubmitting ? "Publishing..." : "Publish Post"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

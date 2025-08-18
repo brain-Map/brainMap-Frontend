@@ -70,11 +70,8 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     email: 'nadun.madusanka@university.edu',
     phone: '+1 (555) 123-4567',
     location: 'San Francisco, CA',
-    institution: 'Stanford University',
-    department: 'Computer Science',
-    degree: 'PhD in Machine Learning',
-    yearOfStudy: '3rd Year',
-    supervisor: 'Dr. Sarah Chen',
+    dateOfBirth: '',
+    gender: '',
     bio: 'PhD student specializing in machine learning and AI ethics. Passionate about developing ethical AI systems for healthcare applications.',
     researchInterests: ['Machine Learning', 'AI Ethics', 'Healthcare AI', 'Computer Vision', 'NLP'],
     avatar: '/image/user.jpg'
@@ -263,6 +260,29 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={profileData.dateOfBirth}
+                      onChange={(e) => handleProfileUpdate('dateOfBirth', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                    <select
+                      value={profileData.gender}
+                      onChange={(e) => handleProfileUpdate('gender', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Contact Information */}
@@ -293,64 +313,11 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </div>
                 </div>
 
-                {/* Academic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Institution</label>
-                    <div className="relative">
-                      <Building size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        value={profileData.institution}
-                        onChange={(e) => handleProfileUpdate('institution', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <input
-                      type="text"
-                      value={profileData.department}
-                      onChange={(e) => handleProfileUpdate('department', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                </div>
+                {/* ...existing code... */}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Degree Program</label>
-                    <div className="relative">
-                      <GraduationCap size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        value={profileData.degree}
-                        onChange={(e) => handleProfileUpdate('degree', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Year of Study</label>
-                    <select
-                      value={profileData.yearOfStudy}
-                      onChange={(e) => handleProfileUpdate('yearOfStudy', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                      <option value="Masters">Masters</option>
-                      <option value="PhD">PhD</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Bio */}
+                {/* About Me */}
                 <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">About Me</label>
                   <textarea
                     value={profileData.bio}
                     onChange={(e) => handleProfileUpdate('bio', e.target.value)}
