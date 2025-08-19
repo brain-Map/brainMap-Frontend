@@ -22,9 +22,6 @@ interface ExpertCardProps {
     avatar?: string
     rating: number
     reviewCount: number
-    location: string
-    yearsExperience: number
-    clientsServed: number
   }
 }
 
@@ -100,22 +97,7 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
                   <span className="font-medium text-gray-900">{mentorData.rating}</span>
                   <span>({mentorData.reviewCount})</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{mentorData.location}</span>
-                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="font-bold text-2xl text-blue-600 mb-1">{mentorData.yearsExperience}+</div>
-              <div className="text-gray-600 text-sm font-medium">Years Experience</div>
-            </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="font-bold text-2xl text-green-600 mb-1">{mentorData.clientsServed}+</div>
-              <div className="text-gray-600 text-sm font-medium">Sessions Completed</div>
             </div>
           </div>
 

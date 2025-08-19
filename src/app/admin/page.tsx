@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/admin/dashboard/overview`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/admin/dashboard/overview`);
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard status');
         }
