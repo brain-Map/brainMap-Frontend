@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { cn } from "@/lib/utils";
 import { 
   User, 
   Bell, 
@@ -25,13 +26,10 @@ import {
   Edit3,
   CheckCircle,
   AlertCircle,
-  Moon,
-  Sun,
-  Monitor,
-  Clock,
   Volume2,
   VolumeX,
-  Plus
+  Plus,
+  AlertTriangle
 } from 'lucide-react';
 
 interface SettingsProps {}
@@ -39,7 +37,6 @@ interface SettingsProps {}
 const SettingsPage: React.FC<SettingsProps> = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isUploading, setIsUploading] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [newInterest, setNewInterest] = useState('');
   const [notifications, setNotifications] = useState({
@@ -156,57 +153,63 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy', icon: Shield },
     { id: 'account', label: 'Account', icon: Settings },
-    { id: 'appearance', label: 'Appearance', icon: Eye }
+    { id: 'reports', label: 'Reports', icon: AlertTriangle }
   ];
 
   const SettingsTab = ({ id, label, icon: Icon, isActive, onClick }: any) => (
     <button
       onClick={() => onClick(id)}
-      className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-all duration-200 ${
+      className={cn(
+        'w-full flex items-center gap-x-3 px-3 py-2 text-sm transition-colors',
         isActive
-          ? 'bg-primary text-white shadow-lg'
-          : 'text-gray-600 hover:bg-value3 hover:text-primary'
-      }`}
+          ? 'bg-gray-100/80 text-gray-900 font-medium'
+          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/50'
+      )}
     >
-      <Icon size={20} />
-      <span className="font-medium">{label}</span>
+      <Icon className="h-4 w-4" />
+      {label}
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">Manage your account, preferences, and privacy settings</p>
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Header */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-5">
+            <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+            <p className="mt-1 text-sm text-gray-500">Manage your account, preferences, and privacy settings</p>
+          </div>
         </div>
+      </div>
 
-        <div className="flex gap-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex bg-white min-h-[calc(100vh-5rem)]">
           {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <nav className="space-y-2">
-                {settingsTabs.map((tab) => (
-                  <SettingsTab
-                    key={tab.id}
-                    id={tab.id}
-                    label={tab.label}
-                    icon={tab.icon}
-                    isActive={activeTab === tab.id}
-                    onClick={setActiveTab}
-                  />
-                ))}
-              </nav>
-            </div>
+          <div className="w-64 flex-shrink-0 border-r border-gray-200">
+            <nav className="p-2 sticky top-0">
+              {settingsTabs.map((tab) => (
+                <SettingsTab
+                  key={tab.id}
+                  id={tab.id}
+                  label={tab.label}
+                  icon={tab.icon}
+                  isActive={activeTab === tab.id}
+                  onClick={setActiveTab}
+                />
+              ))}
+            </nav>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 bg-gray-50/50">
+            <div className="p-8 max-w-4xl">
             {/* Profile Settings */}
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+                </div>
                 
                 {/* Avatar Section */}
                 <div className="mb-8">
@@ -631,15 +634,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           Export Data
                         </button>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-red-900">Delete Account</p>
-                          <p className="text-sm text-red-600">Permanently delete your account and all associated data</p>
-                        </div>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                          Delete Account
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -708,157 +702,153 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     </div>
                   </div>
 
-                  {/* Login Activity */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Login Activity</h3>
-                    <div className="space-y-3">
-                      {[
-                        { device: 'MacBook Pro', location: 'San Francisco, CA', time: '2 hours ago', current: true },
-                        { device: 'iPhone 13', location: 'San Francisco, CA', time: '1 day ago', current: false },
-                        { device: 'Chrome Browser', location: 'San Francisco, CA', time: '3 days ago', current: false }
-                      ].map((session, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div>
-                              <p className="font-medium text-gray-900">{session.device}</p>
-                              <p className="text-sm text-gray-500">{session.location} • {session.time}</p>
-                            </div>
-                          </div>
-                          {session.current && (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Current</span>
-                          )}
+                  {/* Delete Account */}
+                  <div className="mt-12 pt-8">
+                    <h3 className="text-lg font-medium text-red-600 mb-4">Delete Account</h3>
+                    <div className="bg-red-50 rounded-lg p-4">
+                      <p className="text-red-800 font-medium mb-2">Warning: This action is irreversible</p>
+                      <p className="text-red-600 text-sm mb-4">Deleting your account will permanently remove all your data including:</p>
+                      <ul className="list-disc list-inside text-red-600 text-sm mb-6 space-y-1">
+                        <li>All your projects and research work</li>
+                        <li>Messages and communication history</li>
+                        <li>Expert connections and mentorship history</li>
+                        <li>Personal settings and preferences</li>
+                      </ul>
+                      <div className="flex flex-col space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-red-700 mb-2">
+                            Type "DELETE" to confirm
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="Type DELETE in capitals"
+                          />
                         </div>
-                      ))}
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full sm:w-auto">
+                          Permanently Delete Account
+                        </button>
+                      </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  {/* Connected Services */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Connected Services</h3>
-                    <div className="space-y-3">
+            {/* Reports Section */}
+            {activeTab === 'reports' && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium text-gray-900">Reports Management</h2>
+                  <button className="inline-flex items-center px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                    <AlertTriangle size={14} className="mr-2" />
+                    Submit New Report
+                  </button>
+                </div>
+
+                <div className="mt-6 space-y-6">
+                  {/* Reports Made by You */}
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-base font-medium text-gray-900">Reports Created by You</h3>
+                    </div>
+                    <div className="p-4 space-y-2">
                       {[
-                        { service: 'Google Drive', status: 'Connected', color: 'green' },
-                        { service: 'Dropbox', status: 'Not Connected', color: 'gray' },
-                        { service: 'OneDrive', status: 'Connected', color: 'green' },
-                        { service: 'GitHub', status: 'Not Connected', color: 'gray' }
-                      ].map((service, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-3 h-3 rounded-full ${service.color === 'green' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                            <span className="font-medium text-gray-900">{service.service}</span>
+                        { 
+                          title: 'Inappropriate Content in Project Discussion',
+                          reportedUser: 'john.doe',
+                          date: '2025-08-15',
+                          status: 'Under Review',
+                          statusColor: 'yellow'
+                        },
+                        { 
+                          title: 'Harassment in Chat',
+                          reportedUser: 'user123',
+                          date: '2025-08-10',
+                          status: 'Resolved',
+                          statusColor: 'green'
+                        },
+                        { 
+                          title: 'Spam Messages',
+                          reportedUser: 'spammer99',
+                          date: '2025-08-05',
+                          status: 'Closed',
+                          statusColor: 'gray'
+                        }
+                      ].map((report, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                          <div className="flex-grow">
+                            <div className="flex items-center gap-3 mb-1">
+                              <p className="font-medium text-gray-900">{report.title}</p>
+                              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
+                                report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {report.status}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">Reported user: @{report.reportedUser}</p>
+                            <p className="text-sm text-gray-500">Submitted on {report.date}</p>
                           </div>
-                          <button className={`px-4 py-2 rounded-lg transition-colors ${
-                            service.status === 'Connected' 
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                              : 'bg-primary text-white hover:bg-secondary hover:text-black'
-                          }`}>
-                            {service.status === 'Connected' ? 'Disconnect' : 'Connect'}
+                          <button className="ml-4 px-3 py-1.5 text-sm text-primary hover:bg-primary hover:text-white rounded-md border border-primary transition-colors">
+                            View Details
                           </button>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
 
-            {/* Appearance Settings */}
-            {activeTab === 'appearance' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Appearance Settings</h2>
-                
-                <div className="space-y-8">
-                  {/* Theme */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Theme</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[
-                        { id: 'light', label: 'Light', icon: Sun, description: 'Clean and bright interface' },
-                        { id: 'dark', label: 'Dark', icon: Moon, description: 'Easy on the eyes' },
-                        { id: 'system', label: 'System', icon: Monitor, description: 'Match your device settings' }
-                      ].map((theme) => (
-                        <label key={theme.id} className="relative cursor-pointer">
-                          <input
-                            type="radio"
-                            name="theme"
-                            value={theme.id}
-                            checked={theme.id === 'light'}
-                            className="sr-only"
-                          />
-                          <div className={`p-4 border-2 rounded-lg transition-all ${
-                            theme.id === 'light' 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}>
-                            <div className="flex items-center space-x-3 mb-2">
-                              <theme.icon size={20} className="text-gray-600" />
-                              <span className="font-medium text-gray-900">{theme.label}</span>
-                            </div>
-                            <p className="text-sm text-gray-500">{theme.description}</p>
-                          </div>
-                        </label>
-                      ))}
+                  {/* Reports Against You */}
+                  <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-base font-medium text-gray-900">Reports Against You</h3>
                     </div>
-                  </div>
-
-                  {/* Timezone */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Timezone</h3>
-                    <select className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                      <option value="pst">Pacific Standard Time</option>
-                      <option value="mst">Mountain Standard Time</option>
-                      <option value="cst">Central Standard Time</option>
-                      <option value="est">Eastern Standard Time</option>
-                      <option value="utc">UTC</option>
-                    </select>
-                  </div>
-
-                  {/* Accessibility */}
-                  {/* <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Accessibility</h3>
-                    <div className="space-y-4">
+                    <div className="p-4 space-y-2">
                       {[
-                        { key: 'largeText', label: 'Large Text', description: 'Increase font size for better readability' },
-                        { key: 'highContrast', label: 'High Contrast', description: 'Increase color contrast for better visibility' },
-                        { key: 'reduceMotion', label: 'Reduce Motion', description: 'Minimize animations and transitions' },
-                        { key: 'screenReader', label: 'Screen Reader Support', description: 'Optimize for screen reader compatibility' }
-                      ].map(({ key, label, description }) => (
-                        <div key={key} className="flex items-center justify-between py-2">
-                          <div>
-                            <p className="font-medium text-gray-900">{label}</p>
-                            <p className="text-sm text-gray-500">{description}</p>
+                        { 
+                          title: 'Code of Conduct Violation',
+                          reportedBy: 'moderator',
+                          date: '2025-08-12',
+                          status: 'Dismissed',
+                          statusColor: 'gray',
+                          response: 'No violation found after review.'
+                        }
+                      ].map((report, index) => (
+                        <div key={index} className="p-3 bg-gray-50 rounded-md">
+                          <div className="flex items-center gap-3 mb-1">
+                            <p className="font-medium text-gray-900">{report.title}</p>
+                            <span className={`px-2 py-0.5 text-xs rounded-full ${
+                              report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
+                              report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {report.status}
+                            </span>
                           </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only"
-                            />
-                            <div className="w-11 h-6 rounded-full bg-gray-200 relative transition-colors">
-                              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
+                          <p className="text-sm text-gray-600">Reported by: @{report.reportedBy}</p>
+                          <p className="text-sm text-gray-500">Reported on {report.date}</p>
+                          {report.response && (
+                            <div className="mt-2 p-2 bg-white rounded border border-gray-200">
+                              <p className="text-sm text-gray-700">{report.response}</p>
                             </div>
-                          </label>
+                          )}
                         </div>
                       ))}
+                      {/* Empty State */}
+                      {/* <div className="text-center py-6 bg-gray-50 rounded-md">
+                        <p className="text-gray-500">No reports have been filed against you.</p>
+                      </div> */}
                     </div>
-                  </div> */}
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end mt-8">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
+                  </div>
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
