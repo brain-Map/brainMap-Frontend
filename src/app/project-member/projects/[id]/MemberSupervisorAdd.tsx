@@ -127,7 +127,7 @@ const MembersAndTeams = () => {
           name: fullName || u.username || u.email,
           username: u.username || u.email.split("@")[0],
           email: u.email,
-          avatar: (u.firstName?.charAt(0) || u.username?.charAt(0) || u.email.charAt(0)).toUpperCase(),
+          avatar: u.avatar,
           type: modalType,  // ✅ set type according to modal
         };
       });
@@ -369,9 +369,21 @@ useEffect(() => {
             members.map((member) => (
               <div key={member.id} className="p-6 flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                    {member.avatar}
-                  </div>
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {member.avatar ? (
+                            <img
+                              src={member.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
+                        </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-900">{member.name}</p>
                     <p className="text-sm text-gray-600">{member.email}</p>
@@ -473,8 +485,20 @@ useEffect(() => {
                       className="flex items-center justify-between p-3 bg-blue-900 border border-blue-700 rounded"
                     >
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
-                          {user.avatar}
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate">
@@ -508,9 +532,21 @@ useEffect(() => {
                       onClick={() => selectUser(user)}
                       className="flex items-center p-3 hover:bg-gray-700 transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-medium text-sm mr-3">
-                        {user.avatar}
-                      </div>
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
+                        </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">
                           {user.name}
