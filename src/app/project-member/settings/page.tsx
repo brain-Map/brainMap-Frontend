@@ -29,7 +29,8 @@ import {
   Volume2,
   VolumeX,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 
 interface SettingsProps {}
@@ -39,6 +40,16 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [newInterest, setNewInterest] = useState('');
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    reportType: '',
+    reportedUser: '',
+    evidence: null as File | null,
+    description: '',
+    title: ''
+  });
+  
+  const [reportFilter, setReportFilter] = useState('all');
   const [notifications, setNotifications] = useState({
     email: {
       projectUpdates: true,
@@ -126,6 +137,21 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     // Show success message
   };
 
+  const handleReportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically send the report to your backend
+    console.log('Report submitted:', reportForm);
+    setShowReportForm(false);
+    // Reset form
+    setReportForm({
+      reportType: '',
+      reportedUser: '',
+      evidence: null,
+      description: '',
+      title: ''
+    });
+  };
+
   const handleAddInterest = () => {
     if (newInterest.trim() && !profileData.researchInterests.includes(newInterest.trim())) {
       const updatedInterests = [...profileData.researchInterests, newInterest.trim()];
@@ -186,7 +212,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex bg-white min-h-[calc(100vh-5rem)]">
           {/* Sidebar */}
-          <div className="w-64 flex-shrink-0 border-r border-gray-200">
+          <div className="w-48 flex-shrink-0 border-r border-gray-200">
             <nav className="p-2 sticky top-0">
               {settingsTabs.map((tab) => (
                 <SettingsTab
@@ -740,60 +766,259 @@ const SettingsPage: React.FC<SettingsProps> = () => {
               <div>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-medium text-gray-900">Reports Management</h2>
-                  <button className="inline-flex items-center px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                  <button 
+                    onClick={() => setShowReportForm(true)} 
+                    className="inline-flex items-center px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
+                  >
                     <AlertTriangle size={14} className="mr-2" />
                     Submit New Report
                   </button>
                 </div>
 
+                {/* Report Form */}
+                {showReportForm && (
+                  <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">Submit New Report</h3>
+                      <button 
+                        onClick={() => setShowReportForm(false)}
+                        className="text-gray-400 hover:text-gray-500"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    {/* Warning Note */}
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-start">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
+                        <div>
+                          <h4 className="text-sm font-medium text-yellow-800">Important Notice</h4>
+                          <p className="mt-1 text-sm text-yellow-700">
+                            Please note that once submitted, reports cannot be edited or deleted. Make sure all information is accurate before submitting.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleReportSubmit} className="space-y-6">
+                      {/* Title */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={reportForm.title}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, title: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Brief title for your report"
+                        />
+                      </div>
+                      
+                      {/* Report Type */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Report Type
+                        </label>
+                        <select
+                          value={reportForm.reportType}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, reportType: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                          <option value="">Select a report type</option>
+                          <option value="harassment">Harassment</option>
+                          <option value="inappropriate-content">Inappropriate Content</option>
+                          <option value="spam">Spam</option>
+                          <option value="impersonation">Impersonation</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+
+                      {/* Reported User */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Who are you reporting against?
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter username or full name"
+                          value={reportForm.reportedUser}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, reportedUser: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        />
+                      </div>
+
+                      {/* Evidence Upload */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Evidence
+                        </label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                          <div className="space-y-1 text-center">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="flex text-sm text-gray-600">
+                              <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-secondary">
+                                <span>Upload a file</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="sr-only"
+                                  onChange={(e) => setReportForm(prev => ({ 
+                                    ...prev, 
+                                    evidence: e.target.files ? e.target.files[0] : null 
+                                  }))}
+                                />
+                              </label>
+                              <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              PNG, JPG, GIF up to 10MB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea
+                          rows={4}
+                          placeholder="Please provide detailed information about the incident..."
+                          value={reportForm.description}
+                          onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        />
+                      </div>
+
+                      {/* Submit and Cancel Buttons */}
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowReportForm(false)}
+                          className="inline-flex items-center px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
+                        >
+                          Submit Report
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
                 <div className="mt-6 space-y-6">
                   {/* Reports Made by You */}
                   <div className="bg-white rounded-lg border border-gray-200">
                     <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-base font-medium text-gray-900">Reports Created by You</h3>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-medium text-gray-900">Reports Created by You</h3>
+                        <div className="flex items-center space-x-2">
+                          <select 
+                            value={reportFilter}
+                            onChange={(e) => setReportFilter(e.target.value)}
+                            className="text-sm border-gray-200 rounded-md p-1"
+                          >
+                            <option value="all">All Reports</option>
+                            <option value="active">Active</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="dismissed">Dismissed</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-4 space-y-2">
+                    <div className="p-4 space-y-3">
                       {[
-                        { 
+                        {
                           title: 'Inappropriate Content in Project Discussion',
                           reportedUser: 'john.doe',
                           date: '2025-08-15',
                           status: 'Under Review',
-                          statusColor: 'yellow'
+                          statusColor: 'yellow',
+                          type: 'Content',
+                          lastUpdate: '2025-08-16',
+                          description: 'Posted inappropriate content in the project discussion board.',
+                          id: '1'
                         },
                         { 
                           title: 'Harassment in Chat',
                           reportedUser: 'user123',
                           date: '2025-08-10',
                           status: 'Resolved',
-                          statusColor: 'green'
+                          statusColor: 'green',
+                          type: 'Harassment',
+                          lastUpdate: '2025-08-12',
+                          description: 'Sent threatening messages in private chat.',
+                          resolution: 'User received a warning and messages were removed.'
                         },
                         { 
                           title: 'Spam Messages',
                           reportedUser: 'spammer99',
                           date: '2025-08-05',
                           status: 'Closed',
-                          statusColor: 'gray'
+                          statusColor: 'gray',
+                          type: 'Spam',
+                          lastUpdate: '2025-08-07',
+                          description: 'Multiple promotional messages in community forums.',
+                          resolution: 'Account suspended for 7 days.'
                         }
                       ].map((report, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                          <div className="flex-grow">
-                            <div className="flex items-center gap-3 mb-1">
-                              <p className="font-medium text-gray-900">{report.title}</p>
-                              <span className={`px-2 py-0.5 text-xs rounded-full ${
-                                report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
-                                report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {report.status}
+                        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
+                          <div>
+                            {/* Title in larger font */}
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{report.title}</h3>
+
+                            {/* Reported User */}
+                            <div className="mb-3">
+                              <span className="text-sm text-gray-700">
+                                <strong>Reported against: </strong>@{report.reportedUser}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600">Reported user: @{report.reportedUser}</p>
-                            <p className="text-sm text-gray-500">Submitted on {report.date}</p>
+
+                            {/* Header with Title, Description, and Badges */}
+                            <div className="mb-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <h3 className="text-xl font-semibold text-gray-900">{report.title}</h3>
+                                  <p className="mt-1 text-sm text-gray-600">{report.description}</p>
+                                </div>
+                                <div className="flex gap-2 ml-4">
+                                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                                    report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
+                                    report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {report.status}
+                                  </span>
+                                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    {report.type}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Created Date and Time */}
+                            <div className="mb-3">
+                              <div className="text-sm text-gray-600">
+                                <strong>Created: </strong>{new Date(report.date).toLocaleDateString()}{' '}
+                                <strong className="ml-3">Time: </strong>{new Date(report.date).toLocaleTimeString()}
+                              </div>
+                            </div>
+
+                            {/* Resolution (if any) */}
+                            {report.resolution && (
+                              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <span className="text-sm font-medium text-green-800">Resolution: </span>
+                                <span className="text-sm text-green-700">{report.resolution}</span>
+                              </div>
+                            )}
                           </div>
-                          <button className="ml-4 px-3 py-1.5 text-sm text-primary hover:bg-primary hover:text-white rounded-md border border-primary transition-colors">
-                            View Details
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -802,9 +1027,12 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   {/* Reports Against You */}
                   <div className="bg-white rounded-lg border border-gray-200">
                     <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-base font-medium text-gray-900">Reports Against You</h3>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-medium text-gray-900">Reports Against You</h3>
+                        <span className="text-sm text-gray-500">Total: 1 report</span>
+                      </div>
                     </div>
-                    <div className="p-4 space-y-2">
+                    <div className="p-4 space-y-3">
                       {[
                         { 
                           title: 'Code of Conduct Violation',
@@ -812,27 +1040,63 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           date: '2025-08-12',
                           status: 'Dismissed',
                           statusColor: 'gray',
-                          response: 'No violation found after review.'
+                          type: 'Conduct',
+                          lastUpdate: '2025-08-14',
+                          description: 'Alleged violation of community guidelines in forum discussion.',
+                          response: 'No violation found after thorough review of the reported content.',
+                          actionRequired: false
                         }
                       ].map((report, index) => (
-                        <div key={index} className="p-3 bg-gray-50 rounded-md">
-                          <div className="flex items-center gap-3 mb-1">
-                            <p className="font-medium text-gray-900">{report.title}</p>
-                            <span className={`px-2 py-0.5 text-xs rounded-full ${
-                              report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
-                              report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {report.status}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600">Reported by: @{report.reportedBy}</p>
-                          <p className="text-sm text-gray-500">Reported on {report.date}</p>
-                          {report.response && (
-                            <div className="mt-2 p-2 bg-white rounded border border-gray-200">
-                              <p className="text-sm text-gray-700">{report.response}</p>
+                        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
+                          <div>
+                            {/* Title in larger font */}
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{report.title}</h3>
+
+                            {/* Reported By */}
+                            <div className="mb-3">
+                              <span className="text-sm text-gray-700">
+                                <strong>Reported by: </strong>@{report.reportedBy}
+                              </span>
                             </div>
-                          )}
+
+                            {/* Created Date and Time */}
+                            <div className="mb-3 space-y-1">
+                              <div className="text-sm text-gray-600">
+                                <strong>Created: </strong>{new Date(report.date).toLocaleDateString()}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                <strong>Time: </strong>{new Date(report.date).toLocaleTimeString()}
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="mb-4">
+                              <strong className="text-sm text-gray-700 block mb-1">Description: </strong>
+                              <p className="text-sm text-gray-600">{report.description}</p>
+                            </div>
+
+                            {/* Response (if any) */}
+                            {report.response && (
+                              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <span className="text-sm font-medium text-green-800">Response: </span>
+                                <span className="text-sm text-green-700">{report.response}</span>
+                              </div>
+                            )}
+
+                            {/* Status and Type Badges */}
+                            <div className="flex flex-wrap gap-2">
+                              <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                                report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
+                                  report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {report.status}
+                                </span>
+                              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                {report.type}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                       {/* Empty State */}
