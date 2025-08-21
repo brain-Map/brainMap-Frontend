@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProfileData {
   phone: string;
   institution: string;
-  areaOfInterest: string;
+  areaOfInterest: string[];
   linkedIn: string;
   qualification: string;
   expertise: string[];
@@ -61,7 +61,7 @@ const ProfileCompletion = () => {
   const [profileData, setProfileData] = useState<ProfileData>({
     phone: '',
     institution: '',
-    areaOfInterest: '',
+    areaOfInterest: [],
     linkedIn: '',
     qualification: '',
     expertise: [],
@@ -123,6 +123,15 @@ const ProfileCompletion = () => {
     }
   };
 
+  const handleAreaOfInterestToggle = (area: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      areaOfInterest: prev.areaOfInterest.includes(area)
+        ? prev.areaOfInterest.filter(a => a !== area)
+        : [...prev.areaOfInterest, area]
+    }));
+  };
+
   const validateStep = (step: number) => {
     const newErrors: FormErrors = {};
 
@@ -133,13 +142,6 @@ const ProfileCompletion = () => {
       if (!profileData.phone.trim()) newErrors.phone = 'Phone number is required';
       if (!profileData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
       if (!profileData.city.trim()) newErrors.city = 'City is required';
-      
-      if (userType === 'Project Member') {
-        if (!profileData.institution.trim()) newErrors.institution = 'Institution is required';
-        if (!profileData.areaOfInterest) newErrors.areaOfInterest = 'Area of interest is required';
-        if (!profileData.yearsOfStudy) newErrors.yearsOfStudy = 'Year of study is required';
-        if (!profileData.major.trim()) newErrors.major = 'Major/Field of study is required';
-      }
     } else if (step === 2 && userType === 'Mentor') {
       // Mentor qualifications step
       if (!profileData.qualification) newErrors.qualification = 'Qualification is required';
@@ -201,11 +203,21 @@ const ProfileCompletion = () => {
       
       // Add role-specific data
       if (userType === 'Project Member') {
-        profilePayload.institution = profileData.institution;
-        profilePayload.areaOfInterest = profileData.areaOfInterest;
-        profilePayload.yearsOfStudy = profileData.yearsOfStudy;
-        profilePayload.major = profileData.major;
-        profilePayload.currentPosition = profileData.currentPosition;
+        if (profileData.institution.trim()) {
+          profilePayload.institution = profileData.institution;
+        }
+        if (profileData.areaOfInterest.length > 0) {
+          profilePayload.areaOfInterest = profileData.areaOfInterest;
+        }
+        if (profileData.yearsOfStudy) {
+          profilePayload.yearsOfStudy = profileData.yearsOfStudy;
+        }
+        if (profileData.major.trim()) {
+          profilePayload.major = profileData.major;
+        }
+        if (profileData.currentPosition.trim()) {
+          profilePayload.currentPosition = profileData.currentPosition;
+        }
       } else if (userType === 'Mentor') {
         profilePayload.qualification = profileData.qualification;
         profilePayload.expertise = profileData.expertise; // Already an array, no need to stringify
@@ -479,122 +491,108 @@ const ProfileCompletion = () => {
                     </div>
                   </div>
 
-                  {/* Academic/Professional Information */}
+                  <hr className="border-gray-200 my-4" />
+
+                  {/* Areas of Interest Section */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <h3 className="text-xl font-bold text-gray-800">Areas of Interest</h3>
+                      <span className="text-sm text-gray-500 bg-white/50 px-3 py-1 rounded-full">Optional</span>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Select your areas of interest
+                      </label>
+                      <p className="text-sm text-gray-600 mb-4">Choose all areas that interest you</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {areaOptions.map(area => (
+                          <label key={area} className="flex items-center space-x-3 cursor-pointer bg-white/50 backdrop-blur-sm p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300">
+                            <input
+                              type="checkbox"
+                              checked={profileData.areaOfInterest.includes(area)}
+                              onChange={() => handleAreaOfInterestToggle(area)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700 font-medium">{area}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-200 my-4" />
+
+                  {/* Academic Information */}
                   {userType === 'Project Member' && (
                     <div className="p-6">
                       <div className="flex items-center gap-3 mb-6">
                         <h3 className="text-xl font-bold text-gray-800">Academic Information</h3>
+                        <span className="text-sm text-gray-500 bg-white/50 px-3 py-1 rounded-full">Optional</span>
                       </div>
 
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Institution / University *
+                            Institution / University
                           </label>
                           <input
                             type="text"
                             value={profileData.institution}
                             onChange={(e) => handleInputChange('institution', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 ${
-                              errors.institution ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                            placeholder="Enter your institution"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-gray-400"
+                            placeholder="Enter your institution (optional)"
                           />
-                          {errors.institution && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-4 h-4" />
-                              {errors.institution}
-                            </p>
-                          )}
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              Year of Study *
+                              Year of Study
                             </label>
                             <select
                               value={profileData.yearsOfStudy}
                               onChange={(e) => handleInputChange('yearsOfStudy', e.target.value)}
-                              className={`w-full px-4 py-3 border rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 ${
-                                errors.yearsOfStudy ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                              }`}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-gray-400"
                             >
-                              <option value="">Select year of study</option>
+                              <option value="">Select year of study (optional)</option>
                               {yearsOfStudyOptions.map(year => (
                                 <option key={year} value={year}>{year}</option>
                               ))}
                             </select>
-                            {errors.yearsOfStudy && (
-                              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-4 h-4" />
-                                {errors.yearsOfStudy}
-                              </p>
-                            )}
                           </div>
 
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              Major/Field of Study *
+                              Major/Field of Study
                             </label>
                             <input
                               type="text"
                               value={profileData.major}
                               onChange={(e) => handleInputChange('major', e.target.value)}
-                              className={`w-full px-4 py-3 border rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 ${
-                                errors.major ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                              }`}
-                              placeholder="e.g. Computer Science"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-gray-400"
+                              placeholder="e.g. Computer Science (optional)"
                             />
-                            {errors.major && (
-                              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                                <AlertCircle className="w-4 h-4" />
-                                {errors.major}
-                              </p>
-                            )}
                           </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Area of Interest *
-                          </label>
-                          <select
-                            value={profileData.areaOfInterest}
-                            onChange={(e) => handleInputChange('areaOfInterest', e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 ${
-                              errors.areaOfInterest ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                          >
-                            <option value="">Select your area of interest</option>
-                            {areaOptions.map(area => (
-                              <option key={area} value={area}>{area}</option>
-                            ))}
-                          </select>
-                          {errors.areaOfInterest && (
-                            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-4 h-4" />
-                              {errors.areaOfInterest}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Current Position (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.currentPosition}
-                            onChange={(e) => handleInputChange('currentPosition', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-gray-400"
-                            placeholder="e.g. Student, Intern, Research Assistant"
-                          />
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Current Position
+                            </label>
+                            <input
+                              type="text"
+                              value={profileData.currentPosition}
+                              onChange={(e) => handleInputChange('currentPosition', e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white/70 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-gray-400"
+                              placeholder="e.g. Student, Software Engineer, Research Assistant, Freelancer"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
+                  
                   <hr className="border-gray-200 my-4" />
+                  
                   {/* Social Links */}
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-6">
