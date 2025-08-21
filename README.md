@@ -15,6 +15,8 @@ cd brainMap-Frontend
 npm i
 npm install @supabase/supabase-js
 npm install axios
+npm install react-markdown remark-gfm rehype-raw
+npm install @tailwindcss/typography
 ```
 
 ### Run the Development Server

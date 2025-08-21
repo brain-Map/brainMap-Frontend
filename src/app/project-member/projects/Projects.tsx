@@ -6,8 +6,6 @@ import {
   ChevronDown,
   Star,
   MoreHorizontal,
-  X,
-  Calendar,
   ArrowUpDown,
   Trash2,
   AlertTriangle,
@@ -212,6 +210,7 @@ const ProjectsTable: React.FC = () => {
       dueDate: project.dueDate,
       priority: project.priority,
       userName: project.userName || 'Unknown User',
+      avatar: project.avatar || 'https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg', // Default avatar if not provided
     })) :
     [
       ...backendProjects.map(project => ({
@@ -225,6 +224,7 @@ const ProjectsTable: React.FC = () => {
         dueDate: project.dueDate,
         priority: project.priority,
         userName: project.userName || 'Unknown User',
+        avatar: project.avatar || 'https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg', // Default avatar if not provided
       })),
 
     ];
@@ -442,7 +442,19 @@ const ProjectsTable: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        {project.lead.initials}
+                        {project.avatar ? (
+                            <img
+                              src={project.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
                       </div>
                       <span className="text-sm text-gray-900">{project.userName}</span>
                     </div>
