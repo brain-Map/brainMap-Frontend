@@ -64,6 +64,7 @@ export interface ProjectResponse {
     initials: string;
   };
   userName?: string; // Assuming this is the name of the user who created the project
+  avatar?: string; // URL to the project avatar image
 }
 
 
@@ -72,7 +73,7 @@ export const projectApi = {
   // Create a new project
   createProject: async (projectData: CreateProjectRequest): Promise<ProjectResponse> => {
     try {
-      const response = await api.post('/project-member/projects/', projectData);
+      const response = await api.post(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/project-member/projects`, projectData);
       return response.data;
     } catch (error) {
       console.error('Error creating project:', error);
