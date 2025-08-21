@@ -1,49 +1,57 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DollarSign, Star, MapPin, Calendar, Target, User } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DollarSign, Star, MapPin, Calendar, Target, User } from "lucide-react";
 
 interface ExpertCardProps {
   service: {
-    title: string
-    subject: string
-    description: string
-    fee: number
-    serviceId: string
-    mentorId: string
+    title: string;
+    subject: string;
+    description: string;
+    fee: number;
+    serviceId: string;
+    mentorId: string;
     availabilities: {
-      dayOfWeek: number
-      startTime: string
-      endTime: string
-    }[]
-  }
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+    }[];
+  };
   // Optional mentor info - in real app this would come from mentor API
   mentor?: {
-    name: string
-    avatar?: string
-    rating: number
-    reviewCount: number
-  }
+    name: string;
+    avatar?: string;
+    rating: number;
+    reviewCount: number;
+  };
 }
 
 const getDayName = (dayOfWeek: number): string => {
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  return days[dayOfWeek] || "Unknown"
-}
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[dayOfWeek] || "Unknown";
+};
 
 const formatTime = (time: string): string => {
-  const [hours, minutes] = time.split(":")
-  const hour = Number.parseInt(hours)
-  const ampm = hour >= 12 ? "PM" : "AM"
-  const displayHour = hour % 12 || 12
-  return `${displayHour}:${minutes} ${ampm}`
-}
+  const [hours, minutes] = time.split(":");
+  const hour = Number.parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+};
 
 export function ExpertCard({ service, mentor }: ExpertCardProps) {
   const availableDays = service.availabilities.map((availability) => ({
     day: getDayName(availability.dayOfWeek),
     startTime: formatTime(availability.startTime),
     endTime: formatTime(availability.endTime),
-  }))
+  }));
 
   const defaultMentor = {
     name: "Expert Mentor",
@@ -53,16 +61,18 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
     location: "Remote",
     yearsExperience: 5,
     clientsServed: 200,
-  }
+  };
 
-  const mentorData = mentor || defaultMentor
+  const mentorData = mentor || defaultMentor;
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md bg-white overflow-hidden max-w-md">
       <CardContent className="p-0">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
           <div className="flex items-start justify-between mb-2">
-            <h2 className="font-bold text-xl leading-tight flex-1 pr-4">{service.subject}</h2>
+            <h2 className="font-bold text-xl leading-tight flex-1 pr-4">
+              {service.subject}
+            </h2>
             <div className="text-right flex-shrink-0">
               <div className="flex items-center gap-1 font-bold text-2xl">
                 <DollarSign className="h-6 w-6" />
@@ -90,11 +100,15 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-lg mb-1">{mentorData.name}</h3>
+              <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                {mentorData.name}
+              </h3>
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium text-gray-900">{mentorData.rating}</span>
+                  <span className="font-medium text-gray-900">
+                    {mentorData.rating}
+                  </span>
                   <span>({mentorData.reviewCount})</span>
                 </div>
               </div>
@@ -107,7 +121,9 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
                 <Target className="h-4 w-4 text-blue-600" />
                 What You'll Learn
               </h4>
-              <p className="text-gray-700 text-sm leading-relaxed">{service.description}</p>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                {service.description}
+              </p>
             </div>
           </div>
 
@@ -124,7 +140,9 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="font-medium text-gray-900 text-sm min-w-[60px]">{schedule.day}</span>
+                    <span className="font-medium text-gray-900 text-sm min-w-[60px]">
+                      {schedule.day}
+                    </span>
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-medium text-green-700">
@@ -145,5 +163,5 @@ export function ExpertCard({ service, mentor }: ExpertCardProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
