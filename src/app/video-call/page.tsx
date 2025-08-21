@@ -1,382 +1,277 @@
-'use client';
+"use client"
 
-import { useEffect, useRef, useState } from 'react';
-import Peer from 'simple-peer';
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import JitsiMeeting from "@/components/video-call/JitsiMeeting"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { 
+  Video, 
+  VideoOff, 
+  Mic, 
+  MicOff, 
+  Settings, 
+  Users, 
+  Clock, 
+  Calendar,
+  Share2,
+  Copy,
+  Check
+} from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
-// Get user ID from URL
-function getQueryParam(name: string) {
-  if (typeof window === 'undefined') return null;
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name);
+interface MeetingParticipant {
+  id: string
+  name: string
+  avatar?: string
+  role?: string
+  isHost?: boolean
 }
 
-const LOCAL_USER_ID = getQueryParam('id') || 'user1';
-const SIGNALING_SERVER = 'ws://localhost:8080/ws';
-const REMOTE_USER_ID = 'user2';
-
-type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed';
-type MediaType = 'camera' | 'screen';
-
-export default function VideoChat() {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [wsStatus, setWsStatus] = useState<ConnectionStatus>('disconnected');
-  const [peerStatus, setPeerStatus] = useState<ConnectionStatus>('disconnected');
-  const [error, setError] = useState<string>('');
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [currentMediaType, setCurrentMediaType] = useState<MediaType | null>(null);
-  const [remoteUserId, setRemoteUserId] = useState<string | null>(null);
-  
-  const localVideo = useRef<HTMLVideoElement>(null);
-  const remoteVideo = useRef<HTMLVideoElement>(null);
-  const peerRef = useRef<Peer.Instance | null>(null);
+export default function MeetingPage() {
+  const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const [meetingStarted, setMeetingStarted] = useState(false)
+  const [roomName, setRoomName] = useState("")
+  const [meetingTitle, setMeetingTitle] = useState("")
+  const [participants, setParticipants] = useState<MeetingParticipant[]>([])
+  const [copySuccess, setCopySuccess] = useState(false)
 
   useEffect(() => {
-    setWsStatus('connecting');
-    const socket = new WebSocket(`${SIGNALING_SERVER}?id=${LOCAL_USER_ID}`);
-    setWs(socket);
+    // Get room details from URL params or generate new ones
+    const urlRoomName = searchParams.get('room') || `brainmap-${Date.now()}`
+    const urlMeetingTitle = searchParams.get('title') || 'BrainMap Video Call'
+    
+    setRoomName(urlRoomName)
+    setMeetingTitle(urlMeetingTitle)
 
-    socket.onopen = () => {
-      setWsStatus('connected');
-      setError('');
-    };
-
-    socket.onclose = () => {
-      setWsStatus('disconnected');
-    };
-
-    socket.onerror = () => {
-      setWsStatus('failed');
-      setError('WebSocket connection failed');
-    };
-
-    socket.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'offer') {
-        await handleIncomingCall('camera', data.from); // Pass fromId
-      } else if (data.type === 'answer') {
-        peerRef.current?.signal(data.signal);
-      } else if (data.type === 'ice-candidate') {
-        peerRef.current?.signal(data.candidate);
+    // Mock participants data - in real app, this would come from your API
+    setParticipants([
+      {
+        id: '1',
+        name: user?.name || 'You',
+        avatar: user?.profile_picture,
+        role: 'Host',
+        isHost: true
       }
-    };
+    ])
+  }, [searchParams, user])
 
-    return () => {
-      socket.close();
-      peerRef.current?.destroy();
-    };
-  }, []);
+  const handleStartMeeting = () => {
+    setMeetingStarted(true)
+  }
 
-  const getMediaStream = async (mediaType: MediaType): Promise<MediaStream> => {
-    if (mediaType === 'camera') {
-      return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    } else {
-      // Screen sharing
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
-        video: true, 
-        audio: true 
-      });
-      
-      // Listen for when user stops sharing screen
-      screenStream.getVideoTracks()[0].addEventListener('ended', () => {
-        setError('Screen sharing stopped');
-        endCall();
-      });
-      
-      return screenStream;
-    }
-  };
-
-  const handleIncomingCall = async (mediaType: MediaType, fromId?: string) => {
-    try {
-      const stream = await getMediaStream(mediaType);
-      if (localVideo.current) {
-        localVideo.current.srcObject = stream;
-      }
-      
-      setCurrentMediaType(mediaType);
-      setPeerStatus('connecting');
-      const peer = new Peer({ initiator: false, trickle: false, stream });
-      
-      setRemoteUserId(fromId || 'user1'); // Use fromId from signaling data
-      
-      peer.on('signal', (signal: Peer.SignalData) => {
-        ws?.send(JSON.stringify({ to: remoteUserId, from: LOCAL_USER_ID, type: 'answer', signal }));
-      });
-      
-      peer.on('stream', (stream: MediaStream) => {
-        if (remoteVideo.current) {
-          remoteVideo.current.srcObject = stream;
-        }
-      });
-      
-      peer.on('connect', () => {
-        setPeerStatus('connected');
-        setIsCallActive(true);
-        setError('');
-      });
-      
-      peer.on('error', (err) => {
-        setPeerStatus('failed');
-        setError(`Peer connection error: ${err.message}`);
-      });
-      
-      // Signal back with the offer data
-      // peer.signal(data.signal); // This should use the actual offer signal
-      peerRef.current = peer;
-    } catch (err) {
-      const errorMsg = mediaType === 'camera' 
-        ? 'Camera access denied or unavailable' 
-        : 'Screen sharing denied or unavailable';
-      setError(`${errorMsg}: ${err}`);
-    }
-  };
-
-  const startCall = async (mediaType: MediaType) => {
-    try {
-      setError('');
-      const stream = await getMediaStream(mediaType);
-      if (localVideo.current) {
-        localVideo.current.srcObject = stream;
-      }
-      
-      setCurrentMediaType(mediaType);
-      setPeerStatus('connecting');
-      const peer = new Peer({ initiator: true, trickle: false, stream });
-      
-      setRemoteUserId(mediaType === 'camera' ? 'user2' : 'user1'); // You may want to improve this logic
-      
-      peer.on('signal', (signal: Peer.SignalData) => {
-        ws?.send(JSON.stringify({ to: remoteUserId, from: LOCAL_USER_ID, type: 'offer', signal }));
-      });
-      
-      peer.on('stream', (stream: MediaStream) => {
-        if (remoteVideo.current) {
-          remoteVideo.current.srcObject = stream;
-        }
-      });
-      
-      peer.on('connect', () => {
-        setPeerStatus('connected');
-        setIsCallActive(true);
-        setError('');
-      });
-      
-      peer.on('error', (err) => {
-        setPeerStatus('failed');
-        setError(`Peer connection error: ${err.message}`);
-      });
-      
-      peerRef.current = peer;
-    } catch (err) {
-      const errorMsg = mediaType === 'camera' 
-        ? 'Camera access denied or unavailable' 
-        : 'Screen sharing denied or unavailable';
-      setError(`${errorMsg}: ${err}`);
-    }
-  };
-
-  const switchMediaType = async (newMediaType: MediaType) => {
-    if (!isCallActive || !peerRef.current) return;
+  const copyMeetingLink = async () => {
+    const meetingUrl = `${window.location.origin}/video-call?room=${roomName}&title=${encodeURIComponent(meetingTitle)}`
     
     try {
-      // Get new stream
-      const newStream = await getMediaStream(newMediaType);
-      
-      // Stop old stream
-      const oldStream = localVideo.current?.srcObject as MediaStream;
-      oldStream?.getTracks().forEach(track => track.stop());
-      
-      // Update local video
-      if (localVideo.current) {
-        localVideo.current.srcObject = newStream;
-      }
-      
-      // For simple-peer, we need to destroy and recreate the connection
-      // because replaceTrack is not reliably exposed
-      const wasInitiator = (peerRef.current as any).initiator;
-      
-      // Destroy current peer
-      peerRef.current.destroy();
-      
-      // Create new peer with new stream
-      setPeerStatus('connecting');
-      const peer = new Peer({ initiator: wasInitiator, trickle: false, stream: newStream });
-      
-      peer.on('signal', (signal: Peer.SignalData) => {
-        ws?.send(JSON.stringify({ 
-          to: REMOTE_USER_ID, 
-          from: LOCAL_USER_ID, 
-          type: wasInitiator ? 'offer' : 'answer', 
-          signal 
-        }));
-      });
-      
-      peer.on('stream', (stream: MediaStream) => {
-        if (remoteVideo.current) {
-          remoteVideo.current.srcObject = stream;
-        }
-      });
-      
-      peer.on('connect', () => {
-        setPeerStatus('connected');
-        setError('');
-      });
-      
-      peer.on('error', (err) => {
-        setPeerStatus('failed');
-        setError(`Peer connection error: ${err.message}`);
-      });
-      
-      peerRef.current = peer;
-      setCurrentMediaType(newMediaType);
-      setError('');
+      await navigator.clipboard.writeText(meetingUrl)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
     } catch (err) {
-      const errorMsg = newMediaType === 'camera' 
-        ? 'Camera access denied or unavailable' 
-        : 'Screen sharing denied or unavailable';
-      setError(`${errorMsg}: ${err}`);
+      console.error('Failed to copy meeting link:', err)
     }
-  };
+  }
 
-  const endCall = () => {
-    peerRef.current?.destroy();
-    peerRef.current = null;
-    setPeerStatus('disconnected');
-    setIsCallActive(false);
-    setCurrentMediaType(null);
-    
-    // Stop local stream
-    const stream = localVideo.current?.srcObject as MediaStream;
-    stream?.getTracks().forEach(track => track.stop());
-    if (localVideo.current) localVideo.current.srcObject = null;
-    if (remoteVideo.current) remoteVideo.current.srcObject = null;
-  };
-
-  const getStatusColor = (status: ConnectionStatus) => {
-    switch (status) {
-      case 'connected': return 'text-green-500';
-      case 'connecting': return 'text-yellow-500';
-      case 'failed': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getStatusText = (status: ConnectionStatus) => {
-    switch (status) {
-      case 'connected': return '●';
-      case 'connecting': return '◐';
-      case 'failed': return '●';
-      default: return '○';
-    }
-  };
-
-  const getMediaTypeIcon = (mediaType: MediaType) => {
-    return mediaType === 'camera' ? '📹' : '🖥️';
-  };
+  if (meetingStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-secondary/30 via-value3/30 to-secondary/30">
+        <JitsiMeeting
+          roomName={roomName}
+          user={{ 
+            name: user?.name || 'Guest User',
+            email: user?.email,
+            avatar: user?.profile_picture,
+            id: user?.id
+          }}
+          configOverwrite={{
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            enableWelcomePage: false,
+            enableClosePage: false,
+            prejoinPageEnabled: false
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4">
-      {/* Connection Status */}
-      <div className="flex gap-6 text-sm">
-        <div className="flex items-center gap-2">
-          <span className={`text-lg ${getStatusColor(wsStatus)}`}>
-            {getStatusText(wsStatus)}
-          </span>
-          <span>WebSocket: {wsStatus}</span>
+    <div className="min-h-screen bg-gradient-to-br from-secondary/30 via-value3/30 to-secondary/30 p-6">
+      <div className="max-w-4xl mx-auto pt-20 space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-gray-900">
+            Join Video Call
+          </h1>
+          <p className="text-lg text-gray-600">
+            Connect, collaborate, and communicate with your team
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-lg ${getStatusColor(peerStatus)}`}>
-            {getStatusText(peerStatus)}
-          </span>
-          <span>Peer: {peerStatus}</span>
-          {currentMediaType && (
-            <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded">
-              {getMediaTypeIcon(currentMediaType)} {currentMediaType}
-            </span>
-          )}
-        </div>
-      </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-          {error}
-        </div>
-      )}
+        {/* Main Meeting Card */}
+        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Video className="w-10 h-10 text-primary" />
+            </div>
+            <CardTitle className="text-2xl text-gray-900">
+              {meetingTitle}
+            </CardTitle>
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-2">
+              <Calendar className="w-4 h-4" />
+              <span>{new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</span>
+              <Clock className="w-4 h-4 ml-4" />
+              <span>{new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}</span>
+            </div>
+          </CardHeader>
 
-      {/* Video Elements */}
-      <div className="flex gap-4">
-        <div className="relative">
-          <video ref={localVideo} autoPlay muted className="w-64 h-48 border rounded-xl" />
-          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-            Local ({LOCAL_USER_ID})
-            {currentMediaType && ` - ${getMediaTypeIcon(currentMediaType)}`}
-          </div>
-        </div>
-        <div className="relative">
-          <video ref={remoteVideo} autoPlay className="w-64 h-48 border rounded-xl" />
-          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-            Remote ({remoteUserId ?? 'unknown'})
-          </div>
-        </div>
-      </div>
+          <CardContent className="space-y-6">
+            {/* Meeting Info */}
+            <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-700">Meeting Room</p>
+                  <p className="text-lg font-mono text-primary truncate">{roomName}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyMeetingLink}
+                  className="flex items-center gap-2"
+                >
+                  {copySuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy Link
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
 
-      {/* Controls */}
-      <div className="flex flex-col gap-3">
-        {!isCallActive ? (
-          // Start Call Options
-          <div className="flex gap-2">
-            <button
-              onClick={() => startCall('camera')}
-              disabled={wsStatus !== 'connected'}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              📹 Start with Camera
-            </button>
-            
-            <button
-              onClick={() => startCall('screen')}
-              disabled={wsStatus !== 'connected'}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              🖥️ Share Screen
-            </button>
-          </div>
-        ) : (
-          // Active Call Controls
-          <div className="flex gap-2">
-            {currentMediaType === 'camera' ? (
-              <button
-                onClick={() => switchMediaType('screen')}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-2"
+            {/* Participants Preview */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-700">
+                  Participants ({participants.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {participants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center gap-3 bg-white rounded-lg p-3 border border-gray-100 shadow-sm"
+                  >
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={participant.avatar} />
+                      <AvatarFallback className="bg-primary text-white">
+                        {participant.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {participant.name}
+                      </p>
+                      {participant.role && (
+                        <Badge variant="secondary" className="text-xs">
+                          {participant.role}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Join Meeting Actions */}
+            <div className="flex flex-col gap-4 pt-4">
+              <Button
+                onClick={handleStartMeeting}
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg"
               >
-                🖥️ Switch to Screen
-              </button>
-            ) : (
-              <button
-                onClick={() => switchMediaType('camera')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
-              >
-                📹 Switch to Camera
-              </button>
-            )}
-            
-            <button
-              onClick={endCall}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              End Call
-            </button>
-          </div>
-        )}
-      </div>
+                <Video className="w-5 h-5 mr-2" />
+                Join Meeting
+              </Button>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 flex items-center gap-2"
+                  onClick={copyMeetingLink}
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </Button>
+              </div>
+            </div>
 
-      {/* Instructions */}
-      <div className="text-sm text-gray-600 max-w-md text-center">
-        <p><strong>Camera:</strong> Share your webcam feed</p>
-        <p><strong>Screen Share:</strong> Share your entire screen or specific window</p>
-        <p className="mt-2 text-xs">To test: Open in different browsers or use one tab for camera, another for screen share</p>
+            {/* Meeting Tips */}
+            <div className="bg-info/5 border border-info/20 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-2">
+                💡 Meeting Tips
+              </h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Make sure you have a stable internet connection</li>
+                <li>• Use headphones for better audio quality</li>
+                <li>• Test your camera and microphone before joining</li>
+                <li>• Share the meeting link with participants in advance</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-md">
+            <CardContent className="p-4 text-center">
+              <Video className="w-8 h-8 text-primary mx-auto mb-2" />
+              <p className="font-medium text-gray-900">HD Video</p>
+              <p className="text-sm text-gray-500">Crystal clear video calls</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-md">
+            <CardContent className="p-4 text-center">
+              <Share2 className="w-8 h-8 text-secondary mx-auto mb-2" />
+              <p className="font-medium text-gray-900">Screen Share</p>
+              <p className="text-sm text-gray-500">Share your screen easily</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-md">
+            <CardContent className="p-4 text-center">
+              <Users className="w-8 h-8 text-value1 mx-auto mb-2" />
+              <p className="font-medium text-gray-900">Team Chat</p>
+              <p className="text-sm text-gray-500">Built-in messaging</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  );
+  )
 }
