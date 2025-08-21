@@ -90,8 +90,7 @@ const CreateProjectPage = () => {
         dueDate: projectData.deadline || undefined,
         priority: projectData.priority || undefined,
         ownerId: user.id,
-        teamMembers: teamMembers,
-        isPublic: projectData.isPublic
+        isPublic: projectData.isPublic,
       };
 
       console.log('Submitting project data as JSON:');

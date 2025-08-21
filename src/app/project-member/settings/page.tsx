@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useRef, useState, useTransition } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
 import {
   User,
   Bell,
@@ -28,6 +28,23 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface SettingsProps {}
 
+export interface OneUser{
+    id: string;
+    firstName:string;
+    lastName:string;
+    username: string;
+    email: string;
+    mobileNumber?: string;
+    dateOfBirth?:string;
+    userRole:string;
+    createdAt:string;
+    status:string;
+    city?:string;
+    gender: string;
+    bio?:string;
+    avatar:string;
+}
+
 const settingsFunctions = {
   updateUserProfileAvatar: async (userId: string, imageUrl: string) => {
     if (!userId || !imageUrl) return;
@@ -41,7 +58,22 @@ const settingsFunctions = {
       console.error("Error updating user profile avatar:", error);
     }
   },
+
+
+    getOneUserData: async (userId: string): Promise<OneUser> => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
 };
+
+
 
 const SettingsPage: React.FC<SettingsProps> = () => {
   const { user } = useAuth();
@@ -50,6 +82,8 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
+  
 
   const [activeTab, setActiveTab] = useState("profile");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -105,6 +139,21 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     allowContactFromExperts: true,
     showOnlineStatus: true,
   });
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userId) {
+        const oneUserData = await settingsFunctions.getOneUserData(userId);
+        setOneUserData(oneUserData);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
+
+
+
 
   const handleProfileUpdate = (field: string, value: any) => {
     setProfileData((prev) => ({
@@ -192,29 +241,41 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   };
 
   const handleClickUploadImagesButton = async () => {
-    startTransition(async () => {
-      let urls = [];
-      for (const url of imageUrls) {
-        const imageFile = await convertBlobUrlToFile(url);
+  if (imageUrls.length === 0) return;
 
-        const { imageUrl, error } = await uploadImage({
-          file: imageFile,
-          bucket: "uploads",
-        });
+  try {
+    const urls: string[] = [];
 
-        if (error) {
-          console.error(error);
-          return;
-        }
+    for (const url of imageUrls) {
+      const imageFile = await convertBlobUrlToFile(url);
 
-        urls.push(imageUrl);
+      const { imageUrl, error } = await uploadImage({
+        file: imageFile,
+        bucket: "uploads",
+        folder: "avatars",
+        userId: userId!, // overwrite per user
+      });
+
+      if (error) {
+        console.error(error);
+        return;
       }
 
-      console.log(urls);
-      settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
-      setImageUrls([]);
-    });
-  };
+      urls.push(imageUrl);
+    }
+
+    console.log("Uploaded avatar URLs:", urls);
+
+    // Update only with the first (profile pic)
+    settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
+
+    // Clear after upload
+    setImageUrls([]);
+  } catch (err) {
+    console.error("Upload failed:", err);
+  }
+};
+
 
   //image upload end
 
@@ -305,6 +366,16 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     {/* Profile Avatar Preview */}
                     <div className="relative group">
                       <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
+                        {/* {oneUserData?.avatar ? (
+                          <img
+                            src={oneUserData.avatar}
+                            className="w-full h-full object-cover"
+                            alt="Profile Avatar"
+                          />
+                        ) : (
+                          <User size={60} className="text-gray-400" />
+                        )} */}
+
                         {imageUrls[0] ? (
                           <img
                             src={imageUrls[0]}
@@ -314,6 +385,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                         ) : (
                           <User size={60} className="text-gray-400" />
                         )}
+                        
                       </div>
 
                       {/* Edit Button Overlay */}
