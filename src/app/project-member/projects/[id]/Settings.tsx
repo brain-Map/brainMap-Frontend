@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import {
   Settings,
   Users,
@@ -11,17 +11,47 @@ import {
   Save,
   Edit3,
   Shield,
-  UserX,
   Crown,
+  X,
+  Globe
 } from "lucide-react";
 import MembersAndTeams from "./MemberSupervisorAdd";
+import api from "@/utils/api";
+import { useParams } from "next/navigation";
+
+
+const projectSettingBackend = {
+  getProjectDetails: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching project details:", error);
+      throw error;
+    }
+  },
+
+  updateProjectDetails: async (projectId: string, data: Partial<ProjectData>) => {
+    try {
+      const response = await api.put(`/project-member/projects/${projectId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating project details:", error);
+      throw error;
+    }
+  },
+};
 
 // ---------------- Types ----------------
 type ProjectData = {
-  name: string;
+  id: string;
+  title: string;
   description: string;
-  visibility: "private" | "public";
-  defaultBranch: string;
+  isPublic: boolean;
+  ownerId: string;
+  status?: "ACTIVE" | "DONE" | "PAUSED" | "ABANDONED";
+  dueDate: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 };
 
 type MemberRole = "viewer" | "developer" | "supervisor" | "admin";
@@ -37,11 +67,13 @@ type Member = {
 type EditingState = {
   name: boolean;
   description: boolean;
+  visibility: boolean;
 };
 
 type TempValues = {
   name?: string;
   description?: string;
+  visibility?: boolean;
 };
 
 type SidebarItem = {
@@ -50,15 +82,28 @@ type SidebarItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-// ---------------- Component ----------------
 const ProjectSettingsPage: React.FC = () => {
-  const [projectData, setProjectData] = useState<ProjectData>({
-    name: "BrainMap-Backend",
-    description:
-      "A comprehensive backend system for brain mapping visualization and data processing.",
-    visibility: "private",
-    defaultBranch: "main",
-  });
+  const { id } = useParams();
+
+  const [projectData, setProjectData] = useState<ProjectData | null>(null);
+
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      if (id) {
+        try {
+          const data = await projectSettingBackend.getProjectDetails(
+            Array.isArray(id) ? id[0] : id as string
+          );
+          console.log("Fetched project details:", data);
+          setProjectData(data);
+        } catch (error) {
+          console.error("Error fetching project details:", error);
+        }
+      }
+    };
+
+    fetchProjectDetails();
+  }, [id]);
 
   const [members, setMembers] = useState<Member[]>([
     { id: 1, name: "John Doe", email: "john@example.com", role: "admin", avatar: "JD" },
@@ -68,58 +113,127 @@ const ProjectSettingsPage: React.FC = () => {
   ]);
 
   const [activeSection, setActiveSection] = useState<SidebarItem["id"]>("general");
-  const [isEditing, setIsEditing] = useState<EditingState>({ name: false, description: false });
+  const [isEditing, setIsEditing] = useState<EditingState>({ name: false, description: false, visibility: false });
   const [tempValues, setTempValues] = useState<TempValues>({});
+  const [showPopup, setShowPopup] = useState(false);
+  const [tempVisibility, setTempVisibility] = useState<boolean | null>(null);
+
+  const handleVisibilityClick = (newVisibility: boolean) => {
+    setTempVisibility(newVisibility);
+    setShowPopup(true);
+  };
+
+  // const handleSave = () => {
+  //   setProjectData({ ...projectData, isPublic: tempVisibility });
+  //   setShowPopup(false);
+  //   setTempVisibility(null);
+  //   // Here you would typically make an API call to save the changes
+  //   console.log('Visibility changed to:', tempVisibility ? 'Public' : 'Private');
+  // };
+
+  // const handleCancel = () => {
+  //   setShowPopup(false);
+  //   setTempVisibility(null);
+  // };
 
   // ---------------- Handlers ----------------
   const handleEdit = (field: keyof EditingState) => {
-    setIsEditing({ ...isEditing, [field]: true });
-    setTempValues({ ...tempValues, [field]: projectData[field] });
+  if (!projectData) return;
+  setIsEditing({ ...isEditing, [field]: true });
+  if (field === "name") {
+    setTempValues({ ...tempValues, name: projectData.title });
+  } else if (field === "description") {
+    setTempValues({ ...tempValues, description: projectData.description });
+  } else if (field === "visibility") {
+    setTempValues({ ...tempValues, visibility: projectData.isPublic });
+  }
   };
 
   const handleSave = (field: keyof EditingState) => {
-    setProjectData({ ...projectData, [field]: tempValues[field] as string });
-    setIsEditing({ ...isEditing, [field]: false });
-  };
+    if (!projectData) return;
 
-  const handleCancel = (field: keyof EditingState) => {
-    setIsEditing({ ...isEditing, [field]: false });
-    setTempValues({ ...tempValues, [field]: projectData[field] });
-  };
+    setProjectData({ ...projectData, isPublic: tempVisibility ?? projectData.isPublic });
+    setShowPopup(false);
+    setTempVisibility(null);
+    // Here you would typically make an API call to save the changes
+    // console.log('Visibility changed to:', tempVisibility);
 
-  const removeMember = (memberId: number) => {
-    setMembers(members.filter((m) => m.id !== memberId));
-  };
-
-  const changeMemberRole = (memberId: number, newRole: MemberRole) => {
-    setMembers(members.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
-  };
-
-  const getRoleColor = (role: MemberRole) => {
-    switch (role) {
-      case "admin":
-        return "bg-red-100 text-red-800";
-      case "supervisor":
-        return "bg-purple-100 text-purple-800";
-      case "developer":
-        return "bg-blue-100 text-blue-800";
-      case "viewer":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+    const updatedValue = tempValues[field] as string;
+    const updateObj: Partial<ProjectData> = {};
+    if (field === "name") {
+      updateObj.title = updatedValue;
+    } else if (field === "description") {
+      updateObj.description = updatedValue;
+    } else if (field === "visibility") {
+      if (tempVisibility !== null) {
+        updateObj.isPublic = tempVisibility;
+      }
     }
+
+    projectSettingBackend.updateProjectDetails(projectData.id, updateObj)
+      .then((data) => {
+        setProjectData({ ...projectData, ...updateObj });
+        setIsEditing({ ...isEditing, [field]: false });
+      })
+      .catch((error) => {
+        // Optionally show error to user
+        console.error("Failed to update project:", error);
+      });
   };
 
-  const getRoleIcon = (role: MemberRole) => {
-    switch (role) {
-      case "admin":
-        return <Shield className="w-3 h-3" />;
-      case "supervisor":
-        return <Crown className="w-3 h-3" />;
-      default:
-        return null;
+  const handleCancel = (field?: keyof EditingState) => {
+    if (typeof field !== "undefined") {
+      if (!projectData) return;
+      setIsEditing({ ...isEditing, [field]: false });
+      setTempValues({
+        ...tempValues,
+        [field]:
+          field === "name"
+            ? projectData.title
+            : field === "description"
+            ? projectData.description
+            : field === "visibility"
+            ? projectData.isPublic
+            : ""
+      });
     }
+    setShowPopup(false);
+    setTempVisibility(null);
   };
+
+  // const removeMember = (memberId: number) => {
+  //   setMembers(members.filter((m) => m.id !== memberId));
+  // };
+
+  // const changeMemberRole = (memberId: number, newRole: MemberRole) => {
+  //   setMembers(members.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
+  // };
+
+  // const getRoleColor = (role: MemberRole) => {
+  //   switch (role) {
+  //     case "admin":
+  //       return "bg-red-100 text-red-800";
+  //     case "supervisor":
+  //       return "bg-purple-100 text-purple-800";
+  //     case "developer":
+  //       return "bg-blue-100 text-blue-800";
+  //     case "viewer":
+  //       return "bg-gray-100 text-gray-800";
+  //     default:
+  //       return "bg-gray-100 text-gray-800";
+  //   }
+  // };
+
+  // const getRoleIcon = (role: MemberRole) => {
+  //   switch (role) {
+  //     case "admin":
+  //       return <Shield className="w-3 h-3" />;
+  //     case "supervisor":
+  //       return <Crown className="w-3 h-3" />;
+  //     default:
+  //       return null;
+  //   }
+  // };
 
   const sidebarItems: SidebarItem[] = [
     { id: "general", label: "General", icon: Settings },
@@ -206,7 +320,7 @@ const ProjectSettingsPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-700 font-mono bg-gray-50 px-3 py-2 rounded">{projectData.name}</p>
+                  <p className="text-gray-700 font-mono bg-gray-50 px-3 py-2 rounded">{projectData?.title}</p>
                 )}
               </div>
 
@@ -251,66 +365,186 @@ const ProjectSettingsPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-700">{projectData.description}</p>
+                  <p className="text-gray-700">{projectData?.description}</p>
                 )}
               </div>
 
               {/* Visibility */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Project Visibility</h3>
-                <div className="space-y-3">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="private"
-                      checked={projectData.visibility === "private"}
-                      onChange={(e) =>
-                        setProjectData({ ...projectData, visibility: e.target.value as ProjectData["visibility"] })
-                      }
-                      className="mr-3"
-                    />
-                    <EyeOff className="w-4 h-4 mr-2" />
-                    <div>
-                      <span className="font-medium">Private</span>
-                      <p className="text-sm text-gray-600">Only invited members can access this project</p>
-                    </div>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value="public"
-                      checked={projectData.visibility === "public"}
-                      onChange={(e) =>
-                        setProjectData({ ...projectData, visibility: e.target.value as ProjectData["visibility"] })
-                      }
-                      className="mr-3"
-                    />
-                    <Eye className="w-4 h-4 mr-2" />
-                    <div>
-                      <span className="font-medium">Public</span>
-                      <p className="text-sm text-gray-600">Anyone can view this project</p>
-                    </div>
-                  </label>
+               <div className="">
+                {/* Main Visibility Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Project Visibility</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value="private"
+                        checked={projectData?.isPublic === false}
+                        onChange={() => handleVisibilityClick(false)}
+                        className="mr-3 text-blue-600"
+                      />
+                      <EyeOff className="w-4 h-4 mr-2 text-gray-600" />
+                      <div>
+                        <span className="font-medium text-gray-900">Private</span>
+                        <p className="text-sm text-gray-600">Only invited members can access this project</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value="public"
+                        checked={projectData?.isPublic === true}
+                        onChange={() => handleVisibilityClick(true)}
+                        className="mr-3 text-blue-600"
+                      />
+                      <Eye className="w-4 h-4 mr-2 text-gray-600" />
+                      <div>
+                        <span className="font-medium text-gray-900">Public</span>
+                        <p className="text-sm text-gray-600">Anyone can view this project</p>
+                      </div>
+                    </label>
+                  </div>
+              </div>
+
+      {/* Popup Modal */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/75 bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Change Visibility</h2>
+              <button
+                onClick={() => handleCancel()}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                {tempVisibility ? (
+                  <Globe className="w-8 h-8 text-green-600 mr-3" />
+                ) : (
+                  <Lock className="w-8 h-8 text-blue-600 mr-3" />
+                )}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Make project {tempVisibility ? 'Public' : 'Private'}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {tempVisibility 
+                      ? 'Anyone on the internet will be able to see this project'
+                      : 'Only you and invited collaborators will have access'
+                    }
+                  </p>
                 </div>
               </div>
 
-              {/* Default Branch */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Default Branch</h3>
-                <input
-                  type="text"
-                  value={projectData.defaultBranch}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setProjectData({ ...projectData, defaultBranch: e.target.value })
+              {/* Warning/Info Box */}
+              <div className={`p-4 rounded-lg mb-6 ${
+                tempVisibility ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50 border border-blue-200'
+              }`}>
+                <p className={`text-sm ${tempVisibility ? 'text-amber-800' : 'text-blue-800'}`}>
+                  {tempVisibility 
+                    ? '⚠️ This will make your project visible to everyone. Make sure you\'re comfortable sharing this content publicly.'
+                    : '🔒 This will restrict access to your project. Only invited members will be able to view it.'
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-sm text-gray-600 mt-2">
-                  The default branch is considered the "base" branch in your repository.
                 </p>
               </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => handleCancel()}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSave("visibility")}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                  tempVisibility 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {tempVisibility ? 'Make Public' : 'Make Private'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+
+              {/* Default Branch */}
+              {/* Status, Due Date, Priority Section */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Project Status & Details</h3>
+                {/* Status */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select
+                    value={projectData?.status || "ACTIVE"}
+                    onChange={e => {
+                      if (projectData) {
+                        const newStatus = e.target.value as ProjectData["status"];
+                        setProjectData({ ...projectData, status: newStatus });
+                        projectSettingBackend.updateProjectDetails(projectData.id, { status: newStatus });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="ACTIVE">Active</option>
+                    <option value="DONE">Done</option>
+                    <option value="PAUSED">Paused</option>
+                    <option value="ABANDONED">Abandoned</option>
+                  </select>
+                </div>
+                {/* Due Date */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                  <input
+                    type="date"
+                    value={projectData?.dueDate || ""}
+                    onChange={e => {
+                      if (projectData) {
+                        setProjectData({ ...projectData, dueDate: e.target.value });
+                        projectSettingBackend.updateProjectDetails(projectData.id, { dueDate: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {/* Priority */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={projectData?.priority || "MEDIUM"}
+                    onChange={e => {
+                      if (projectData) {
+                        const newPriority = e.target.value as ProjectData["priority"];
+                        setProjectData({ ...projectData, priority: newPriority });
+                        projectSettingBackend.updateProjectDetails(projectData.id, { priority: newPriority });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+
+
             </div>
           )}
 

@@ -27,7 +27,7 @@ interface TeamMember {
   name: string;
   role: string;
   avatar: string;
-  status: 'Lead' | 'Active' | 'Inactive';
+  status: 'ACCEPTED' | 'PENDING';
 }
 
 interface Activity {
@@ -43,7 +43,7 @@ interface collaborator {
   name: string;
   role: string;
   avatar: string;
-  status: 'Lead' | 'Active' | 'Inactive';
+  status:  'ACCEPTED' | 'PENDING';
 }
 
 const projectCollaborators ={
@@ -339,12 +339,19 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {member.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
+                      {member.avatar ? (
+                            <img
+                              src={member.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{member.name}</p>
@@ -353,14 +360,12 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
                   </div>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      member.status === "Lead"
-                        ? "bg-blue-100 text-blue-800"
-                        : member.status === "Active"
+                      member.status === "ACCEPTED"
                         ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {member.status}
+                    {member.status === "ACCEPTED" ? "Accepted" : "Pending"}
                   </span>
                 </div>
               ))

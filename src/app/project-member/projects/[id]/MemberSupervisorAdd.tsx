@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { UserX, Shield, Users, Eye, Code, X, Search } from 'lucide-react';
 import api from "@/utils/api";
+import { useParams } from 'next/navigation';
 
 
-type MemberRole = 'viewer' | 'developer' | 'admin';
+type MemberRole = 'MEMBER' | 'OWNER';
 type SupervisorRole = 'supervisor';
 
 interface Member {
@@ -12,6 +13,7 @@ interface Member {
   email: string;
   avatar: string;
   role: MemberRole;
+  status?: 'ACCEPTED' | 'PENDING';
 }
 
 interface Supervisor {
@@ -30,10 +32,14 @@ interface SearchUser {
   email: string;
   avatar: string;
   type: 'member' | 'supervisor';
+  projectId?: string;
+  role: string;
+  status?: string;
 }
 
 
 const memberSearch = {
+  
   getUsers: async (query: string, type: 'member' | 'supervisor') => {
     try {
       const response = await api.get(
@@ -46,11 +52,53 @@ const memberSearch = {
       throw error;
     }
   },
+
+  addUser: async (user: SearchUser) => {
+    try {
+      const response = await api.post('/api/v1/users/addcollaborator', user);
+      console.log("Add User:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding user:", error);
+      throw error;
+    }
+  },
+
+
+  getProjectMember: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborators/${projectId}`);
+      console.log('Collaborators data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
+      throw error;
+    }
+  },
+
+  removeProjectMember: async (projectId: string, userId: string) => {
+    try {
+      const response = await api.post(`/project-member/projects/remove-collaborator`, {
+        projectId,
+        userId,
+      });
+      console.log('Removed collaborator:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing collaborator:', error);
+      throw error;
+    }
+  },
+
 };
 
 
 
 const MembersAndTeams = () => {
+
+  const params = useParams();
+  const projectId = String(params?.id);
+  // console.log('Project ID:', projectId);
   const [members, setMembers] = useState<Member[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,7 +127,7 @@ const MembersAndTeams = () => {
           name: fullName || u.username || u.email,
           username: u.username || u.email.split("@")[0],
           email: u.email,
-          avatar: (u.firstName?.charAt(0) || u.username?.charAt(0) || u.email.charAt(0)).toUpperCase(),
+          avatar: u.avatar,
           type: modalType,  // ✅ set type according to modal
         };
       });
@@ -101,20 +149,42 @@ const MembersAndTeams = () => {
 }, [searchQuery, modalType]); // ✅ added modalType
 
 
+useEffect(() => {
+  const fetchProjectMembers = async () => {
+    try {
+      const members = await memberSearch.getProjectMember(projectId ? projectId : '');
+      console.log('Project Members:', members);
+      setMembers(members);
+    } catch (error) {
+      console.error('Error fetching project members:', error);
+    }
+  };
+
+  fetchProjectMembers();
+}, []);
+
+
   const filteredUsers = searchUsers.filter((user: SearchUser) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const changeMemberRole = (id: string, newRole: MemberRole) => {
-    setMembers(members.map(member => 
-      member.id === id ? { ...member, role: newRole } : member
-    ));
-  };
+  // const changeMemberRole = (id: string, newRole: MemberRole) => {
+  //   setMembers(members.map(member => 
+  //     member.id === id ? { ...member, role: newRole } : member
+  //   ));
+  // };
 
   const removeMember = (id: string) => {
-    setMembers(members.filter(member => member.id !== id));
+    // Remove from backend
+    memberSearch.removeProjectMember(projectId, id)
+      .then(() => {
+        setMembers(members.filter(member => member.id !== id));
+      })
+      .catch((error) => {
+        console.error('Error removing member from backend:', error);
+      });
   };
 
   const removeSupervisor = (id: string) => {
@@ -144,7 +214,7 @@ const MembersAndTeams = () => {
   };
 
   const addSelectedUsersToProject = () => {
-    selectedUsers.forEach(user => {
+    selectedUsers.forEach(async (user) => {
       if (modalType === 'supervisor') {
         const newSupervisor: Supervisor = {
           id: user.id,
@@ -161,9 +231,32 @@ const MembersAndTeams = () => {
           name: user.name,
           email: user.email,
           avatar: user.avatar,
-          role: 'viewer'
+          role: 'MEMBER'
         };
         setMembers(prev => [...prev, newMember]);
+
+        // // Send to backend with required info
+        // const url = window.location.pathname;
+        // const match = url.match(/project-member\/projects\/(.*?)\//);
+        // const projectId = match ? match[1] : null;
+        if (projectId) {
+          try {
+            await memberSearch.addUser({
+              id: user.id,
+              name: user.name,
+              username: user.username,
+              email: user.email,
+              avatar: user.avatar,
+              type: user.type,
+              projectId: projectId,
+              role: 'MEMBER',
+              status: 'PENDING',
+            });
+            console.log('User added to backend successfully:', user);
+          } catch (error) {
+            console.error('Error adding user to backend:', error);
+          }
+        }
       }
     });
     closeModal();
@@ -171,11 +264,11 @@ const MembersAndTeams = () => {
 
   const getMemberRoleColor = (role: MemberRole) => {
     switch (role) {
-      case 'admin':
+      case 'OWNER':
         return 'bg-red-100 text-red-800';
-      case 'developer':
-        return 'bg-blue-100 text-blue-800';
-      case 'viewer':
+      // case 'developer':
+      //   return 'bg-blue-100 text-blue-800';
+      case 'MEMBER':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -184,12 +277,12 @@ const MembersAndTeams = () => {
 
   const getMemberRoleIcon = (role: MemberRole) => {
     switch (role) {
-      case 'admin':
+      case 'OWNER':
         return <Shield className="w-3 h-3" />;
-      case 'developer':
+      case 'MEMBER':
         return <Code className="w-3 h-3" />;
-      case 'viewer':
-        return <Eye className="w-3 h-3" />;
+      // case 'VIEWER':
+      //   return <Eye className="w-3 h-3" />;
       default:
         return <Users className="w-3 h-3" />;
     }
@@ -276,39 +369,74 @@ const MembersAndTeams = () => {
             members.map((member) => (
               <div key={member.id} className="p-6 flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                    {member.avatar}
-                  </div>
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {member.avatar ? (
+                            <img
+                              src={member.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
+                        </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-900">{member.name}</p>
                     <p className="text-sm text-gray-600">{member.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <select
-                    value={member.role}
-                    onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="viewer">Viewer</option>
-                    <option value="developer">Developer</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMemberRoleColor(
-                      member.role
-                    )}`}
-                  >
-                    {getMemberRoleIcon(member.role)}
-                    <span className="ml-1 capitalize">{member.role}</span>
-                  </span>
-                  <button
-                    onClick={() => removeMember(member.id)}
-                    className="text-red-600 hover:text-red-800 transition-colors"
-                  >
-                    <UserX className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg transition">
+                    {/* Role dropdown + badge */}
+                    <div className="flex items-center space-x-3">
+                      {/* Dropdown
+                      <select
+                        value={member.role}
+                        onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
+                        className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="MEMBER">Member</option>
+                        <option value="OWNER">Owner</option>
+                      </select> */}
+
+                      {/* Role Badge */}
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium shadow-sm ${getMemberRoleColor(
+                          member.role
+                        )}`}
+                      >
+                        {getMemberRoleIcon(member.role)}
+                        <span className="ml-1 capitalize">{member.role.toLowerCase()}</span>
+                      </span>
+                    </div>
+
+                    {/* Status + Actions */}
+                    <div className="flex items-center space-x-3">
+                      {/* Status Badge */}
+                      {member.status && (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold shadow-sm
+                            ${member.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                        >
+                          {member.status === 'ACCEPTED' ? 'Approved' : 'Pending'}
+                        </span>
+                      )}
+
+                      {/* Remove Button */}
+                     {member.role !== 'OWNER' && (
+                       <button
+                         onClick={() => removeMember(member.id)}
+                         className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition"
+                       >
+                         <UserX className="w-4 h-4" />
+                       </button>
+                     )}
+                    </div>
+                  </div>
+
               </div>
             ))
           )}
@@ -357,8 +485,20 @@ const MembersAndTeams = () => {
                       className="flex items-center justify-between p-3 bg-blue-900 border border-blue-700 rounded"
                     >
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
-                          {user.avatar}
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate">
@@ -392,9 +532,21 @@ const MembersAndTeams = () => {
                       onClick={() => selectUser(user)}
                       className="flex items-center p-3 hover:bg-gray-700 transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-medium text-sm mr-3">
-                        {user.avatar}
-                      </div>
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <img
+                              src="https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          )}
+                        </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">
                           {user.name}

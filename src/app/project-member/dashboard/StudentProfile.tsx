@@ -33,6 +33,24 @@ export interface User {
   following?: number;
   profileViews?: number;
   isVerified?: boolean;
+  avatar?: string;
+}
+
+export interface OneUser{
+    id: string;
+    firstName:string;
+    lastName:string;
+    username: string;
+    email: string;
+    mobileNumber?: string;
+    dateOfBirth?:string;
+    userRole:string;
+    createdAt:string;
+    status:string;
+    city?:string;
+    gender: string;
+    bio?:string;
+    avatar:string;
 }
 
 export interface UserAbout {
@@ -44,6 +62,17 @@ const userService = {
   getUser: async (userId: string): Promise<User> => {
     try {
       const response = await api.get(`/api/project-member/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+  getOneUserData: async (userId: string): Promise<OneUser> => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
       console.log('User Data:', response.data);
       return response.data;
     } catch (error) {
@@ -73,6 +102,7 @@ const ProjectDashboard = () => {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutText, setAboutText] = useState('');
   const [userAbout, setUserAbout] = useState<UserAbout | null>(null);
+  const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
 
   console.log('User in ProjectDashboard:', user1);
 
@@ -99,8 +129,10 @@ const ProjectDashboard = () => {
       
       try {
         const userData = await userService.getUser(userId);
+        const oneUserData = await userService.getOneUserData(userId);
         setUser(userData);
         setAboutText(userData.about || '');
+        setOneUserData(oneUserData);
       } catch (error) {
         console.error('Failed to fetch user:', error);
       }
@@ -249,9 +281,20 @@ const ProjectDashboard = () => {
             {/* Profile Card */}
             <div className=" rounded-xl p-6">
               <div className="relative mb-6">
-                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gray-300 bg-gradient-to-br from-red-500 to-red-700">
+                <div className="w-50 h-50 mx-auto rounded-full overflow-hidden  bg-gradient-to-br from-red-500 to-red-700">
                   <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-16 h-16 text-white" />
+                    {oneUserData?.avatar ? (
+                      <img
+                        src={oneUserData.avatar}
+                        alt="User Avatar"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-20 h-20 text-white" />
+                    )}
+
+
+
                   </div>
                 </div>
               </div>
