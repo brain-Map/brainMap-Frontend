@@ -1,8 +1,10 @@
 "use client";
 
 import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  AlertTriangle,
+  AlertCircle,
+  AlertTriangle, 
   Bell,
   Briefcase,
   Camera,
@@ -16,7 +18,9 @@ import {
   Save,
   Settings,
   Shield,
+  Star,
   Table,
+  Timer,
   Trash2,
   Upload,
   User,
@@ -337,6 +341,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
           {/* Main Content */}
           <div className="flex-1">
+            
             {/* Profile Settings */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1038,111 +1043,232 @@ const SettingsPage: React.FC<SettingsProps> = () => {
             {/* Reports Settings */}
             {activeTab === "reports" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Reports Dashboard
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Reports</h2>
+                  <button 
+                    onClick={() => setModalState({ isOpen: true, field: 'newReport', value: '', label: 'New Report', type: 'text' })}
+                    className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
+                  >
+                    <AlertCircle size={16} className="mr-2" />
+                    Create New Report
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mb-8">Manage and track your reports and incidents</p>
+
+                {/* Reports Table */}
                 <div className="space-y-8">
-                  {/* Progress Report */}
+                  {/* Reports Submitted by You */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Progress Report
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <FileText size={20} className="mr-2 text-primary" />
+                      Reports Submitted by You
                     </h3>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Project Completion</span>
-                          <span className="font-medium">75%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                          <div className="p-4 bg-gray-50 rounded-lg">
-                            <h4 className="font-medium text-gray-900">Tasks Completed</h4>
-                            <p className="text-2xl font-bold text-primary">24/32</p>
+                    <div className="space-y-4">
+                          {[
+                            {
+                              date: '2024-02-15 09:30 AM',
+                              type: 'Technical Issue',
+                              title: 'Video Call Connection Issues',
+                              description: 'Unable to establish video connection during scheduled meeting. Screen sharing feature not working and audio quality is poor.',
+                              reportedAgainst: 'John Smith',
+                              status: 'Open',
+                              priority: 'High',
+                              timeToResolve: null,
+                              feedback: null,
+                              resolution: null,
+                              lastUpdated: '2024-02-15 10:15 AM'
+                            },
+                            {
+                              date: '2024-02-10 02:15 PM',
+                              type: 'Service Issue',
+                              title: 'Expert Response Delay',
+                              description: 'No response received for over 48 hours after multiple attempts to contact.',
+                              reportedAgainst: 'Sarah Wilson',
+                              status: 'Resolved',
+                              resolution: 'Expert schedule adjusted and communication protocol updated'
+                            }
+                          ].map((report) => (
+                            <div key={report.date} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
+                              {/* Header */}
+                              <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center text-sm">
+                                  <span className="text-gray-500 mr-2">Reported on:</span>
+                                  <span className="font-medium text-gray-900">{report.date}</span>
+                                </div>
+                                <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                  report.status === 'Open' 
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : report.status === 'In Progress'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : report.status === 'Resolved'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {report.status}
+                                </span>
+                              </div>
+                              
+                              {/* Title and Description */}
+                              <h4 className="text-base font-medium text-gray-900 mb-2">{report.title}</h4>
+                              <p className="text-sm text-gray-600 mb-4">{report.description}</p>
+                              
+                              {/* Meta Information */}
+                              <div className="flex flex-wrap items-center gap-4 mb-4">
+                                <div className="flex items-center text-xs text-gray-500">
+                                  <AlertCircle size={14} className="mr-2 text-primary" />
+                                  <span className={`font-medium px-2 py-1 rounded-full ${
+                                    report.type === 'Technical Issue' 
+                                      ? 'bg-blue-50 text-blue-700'
+                                      : report.type === 'Service Issue'
+                                      ? 'bg-purple-50 text-purple-700'
+                                      : report.type === 'User Complaint'
+                                      ? 'bg-orange-50 text-orange-700'
+                                      : 'bg-gray-50 text-gray-700'
+                                  }`}>{report.type}</span>
+                                </div>
+                                <div className="flex items-center text-xs text-gray-500">
+                                  <User size={14} className="mr-2 text-primary" />
+                                  <span>Against: <span className="font-medium text-gray-700">{report.reportedAgainst}</span></span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                    </div>
+                  </div>
+
+                  {/* Reports Against You */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <Shield size={20} className="mr-2 text-primary" />
+                      Reports Against You
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex items-center text-sm">
+                            <span className="text-gray-500 mr-2">Reported on:</span>
+                            <span className="font-medium text-gray-900">2024-02-20 11:45 AM</span>
                           </div>
-                          <div className="p-4 bg-gray-50 rounded-lg">
-                            <h4 className="font-medium text-gray-900">Hours Spent</h4>
-                            <p className="text-2xl font-bold text-primary">45h</p>
+                          <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            In Progress
+                          </span>
+                        </div>
+                        
+                        {/* Title and Description */}
+                        <h4 className="text-base font-medium text-gray-900 mb-2">Session Schedule Conflict</h4>
+                        <p className="text-sm text-gray-600 mb-4">Mentor has reported multiple instances of missed scheduled sessions without prior notice.</p>
+                        
+                        {/* Meta Information */}
+                        <div className="flex flex-wrap items-center gap-4 mb-4">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <AlertCircle size={14} className="mr-2 text-primary" />
+                            <span className="font-medium px-2 py-1 rounded-full bg-orange-50 text-orange-700">
+                              Schedule Violation
+                            </span>
                           </div>
-                          <div className="p-4 bg-gray-50 rounded-lg">
-                            <h4 className="font-medium text-gray-900">Milestones</h4>
-                            <p className="text-2xl font-bold text-primary">3/4</p>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <User size={14} className="mr-2 text-primary" />
+                            <span>By: <span className="font-medium text-gray-700">David Chen (Expert)</span></span>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* New Report Dialog */}
+                <Dialog open={modalState.isOpen} onOpenChange={(open) => setModalState({ ...modalState, isOpen: open })}>
+                  <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-white">
+                    <DialogHeader className="p-4 bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <DialogTitle className="text-xl font-bold text-gray-900">Create New Report</DialogTitle>
+                        <div className="flex items-center text-amber-600 text-sm">
+                          <AlertTriangle size={16} className="mr-2" />
+                          Non-editable after submission
+                        </div>
+                      </div>
+                    </DialogHeader>
+                    <div className="space-y-4 p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-1">
+                            Report Type
+                          </label>
+                          <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">Select Report Type</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="user">User Complaint</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="payment">Payment Issue</option>
+                            <option value="service">Service Quality</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-1">
+                            Report Against
+                          </label>
+                          <input 
+                          type="text"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Username or e-mail"
+                        />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Report Title
+                        </label>
+                        <input 
+                          type="text"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Brief, specific title for your report"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Description
+                        </label>
+                        <textarea 
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent h-24 resize-none"
+                          placeholder="Please describe the issue in detail"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Evidence
+                        </label>
+                        <div className="mt-1 flex justify-center px-4 py-3 border border-gray-300 border-dashed rounded-md hover:border-primary transition-all duration-200 cursor-pointer">
+                          <div className="text-center">
+                            <Upload size={24} className="mx-auto text-gray-400" />
+                            <label className="relative cursor-pointer">
+                              <span className="text-sm font-medium text-primary hover:text-secondary">Upload files</span>
+                              <input type="file" className="sr-only" multiple />
+                            </label>
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, PDF up to 10MB each</p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Activity Summary */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Activity Summary
-                    </h3>
-                    <div className="space-y-4">
-                      {[
-                        {
-                          activity: "Research Documentation",
-                          status: "In Progress",
-                          dueDate: "Aug 25, 2025",
-                          priority: "High"
-                        },
-                        {
-                          activity: "Data Analysis",
-                          status: "Completed",
-                          dueDate: "Aug 20, 2025",
-                          priority: "Medium"
-                        },
-                        {
-                          activity: "Literature Review",
-                          status: "Pending",
-                          dueDate: "Aug 30, 2025",
-                          priority: "Low"
-                        }
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{item.activity}</h4>
-                            <p className="text-sm text-gray-500">Due: {item.dueDate}</p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className={`px-3 py-1 rounded-full text-sm ${
-                              item.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                              item.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {item.status}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm ${
-                              item.priority === 'High' ? 'bg-red-100 text-red-800' :
-                              item.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {item.priority}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Export Options */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Export Options
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <button className="flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
-                        <FileText size={20} />
-                        Export as PDF
+                    <DialogFooter className="px-4 py-3 border-t border-gray-200 gap-2">
+                      <button 
+                        onClick={() => setModalState({ ...modalState, isOpen: false })}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium text-sm"
+                      >
+                        Cancel
                       </button>
-                      <button className="flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
-                        <Table size={20} />
-                        Export as Excel
+                      <button className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary hover:text-black transition-colors font-medium text-sm">
+                        Submit Report
                       </button>
-                    </div>
-                  </div>
-                </div>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
 
