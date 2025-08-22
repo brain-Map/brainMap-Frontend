@@ -1,442 +1,537 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { cn } from "@/lib/utils";
-import { 
-  User, 
-  Bell, 
-  Lock, 
-  Shield, 
+import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
+import {
+  User,
+  Bell,
+  Shield,
   Eye,
-  Globe,
-  Calendar,
-  MessageCircle,
   Save,
   Upload,
   Camera,
   Mail,
   Phone,
-  MapPin,
-  Building,
-  GraduationCap,
-  BookOpen,
-  Users,
   Settings,
-  Trash2,
-  Edit3,
   CheckCircle,
-  AlertCircle,
+  Moon,
+  Sun,
+  Monitor,
   Volume2,
-  VolumeX,
   Plus,
-  AlertTriangle,
-  Clock
-} from 'lucide-react';
+  Check,
+  X,
+  Edit2,
+} from "lucide-react";
+import { convertBlobUrlToFile } from "@/lib/converToFile";
+import { uploadImage } from "@/lib/storageClient";
+import api from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
+import ProfileEditor from "./ProfileEditor"
 
 interface SettingsProps {}
 
+export interface OneUser{
+    id: string;
+    firstName:string;
+    lastName:string;
+    username: string;
+    email: string;
+    mobileNumber?: string;
+    dateOfBirth?:string;
+    userRole:string;
+    createdAt:string;
+    status:string;
+    city?:string;
+    gender: string;
+    bio?:string;
+    avatar:string;
+}
+
+const settingsFunctions = {
+  updateUserProfileAvatar: async (userId: string, imageUrl: string) => {
+    if (!userId || !imageUrl) return;
+
+    try {
+      await api.put("/api/v1/users/avatar", {
+        userId: userId,
+        avatar: imageUrl,
+      });
+    } catch (error) {
+      console.error("Error updating user profile avatar:", error);
+    }
+  },
+
+
+    getOneUserData: async (userId: string): Promise<OneUser> => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+};
+
+
+
+
+
 const SettingsPage: React.FC<SettingsProps> = () => {
-  const [activeTab, setActiveTab] = useState('profile');
-  const [isUploading, setIsUploading] = useState(false);
-  const [isAddingInterest, setIsAddingInterest] = useState(false);
-  const [newInterest, setNewInterest] = useState('');
-  const [showReportForm, setShowReportForm] = useState(false);
-  const [reportForm, setReportForm] = useState({
-    reportType: '',
-    reportedUser: '',
-    evidence: null as File | null,
-    description: '',
-    title: ''
-  });
-  
-  const [reportFilter, setReportFilter] = useState('all');
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [notifications, setNotifications] = useState({
     email: {
       projectUpdates: true,
       expertMessages: true,
       deadlineReminders: true,
       collaborationInvites: true,
-      systemUpdates: false
+      systemUpdates: false,
     },
     push: {
       instantMessages: true,
       meetingReminders: true,
       taskDeadlines: true,
-      expertAvailability: false
+      expertAvailability: false,
     },
     inApp: {
       newProjects: true,
       comments: true,
       mentions: true,
-      fileSharing: true
-    }
+      fileSharing: true,
+    },
   });
 
   const [profileData, setProfileData] = useState({
-    fullName: 'Nadun Madusanka',
-    username: 'nadu_nm',
-    email: 'nadun.madusanka@university.edu',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    dateOfBirth: '',
-    gender: '',
-    bio: 'PhD student specializing in machine learning and AI ethics. Passionate about developing ethical AI systems for healthcare applications.',
-    researchInterests: ['Machine Learning', 'AI Ethics', 'Healthcare AI', 'Computer Vision', 'NLP'],
-    avatar: '/image/user.jpg'
+    fullName: "Nadun Madusanka",
+    username: "nadu_nm",
+    email: "nadun.madusanka@university.edu",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    dateOfBirth: "",
+    gender: "",
+    bio: "PhD student specializing in machine learning and AI ethics. Passionate about developing ethical AI systems for healthcare applications.",
+    researchInterests: [
+      "Machine Learning",
+      "AI Ethics",
+      "Healthcare AI",
+      "Computer Vision",
+      "NLP",
+    ],
+    avatar: "/image/user.jpg",
   });
 
   const [privacy, setPrivacy] = useState({
-    profileVisibility: 'public',
+    profileVisibility: "public",
     showEmail: false,
     showPhone: false,
     showProjects: true,
     showProgress: true,
     allowContactFromExperts: true,
-    showOnlineStatus: true
+    showOnlineStatus: true,
   });
 
+
+   const [modalState, setModalState] = useState({
+    isOpen: false,
+    field: '',
+    value: '',
+    label: '',
+    type: 'text'
+  });
+
+  
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userId) {
+        const oneUserData = await settingsFunctions.getOneUserData(userId);
+        setOneUserData(oneUserData);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
+
+
+
+
   const handleProfileUpdate = (field: string, value: any) => {
-    setProfileData(prev => ({
+    setProfileData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleNotificationChange = (category: string, setting: string, value: boolean) => {
-    setNotifications(prev => ({
+  const handleNotificationChange = (
+    category: string,
+    setting: string,
+    value: boolean
+  ) => {
+    setNotifications((prev) => ({
       ...prev,
       [category]: {
         ...prev[category as keyof typeof prev],
-        [setting]: value
-      }
+        [setting]: value,
+      },
     }));
   };
 
   const handlePrivacyChange = (setting: string, value: any) => {
-    setPrivacy(prev => ({
+    setPrivacy((prev) => ({
       ...prev,
-      [setting]: value
+      [setting]: value,
     }));
-  };
-
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setIsUploading(true);
-      // Simulate upload process
-      setTimeout(() => {
-        setIsUploading(false);
-        // In real app, you would upload to server and update profileData.avatar
-      }, 2000);
-    }
   };
 
   const handleSaveSettings = () => {
     // Simulate saving settings
-    console.log('Saving settings...', { profileData, notifications, privacy });
+    console.log("Saving settings...", { profileData, notifications, privacy });
     // Show success message
   };
 
-  const handleReportSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically send the report to your backend
-    console.log('Report submitted:', reportForm);
-    setShowReportForm(false);
-    // Reset form
-    setReportForm({
-      reportType: '',
-      reportedUser: '',
-      evidence: null,
-      description: '',
-      title: ''
-    });
-  };
 
-  const handleAddInterest = () => {
-    if (newInterest.trim() && !profileData.researchInterests.includes(newInterest.trim())) {
-      const updatedInterests = [...profileData.researchInterests, newInterest.trim()];
-      handleProfileUpdate('researchInterests', updatedInterests);
-      setNewInterest('');
-      setIsAddingInterest(false);
+  //image upload begin
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const newImageUrls = filesArray.map((file) => URL.createObjectURL(file));
+
+      setImageUrls(newImageUrls);
     }
   };
 
-  const handleCancelAddInterest = () => {
-    setNewInterest('');
-    setIsAddingInterest(false);
-  };
+  const [isPending, startTransition] = useTransition();
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleAddInterest();
-    } else if (e.key === 'Escape') {
-      handleCancelAddInterest();
+  const removeImage = () => {
+    setImageUrls([]);
+    setPreviewUrl(null);
+    setShowSuccess(false);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
     }
   };
+
+  const handleClickUploadImagesButton = async () => {
+  if (imageUrls.length === 0) return;
+
+  try {
+    const urls: string[] = [];
+
+    for (const url of imageUrls) {
+      const imageFile = await convertBlobUrlToFile(url);
+
+      const { imageUrl, error } = await uploadImage({
+        file: imageFile,
+        bucket: "uploads",
+        folder: "avatars",
+        userId: userId!, // overwrite per user
+      });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      urls.push(imageUrl);
+    }
+
+    console.log("Uploaded avatar URLs:", urls);
+
+    // Update only with the first (profile pic)
+    settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
+
+    // Clear after upload
+    setImageUrls([]);
+  } catch (err) {
+    console.error("Upload failed:", err);
+  }
+};
+
+
+  //image upload end
 
   const settingsTabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy', icon: Shield },
-    { id: 'account', label: 'Account', icon: Settings },
-    { id: 'reports', label: 'Reports', icon: AlertTriangle }
+    { id: "profile", label: "Profile", icon: User },
+    { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "privacy", label: "Privacy", icon: Shield },
+    { id: "account", label: "Account", icon: Settings },
+    { id: "appearance", label: "Appearance", icon: Eye },
   ];
 
   const SettingsTab = ({ id, label, icon: Icon, isActive, onClick }: any) => (
     <button
       onClick={() => onClick(id)}
-      className={cn(
-        'w-full flex items-center gap-x-3 px-3 py-2 text-sm transition-colors',
+      className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-all duration-200 ${
         isActive
-          ? 'bg-gray-100/80 text-gray-900 font-medium'
-          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/50'
-      )}
+          ? "bg-primary text-white shadow-lg"
+          : "text-gray-600 hover:bg-value3 hover:text-primary"
+      }`}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon size={20} />
+      <span className="font-medium">{label}</span>
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-5">
-            <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
-            <p className="mt-1 text-sm text-gray-500">Manage your account, preferences, and privacy settings</p>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex bg-white min-h-[calc(100vh-5rem)]">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
+          <p className="text-gray-600">
+            Manage your account, preferences, and privacy settings
+          </p>
+        </div>
+
+        <div className="flex gap-8">
           {/* Sidebar */}
-          <div className="w-48 flex-shrink-0 border-r border-gray-200">
-            <nav className="p-2 sticky top-0">
-              {settingsTabs.map((tab) => (
-                <SettingsTab
-                  key={tab.id}
-                  id={tab.id}
-                  label={tab.label}
-                  icon={tab.icon}
-                  isActive={activeTab === tab.id}
-                  onClick={setActiveTab}
-                />
-              ))}
-            </nav>
+          <div className="w-64 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <nav className="space-y-2">
+                {settingsTabs.map((tab) => (
+                  <SettingsTab
+                    key={tab.id}
+                    id={tab.id}
+                    label={tab.label}
+                    icon={tab.icon}
+                    isActive={activeTab === tab.id}
+                    onClick={setActiveTab}
+                  />
+                ))}
+              </nav>
+            </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 bg-gray-50/50">
-            <div className="p-8 max-w-4xl">
+          <div className="flex-1">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* Profile Settings */}
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
-                </div>
-                
-                {/* Avatar Section */}
-                <div className="mb-8">
-                  <div className="flex items-center space-x-6">
-                    <div className="relative">
-                      <img
-                        src={profileData.avatar}
-                        alt="Profile"
-                        className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
-                      />
-                      {isUploading && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        </div>
+            {activeTab === "profile" && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Profile Information
+                </h2>
+
+                {/* Avatar Section - Demo Style */}
+                <div className=" flex justify-center items-center p-4">
+                  <div className="bg-white rounded-3xl p-8 flex flex-col items-center gap-8 w-full max-w-md relative overflow-hidden ">
+                    {/* Success Message */}
+                    {showSuccess && (
+                      <div className="absolute top-4 left-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 z-10">
+                        <Check size={16} />
+                        <span className="text-sm font-medium">
+                          Profile picture updated successfully!
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Header */}
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                        Update Profile Picture
+                      </h1>
+                      <p className="text-gray-600 text-sm">
+                        Choose a new photo to represent yourself
+                      </p>
+                    </div>
+
+                    {/* Profile Avatar Preview */}
+                    <div className="relative group">
+                      <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
+                        {imageUrls[0] ? (
+                          <img
+                            src={imageUrls[0]}
+                            className="w-full h-full object-cover"
+                            alt="Profile Avatar"
+                          />
+                        ) : (
+                        oneUserData?.avatar ? (
+                          <img
+                            src={oneUserData.avatar}
+                            className="w-full h-full object-cover"
+                            alt="Profile Avatar"
+                          />
+                        ) : (
+                          <User size={60} className="text-gray-400" />
+                        )
+                        )}
+                        
+                      </div>
+
+                      {/* Edit Button Overlay */}
+                      <button
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isPending}
+                        className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100"
+                      >
+                        <Camera size={24} className="text-white" />
+                      </button>
+
+                      {/* Corner Edit Button */}
+                      <button
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isPending}
+                        className="absolute bottom-2 right-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white p-3 rounded-full shadow-lg transform hover:scale-110 transition-all duration-200"
+                      >
+                        <Camera size={16} />
+                      </button>
+
+                      {/* Remove Button */}
+                      {imageUrls.length > 0 && (
+                        <button
+                          onClick={removeImage}
+                          disabled={isPending}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white p-2 rounded-full shadow-lg transform hover:scale-110 transition-all duration-200"
+                        >
+                          <X size={14} />
+                        </button>
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-1">Profile Picture</h3>
-                      <p className="text-sm text-gray-500 mb-3">Update your profile picture</p>
-                      <label className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors cursor-pointer">
-                        <Camera size={16} className="mr-2" />
-                        Upload New Photo
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleAvatarUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    {/* Hidden Input */}
                     <input
-                      type="text"
-                      value={profileData.fullName}
-                      onChange={(e) => handleProfileUpdate('fullName', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      type="file"
+                      hidden
+                      ref={imageInputRef}
+                      onChange={handleImageChange}
+                      disabled={isPending}
+                      accept="image/*"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                    <input
-                      type="text"
-                      value={profileData.username}
-                      onChange={(e) => handleProfileUpdate('username', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                    <input
-                      type="date"
-                      value={profileData.dateOfBirth}
-                      onChange={(e) => handleProfileUpdate('dateOfBirth', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                    <select
-                      value={profileData.gender}
-                      onChange={(e) => handleProfileUpdate('gender', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => handleProfileUpdate('email', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                    <div className="relative">
-                      <Phone size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => handleProfileUpdate('phone', e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* ...existing code... */}
-
-                {/* About Me */}
-                <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">About Me</label>
-                  <textarea
-                    value={profileData.bio}
-                    onChange={(e) => handleProfileUpdate('bio', e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Tell us about yourself, your research interests, and academic goals..."
-                  />
-                </div>
-
-                {/* Research Interests */}
-                <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Research Interests</label>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.researchInterests.map((interest, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                      >
-                        {interest}
-                        <button
-                          onClick={() => {
-                            const newInterests = profileData.researchInterests.filter((_, i) => i !== index);
-                            handleProfileUpdate('researchInterests', newInterests);
-                          }}
-                          className="ml-2 hover:text-red-600"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                    
-                    {/* Add Interest Input */}
-                    {isAddingInterest ? (
-                      <div className="inline-flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={newInterest}
-                          onChange={(e) => setNewInterest(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          placeholder="Enter interest..."
-                          className="px-3 py-1 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                          autoFocus
-                        />
-                        <button
-                          onClick={handleAddInterest}
-                          disabled={!newInterest.trim()}
-                          className="text-green-600 hover:text-green-700 disabled:text-gray-400"
-                        >
-                          <CheckCircle size={16} />
-                        </button>
-                        <button
-                          onClick={handleCancelAddInterest}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          ×
-                        </button>
+                    {/* Image Info */}
+                    {imageUrls.length > 0 && (
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">
+                          New profile picture selected
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Click "Save Profile Picture" to apply changes
+                        </p>
                       </div>
-                    ) : (
-                      <button 
-                        onClick={() => setIsAddingInterest(true)}
-                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary transition-colors"
-                      >
-                        <Plus size={14} className="mr-1" />
-                        Add Interest
-                      </button>
                     )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 w-full">
+                      {/* Upload/Browse Button */}
+                      <button
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isPending}
+                        className="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 py-3 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-gray-400"
+                      >
+                        <Upload size={18} />
+                        {imageUrls.length > 0
+                          ? "Choose Different Photo"
+                          : "Browse Photos"}
+                      </button>
+
+                      {/* Save Button */}
+                      <button
+                        onClick={handleClickUploadImagesButton}
+                        className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-3 px-6 rounded-xl font-medium shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                        disabled={isPending || imageUrls.length === 0}
+                      >
+                        {isPending ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Check size={18} />
+                            Save Profile Picture
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Guidelines */}
+                    <div className="text-center text-xs text-gray-500 space-y-1">
+                      <p>Recommended: Square image, at least 400x400px</p>
+                      <p>Supported formats: JPG, PNG, GIF</p>
+                      <p>Maximum file size: 10MB</p>
+                    </div>
                   </div>
-                  {profileData.researchInterests.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-2">No research interests added yet. Click "Add Interest" to get started.</p>
-                  )}
                 </div>
 
-                {/* Save Button */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
-                </div>
+                <ProfileEditor />
+                
               </div>
             )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* Notifications Settings */}
-            {activeTab === 'notifications' && (
+            {activeTab === "notifications" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Notification Preferences
+                </h2>
+
                 {/* Email Notifications */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -445,28 +540,50 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </h3>
                   <div className="space-y-4">
                     {Object.entries(notifications.email).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between py-2">
+                      <div
+                        key={key}
+                        className="flex items-center justify-between py-2"
+                      >
                         <div>
                           <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                            {key.replace(/([A-Z])/g, " $1").trim()}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {key === 'projectUpdates' && 'Get notified about updates to your projects'}
-                            {key === 'expertMessages' && 'Receive messages from domain experts'}
-                            {key === 'deadlineReminders' && 'Reminders about upcoming deadlines'}
-                            {key === 'collaborationInvites' && 'Invitations to collaborate on projects'}
-                            {key === 'systemUpdates' && 'System maintenance and feature updates'}
+                            {key === "projectUpdates" &&
+                              "Get notified about updates to your projects"}
+                            {key === "expertMessages" &&
+                              "Receive messages from domain experts"}
+                            {key === "deadlineReminders" &&
+                              "Reminders about upcoming deadlines"}
+                            {key === "collaborationInvites" &&
+                              "Invitations to collaborate on projects"}
+                            {key === "systemUpdates" &&
+                              "System maintenance and feature updates"}
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             checked={value}
-                            onChange={(e) => handleNotificationChange('email', key, e.target.checked)}
+                            onChange={(e) =>
+                              handleNotificationChange(
+                                "email",
+                                key,
+                                e.target.checked
+                              )
+                            }
                             className="sr-only"
                           />
-                          <div className={`w-11 h-6 rounded-full ${value ? 'bg-primary' : 'bg-gray-200'} relative transition-colors`}>
-                            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                          <div
+                            className={`w-11 h-6 rounded-full ${
+                              value ? "bg-primary" : "bg-gray-200"
+                            } relative transition-colors`}
+                          >
+                            <div
+                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                value ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            ></div>
                           </div>
                         </label>
                       </div>
@@ -482,27 +599,48 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </h3>
                   <div className="space-y-4">
                     {Object.entries(notifications.push).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between py-2">
+                      <div
+                        key={key}
+                        className="flex items-center justify-between py-2"
+                      >
                         <div>
                           <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                            {key.replace(/([A-Z])/g, " $1").trim()}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {key === 'instantMessages' && 'Real-time chat messages'}
-                            {key === 'meetingReminders' && 'Upcoming meeting alerts'}
-                            {key === 'taskDeadlines' && 'Task and deadline notifications'}
-                            {key === 'expertAvailability' && 'When experts become available'}
+                            {key === "instantMessages" &&
+                              "Real-time chat messages"}
+                            {key === "meetingReminders" &&
+                              "Upcoming meeting alerts"}
+                            {key === "taskDeadlines" &&
+                              "Task and deadline notifications"}
+                            {key === "expertAvailability" &&
+                              "When experts become available"}
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             checked={value}
-                            onChange={(e) => handleNotificationChange('push', key, e.target.checked)}
+                            onChange={(e) =>
+                              handleNotificationChange(
+                                "push",
+                                key,
+                                e.target.checked
+                              )
+                            }
                             className="sr-only"
                           />
-                          <div className={`w-11 h-6 rounded-full ${value ? 'bg-primary' : 'bg-gray-200'} relative transition-colors`}>
-                            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                          <div
+                            className={`w-11 h-6 rounded-full ${
+                              value ? "bg-primary" : "bg-gray-200"
+                            } relative transition-colors`}
+                          >
+                            <div
+                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                value ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            ></div>
                           </div>
                         </label>
                       </div>
@@ -518,27 +656,47 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </h3>
                   <div className="space-y-4">
                     {Object.entries(notifications.inApp).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between py-2">
+                      <div
+                        key={key}
+                        className="flex items-center justify-between py-2"
+                      >
                         <div>
                           <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                            {key.replace(/([A-Z])/g, " $1").trim()}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {key === 'newProjects' && 'Notifications about new project invitations'}
-                            {key === 'comments' && 'Comments on your work or projects'}
-                            {key === 'mentions' && 'When someone mentions you'}
-                            {key === 'fileSharing' && 'File sharing and collaboration updates'}
+                            {key === "newProjects" &&
+                              "Notifications about new project invitations"}
+                            {key === "comments" &&
+                              "Comments on your work or projects"}
+                            {key === "mentions" && "When someone mentions you"}
+                            {key === "fileSharing" &&
+                              "File sharing and collaboration updates"}
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             checked={value}
-                            onChange={(e) => handleNotificationChange('inApp', key, e.target.checked)}
+                            onChange={(e) =>
+                              handleNotificationChange(
+                                "inApp",
+                                key,
+                                e.target.checked
+                              )
+                            }
                             className="sr-only"
                           />
-                          <div className={`w-11 h-6 rounded-full ${value ? 'bg-primary' : 'bg-gray-200'} relative transition-colors`}>
-                            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                          <div
+                            className={`w-11 h-6 rounded-full ${
+                              value ? "bg-primary" : "bg-gray-200"
+                            } relative transition-colors`}
+                          >
+                            <div
+                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                value ? "translate-x-5" : "translate-x-0"
+                              }`}
+                            ></div>
                           </div>
                         </label>
                       </div>
@@ -560,27 +718,38 @@ const SettingsPage: React.FC<SettingsProps> = () => {
             )}
 
             {/* Privacy Settings */}
-            {activeTab === 'privacy' && (
+            {activeTab === "privacy" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Privacy Settings</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Privacy Settings
+                </h2>
+
                 <div className="space-y-6">
                   {/* Profile Visibility */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Profile Visibility</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Profile Visibility
+                    </h3>
                     <div className="space-y-3">
                       <label className="flex items-center">
                         <input
                           type="radio"
                           name="profileVisibility"
                           value="public"
-                          checked={privacy.profileVisibility === 'public'}
-                          onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
+                          checked={privacy.profileVisibility === "public"}
+                          onChange={(e) =>
+                            handlePrivacyChange(
+                              "profileVisibility",
+                              e.target.value
+                            )
+                          }
                           className="mr-3"
                         />
                         <div>
                           <p className="font-medium text-gray-900">Public</p>
-                          <p className="text-sm text-gray-500">Your profile is visible to all users</p>
+                          <p className="text-sm text-gray-500">
+                            Your profile is visible to all users
+                          </p>
                         </div>
                       </label>
                       <label className="flex items-center">
@@ -588,13 +757,22 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           type="radio"
                           name="profileVisibility"
                           value="experts"
-                          checked={privacy.profileVisibility === 'experts'}
-                          onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
+                          checked={privacy.profileVisibility === "experts"}
+                          onChange={(e) =>
+                            handlePrivacyChange(
+                              "profileVisibility",
+                              e.target.value
+                            )
+                          }
                           className="mr-3"
                         />
                         <div>
-                          <p className="font-medium text-gray-900">Experts Only</p>
-                          <p className="text-sm text-gray-500">Only domain experts can view your profile</p>
+                          <p className="font-medium text-gray-900">
+                            Experts Only
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Only domain experts can view your profile
+                          </p>
                         </div>
                       </label>
                       <label className="flex items-center">
@@ -602,13 +780,20 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           type="radio"
                           name="profileVisibility"
                           value="private"
-                          checked={privacy.profileVisibility === 'private'}
-                          onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
+                          checked={privacy.profileVisibility === "private"}
+                          onChange={(e) =>
+                            handlePrivacyChange(
+                              "profileVisibility",
+                              e.target.value
+                            )
+                          }
                           className="mr-3"
                         />
                         <div>
                           <p className="font-medium text-gray-900">Private</p>
-                          <p className="text-sm text-gray-500">Only you can view your profile</p>
+                          <p className="text-sm text-gray-500">
+                            Only you can view your profile
+                          </p>
                         </div>
                       </label>
                     </div>
@@ -616,30 +801,81 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
                   {/* Information Sharing */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Information Sharing</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Information Sharing
+                    </h3>
                     <div className="space-y-4">
                       {[
-                        { key: 'showEmail', label: 'Show Email Address', description: 'Allow others to see your email address' },
-                        { key: 'showPhone', label: 'Show Phone Number', description: 'Allow others to see your phone number' },
-                        { key: 'showProjects', label: 'Show Projects', description: 'Display your current and completed projects' },
-                        { key: 'showProgress', label: 'Show Progress', description: 'Show your academic progress and achievements' },
-                        { key: 'allowContactFromExperts', label: 'Allow Contact from Experts', description: 'Let domain experts contact you directly' },
-                        { key: 'showOnlineStatus', label: 'Show Online Status', description: 'Display when you are online and available' }
+                        {
+                          key: "showEmail",
+                          label: "Show Email Address",
+                          description: "Allow others to see your email address",
+                        },
+                        {
+                          key: "showPhone",
+                          label: "Show Phone Number",
+                          description: "Allow others to see your phone number",
+                        },
+                        {
+                          key: "showProjects",
+                          label: "Show Projects",
+                          description:
+                            "Display your current and completed projects",
+                        },
+                        {
+                          key: "showProgress",
+                          label: "Show Progress",
+                          description:
+                            "Show your academic progress and achievements",
+                        },
+                        {
+                          key: "allowContactFromExperts",
+                          label: "Allow Contact from Experts",
+                          description:
+                            "Let domain experts contact you directly",
+                        },
+                        {
+                          key: "showOnlineStatus",
+                          label: "Show Online Status",
+                          description:
+                            "Display when you are online and available",
+                        },
                       ].map(({ key, label, description }) => (
-                        <div key={key} className="flex items-center justify-between py-2">
+                        <div
+                          key={key}
+                          className="flex items-center justify-between py-2"
+                        >
                           <div>
                             <p className="font-medium text-gray-900">{label}</p>
-                            <p className="text-sm text-gray-500">{description}</p>
+                            <p className="text-sm text-gray-500">
+                              {description}
+                            </p>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={privacy[key as keyof typeof privacy] as boolean}
-                              onChange={(e) => handlePrivacyChange(key, e.target.checked)}
+                              checked={
+                                privacy[key as keyof typeof privacy] as boolean
+                              }
+                              onChange={(e) =>
+                                handlePrivacyChange(key, e.target.checked)
+                              }
                               className="sr-only"
                             />
-                            <div className={`w-11 h-6 rounded-full ${privacy[key as keyof typeof privacy] ? 'bg-primary' : 'bg-gray-200'} relative transition-colors`}>
-                              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${privacy[key as keyof typeof privacy] ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                            <div
+                              className={`w-11 h-6 rounded-full ${
+                                privacy[key as keyof typeof privacy]
+                                  ? "bg-primary"
+                                  : "bg-gray-200"
+                              } relative transition-colors`}
+                            >
+                              <div
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                  privacy[key as keyof typeof privacy]
+                                    ? "translate-x-5"
+                                    : "translate-x-0"
+                                }`}
+                              ></div>
                             </div>
                           </label>
                         </div>
@@ -649,15 +885,36 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
                   {/* Data Export */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Data Management</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Data Management
+                    </h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div>
-                          <p className="font-medium text-gray-900">Download Your Data</p>
-                          <p className="text-sm text-gray-500">Export all your data including projects, messages, and settings</p>
+                          <p className="font-medium text-gray-900">
+                            Download Your Data
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Export all your data including projects, messages,
+                            and settings
+                          </p>
                         </div>
                         <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
                           Export Data
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-red-900">
+                            Delete Account
+                          </p>
+                          <p className="text-sm text-red-600">
+                            Permanently delete your account and all associated
+                            data
+                          </p>
+                        </div>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                          Delete Account
                         </button>
                       </div>
                     </div>
@@ -678,31 +935,41 @@ const SettingsPage: React.FC<SettingsProps> = () => {
             )}
 
             {/* Account Settings */}
-            {activeTab === 'account' && (
+            {activeTab === "account" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Account Settings
+                </h2>
+
                 <div className="space-y-8">
                   {/* Change Password */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Change Password
+                    </h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current Password
+                        </label>
                         <input
                           type="password"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          New Password
+                        </label>
                         <input
                           type="password"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm New Password
+                        </label>
                         <input
                           type="password"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -716,11 +983,15 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
                   {/* Two-Factor Authentication */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Two-Factor Authentication</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Two-Factor Authentication
+                    </h3>
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">Enable 2FA</p>
-                        <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                        <p className="text-sm text-gray-500">
+                          Add an extra layer of security to your account
+                        </p>
                       </div>
                       <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
                         Enable 2FA
@@ -728,391 +999,246 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     </div>
                   </div>
 
-                  {/* Delete Account */}
-                  <div className="mt-12 pt-8">
-                    <h3 className="text-lg font-medium text-red-600 mb-4">Delete Account</h3>
-                    <div className="bg-red-50 rounded-lg p-4">
-                      <p className="text-red-800 font-medium mb-2">Warning: This action is irreversible</p>
-                      <p className="text-red-600 text-sm mb-4">Deleting your account will permanently remove all your data including:</p>
-                      <ul className="list-disc list-inside text-red-600 text-sm mb-6 space-y-1">
-                        <li>All your projects and research work</li>
-                        <li>Messages and communication history</li>
-                        <li>Expert connections and mentorship history</li>
-                        <li>Personal settings and preferences</li>
-                      </ul>
-                      <div className="flex flex-col space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-red-700 mb-2">
-                            Type "DELETE" to confirm
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                            placeholder="Type DELETE in capitals"
-                          />
-                        </div>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full sm:w-auto">
-                          Permanently Delete Account
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reports Section */}
-            {activeTab === 'reports' && (
-              <div>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-gray-900">Reports Management</h2>
-                  <button 
-                    onClick={() => setShowReportForm(true)} 
-                    className="inline-flex items-center px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <AlertTriangle size={14} className="mr-2" />
-                    Submit New Report
-                  </button>
-                </div>
-
-                {/* Report Form */}
-                {showReportForm && (
-                  <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-gray-900">Submit New Report</h3>
-                      <button 
-                        onClick={() => setShowReportForm(false)}
-                        className="text-gray-400 hover:text-gray-500"
-                      >
-                        ×
-                      </button>
-                    </div>
-
-                    {/* Warning Note */}
-                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-start">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
-                        <div>
-                          <h4 className="text-sm font-medium text-yellow-800">Important Notice</h4>
-                          <p className="mt-1 text-sm text-yellow-700">
-                            Please note that once submitted, reports cannot be edited or deleted. Make sure all information is accurate before submitting.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <form onSubmit={handleReportSubmit} className="space-y-6">
-                      {/* Title */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Title
-                        </label>
-                        <input
-                          type="text"
-                          value={reportForm.title}
-                          onChange={(e) => setReportForm(prev => ({ ...prev, title: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Brief title for your report"
-                        />
-                      </div>
-                      
-                      {/* Report Type */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Report Type
-                        </label>
-                        <select
-                          value={reportForm.reportType}
-                          onChange={(e) => setReportForm(prev => ({ ...prev, reportType: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        >
-                          <option value="">Select a report type</option>
-                          <option value="harassment">Harassment</option>
-                          <option value="inappropriate-content">Inappropriate Content</option>
-                          <option value="spam">Spam</option>
-                          <option value="impersonation">Impersonation</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-
-                      {/* Reported User */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Who are you reporting against?
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Enter username or full name"
-                          value={reportForm.reportedUser}
-                          onChange={(e) => setReportForm(prev => ({ ...prev, reportedUser: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-
-                      {/* Evidence Upload */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Evidence
-                        </label>
-                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                          <div className="space-y-1 text-center">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                            <div className="flex text-sm text-gray-600">
-                              <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-secondary">
-                                <span>Upload a file</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="sr-only"
-                                  onChange={(e) => setReportForm(prev => ({ 
-                                    ...prev, 
-                                    evidence: e.target.files ? e.target.files[0] : null 
-                                  }))}
-                                />
-                              </label>
-                              <p className="pl-1">or drag and drop</p>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              PNG, JPG, GIF up to 10MB
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Description
-                        </label>
-                        <textarea
-                          rows={4}
-                          placeholder="Please provide detailed information about the incident..."
-                          value={reportForm.description}
-                          onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-
-                      {/* Submit and Cancel Buttons */}
-                      <div className="flex justify-end space-x-4">
-                        <button
-                          type="button"
-                          onClick={() => setShowReportForm(false)}
-                          className="inline-flex items-center px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                        >
-                          Submit Report
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                <div className="mt-6 space-y-6">
-                  {/* Reports Made by You */}
-                  <div className="bg-white rounded-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-medium text-gray-900">Reports Created by You</h3>
-                        <div className="flex items-center space-x-2">
-                          <select 
-                            value={reportFilter}
-                            onChange={(e) => setReportFilter(e.target.value)}
-                            className="text-sm border-gray-200 rounded-md p-1"
-                          >
-                            <option value="all">All Reports</option>
-                            <option value="active">Active</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="dismissed">Dismissed</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-3">
+                  {/* Login Activity */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Recent Login Activity
+                    </h3>
+                    <div className="space-y-3">
                       {[
                         {
-                          title: 'Inappropriate Content in Project Discussion',
-                          reportedUser: 'john.doe',
-                          date: '2025-08-15',
-                          status: 'Under Review',
-                          statusColor: 'yellow',
-                          type: 'Content',
-                          lastUpdate: '2025-08-16',
-                          description: 'Posted inappropriate content in the project discussion board.',
-                          id: '1'
+                          device: "MacBook Pro",
+                          location: "San Francisco, CA",
+                          time: "2 hours ago",
+                          current: true,
                         },
-                        { 
-                          title: 'Harassment in Chat',
-                          reportedUser: 'user123',
-                          date: '2025-08-10',
-                          status: 'Resolved',
-                          statusColor: 'green',
-                          type: 'Harassment',
-                          lastUpdate: '2025-08-12',
-                          description: 'Sent threatening messages in private chat.',
-                          resolution: 'User received a warning and messages were removed.'
+                        {
+                          device: "iPhone 13",
+                          location: "San Francisco, CA",
+                          time: "1 day ago",
+                          current: false,
                         },
-                        { 
-                          title: 'Spam Messages',
-                          reportedUser: 'spammer99',
-                          date: '2025-08-05',
-                          status: 'Closed',
-                          statusColor: 'gray',
-                          type: 'Spam',
-                          lastUpdate: '2025-08-07',
-                          description: 'Multiple promotional messages in community forums.',
-                          resolution: 'Account suspended for 7 days.'
-                        }
-                      ].map((report, index) => (
-                        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
-                          <div>
-                            {/* Title in larger font */}
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{report.title}</h3>
-
-                            {/* Reported User */}
-                            <div className="mb-3">
-                              <span className="text-sm text-gray-700">
-                                <strong>Reported against: </strong>@{report.reportedUser}
-                              </span>
+                        {
+                          device: "Chrome Browser",
+                          location: "San Francisco, CA",
+                          time: "3 days ago",
+                          current: false,
+                        },
+                      ].map((session, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {session.device}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {session.location} • {session.time}
+                              </p>
                             </div>
-
-                            {/* Header with Title, Description, and Badges */}
-                            <div className="mb-4">
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <h3 className="text-xl font-semibold text-gray-900">{report.title}</h3>
-                                  <p className="mt-1 text-sm text-gray-600">{report.description}</p>
-                                </div>
-                                <div className="flex gap-2 ml-4">
-                                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                                    report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
-                                    report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {report.status}
-                                  </span>
-                                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                    {report.type}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Created Date and Time */}
-                            <div className="mb-3">
-                              <div className="text-sm text-gray-600">
-                                <strong>Created: </strong>{new Date(report.date).toLocaleDateString()}{' '}
-                                <strong className="ml-3">Time: </strong>{new Date(report.date).toLocaleTimeString()}
-                              </div>
-                            </div>
-
-                            {/* Resolution (if any) */}
-                            {report.resolution && (
-                              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <span className="text-sm font-medium text-green-800">Resolution: </span>
-                                <span className="text-sm text-green-700">{report.resolution}</span>
-                              </div>
-                            )}
                           </div>
+                          {session.current && (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                              Current
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Reports Against You */}
-                  <div className="bg-white rounded-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-medium text-gray-900">Reports Against You</h3>
-                        <span className="text-sm text-gray-500">Total: 1 report</span>
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-3">
+                  {/* Connected Services */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Connected Services
+                    </h3>
+                    <div className="space-y-3">
                       {[
-                        { 
-                          title: 'Code of Conduct Violation',
-                          reportedBy: 'moderator',
-                          date: '2025-08-12',
-                          status: 'Dismissed',
-                          statusColor: 'gray',
-                          type: 'Conduct',
-                          lastUpdate: '2025-08-14',
-                          description: 'Alleged violation of community guidelines in forum discussion.',
-                          response: 'No violation found after thorough review of the reported content.',
-                          actionRequired: false
-                        }
-                      ].map((report, index) => (
-                        <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
-                          <div>
-                            {/* Title in larger font */}
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{report.title}</h3>
-
-                            {/* Reported By */}
-                            <div className="mb-3">
-                              <span className="text-sm text-gray-700">
-                                <strong>Reported by: </strong>@{report.reportedBy}
-                              </span>
-                            </div>
-
-                            {/* Created Date and Time */}
-                            <div className="mb-3 space-y-1">
-                              <div className="text-sm text-gray-600">
-                                <strong>Created: </strong>{new Date(report.date).toLocaleDateString()}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                <strong>Time: </strong>{new Date(report.date).toLocaleTimeString()}
-                              </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="mb-4">
-                              <strong className="text-sm text-gray-700 block mb-1">Description: </strong>
-                              <p className="text-sm text-gray-600">{report.description}</p>
-                            </div>
-
-                            {/* Response (if any) */}
-                            {report.response && (
-                              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <span className="text-sm font-medium text-green-800">Response: </span>
-                                <span className="text-sm text-green-700">{report.response}</span>
-                              </div>
-                            )}
-
-                            {/* Status and Type Badges */}
-                            <div className="flex flex-wrap gap-2">
-                              <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                                report.statusColor === 'green' ? 'bg-green-100 text-green-800' :
-                                  report.statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {report.status}
-                                </span>
-                              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                {report.type}
-                              </span>
-                            </div>
+                        {
+                          service: "Google Drive",
+                          status: "Connected",
+                          color: "green",
+                        },
+                        {
+                          service: "Dropbox",
+                          status: "Not Connected",
+                          color: "gray",
+                        },
+                        {
+                          service: "OneDrive",
+                          status: "Connected",
+                          color: "green",
+                        },
+                        {
+                          service: "GitHub",
+                          status: "Not Connected",
+                          color: "gray",
+                        },
+                      ].map((service, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                service.color === "green"
+                                  ? "bg-green-500"
+                                  : "bg-gray-300"
+                              }`}
+                            ></div>
+                            <span className="font-medium text-gray-900">
+                              {service.service}
+                            </span>
                           </div>
+                          <button
+                            className={`px-4 py-2 rounded-lg transition-colors ${
+                              service.status === "Connected"
+                                ? "bg-red-100 text-red-700 hover:bg-red-200"
+                                : "bg-primary text-white hover:bg-secondary hover:text-black"
+                            }`}
+                          >
+                            {service.status === "Connected"
+                              ? "Disconnect"
+                              : "Connect"}
+                          </button>
                         </div>
                       ))}
-                      {/* Empty State */}
-                      {/* <div className="text-center py-6 bg-gray-50 rounded-md">
-                        <p className="text-gray-500">No reports have been filed against you.</p>
-                      </div> */}
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Appearance Settings */}
+            {activeTab === "appearance" && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Appearance Settings
+                </h2>
+
+                <div className="space-y-8">
+                  {/* Theme */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Theme
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        {
+                          id: "light",
+                          label: "Light",
+                          icon: Sun,
+                          description: "Clean and bright interface",
+                        },
+                        {
+                          id: "dark",
+                          label: "Dark",
+                          icon: Moon,
+                          description: "Easy on the eyes",
+                        },
+                        {
+                          id: "system",
+                          label: "System",
+                          icon: Monitor,
+                          description: "Match your device settings",
+                        },
+                      ].map((theme) => (
+                        <label
+                          key={theme.id}
+                          className="relative cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="theme"
+                            value={theme.id}
+                            checked={theme.id === "light"}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-4 border-2 rounded-lg transition-all ${
+                              theme.id === "light"
+                                ? "border-primary bg-primary/5"
+                                : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3 mb-2">
+                              <theme.icon size={20} className="text-gray-600" />
+                              <span className="font-medium text-gray-900">
+                                {theme.label}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500">
+                              {theme.description}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Timezone */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Timezone
+                    </h3>
+                    <select className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <option value="pst">Pacific Standard Time</option>
+                      <option value="mst">Mountain Standard Time</option>
+                      <option value="cst">Central Standard Time</option>
+                      <option value="est">Eastern Standard Time</option>
+                      <option value="utc">UTC</option>
+                    </select>
+                  </div>
+
+                  {/* Accessibility */}
+                  {/* <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Accessibility</h3>
+                    <div className="space-y-4">
+                      {[
+                        { key: 'largeText', label: 'Large Text', description: 'Increase font size for better readability' },
+                        { key: 'highContrast', label: 'High Contrast', description: 'Increase color contrast for better visibility' },
+                        { key: 'reduceMotion', label: 'Reduce Motion', description: 'Minimize animations and transitions' },
+                        { key: 'screenReader', label: 'Screen Reader Support', description: 'Optimize for screen reader compatibility' }
+                      ].map(({ key, label, description }) => (
+                        <div key={key} className="flex items-center justify-between py-2">
+                          <div>
+                            <p className="font-medium text-gray-900">{label}</p>
+                            <p className="text-sm text-gray-500">{description}</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                            />
+                            <div className="w-11 h-6 rounded-full bg-gray-200 relative transition-colors">
+                              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
+                            </div>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div> */}
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end mt-8">
+                  <button
+                    onClick={handleSaveSettings}
+                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
+                  >
+                    <Save size={16} className="mr-2" />
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };
