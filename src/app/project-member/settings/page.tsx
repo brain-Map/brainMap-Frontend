@@ -2,26 +2,28 @@
 
 import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
 import {
-  User,
+  AlertTriangle,
   Bell,
-  Shield,
-  Eye,
-  Save,
-  Upload,
+  Briefcase,
   Camera,
-  Mail,
-  Phone,
-  Settings,
-  CheckCircle,
-  Moon,
-  Sun,
-  Monitor,
-  Volume2,
-  Plus,
   Check,
+  CheckCircle,
+  Clock,
+  Eye,
+  FileText,
+  Lock,
+  Mail,
+  Save,
+  Settings,
+  Shield,
+  Table,
+  Trash2,
+  Upload,
+  User,
+  Volume2,
   X,
-  Edit2,
 } from "lucide-react";
+
 import { convertBlobUrlToFile } from "@/lib/converToFile";
 import { uploadImage } from "@/lib/storageClient";
 import api from "@/utils/api";
@@ -147,6 +149,27 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     type: 'text'
   });
 
+  const calculateMemberDuration = (createdAt: string) => {
+    const createDate = new Date(createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - createDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
   
 
 
@@ -258,7 +281,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   }
 };
 
-
   //image upload end
 
   const settingsTabs = [
@@ -266,7 +288,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "privacy", label: "Privacy", icon: Shield },
     { id: "account", label: "Account", icon: Settings },
-    { id: "appearance", label: "Appearance", icon: Eye },
+    { id: "reports", label: "Reports", icon: AlertTriangle },
   ];
 
   const SettingsTab = ({ id, label, icon: Icon, isActive, onClick }: any) => (
@@ -315,23 +337,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
           {/* Main Content */}
           <div className="flex-1">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             {/* Profile Settings */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -484,46 +489,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 
               </div>
             )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             {/* Notifications Settings */}
             {activeTab === "notifications" && (
@@ -903,20 +868,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           Export Data
                         </button>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-red-900">
-                            Delete Account
-                          </p>
-                          <p className="text-sm text-red-600">
-                            Permanently delete your account and all associated
-                            data
-                          </p>
-                        </div>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                          Delete Account
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -942,9 +893,61 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 </h2>
 
                 <div className="space-y-8">
+                  {/* Account Information */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <User size={20} className="mr-2 text-primary" />
+                      Account Information
+                    </h3>
+                    <div className="space-y-6">
+                      {/* Basic Account Info */}
+                      <div className="flex flex-wrap justify-between items-center gap-4 p-6 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-4 flex-1 min-w-[200px]">
+                          <div className="p-3 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <Briefcase size={20} className="text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Account Type</p>
+                            <div className="flex items-center">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-2"></div>
+                                Project Member
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 flex-1 min-w-[200px]">
+                          <div className="p-3 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <Clock size={20} className="text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Member Since</p>
+                            <p className="font-medium text-gray-900">August 2025</p>
+                            <p className="text-xs text-gray-500 mt-1">Active member for {oneUserData ? calculateMemberDuration(oneUserData.createdAt) : '0'} days</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 flex-1 min-w-[200px]">
+                          <div className="p-3 bg-green-100 rounded-lg">
+                            <CheckCircle size={20} className="text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Account Status</p>
+                            <div className="flex items-center">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <div className="w-1.5 h-1.5 bg-green-600 rounded-full mr-2"></div>
+                                Active
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Change Password */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <Lock size={20} className="mr-2 text-primary" />
                       Change Password
                     </h3>
                     <div className="space-y-4">
@@ -952,290 +955,197 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Current Password
                         </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
+                        <div className="relative">
+                          <input
+                            type="password"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                          <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <Eye size={20} />
+                          </button>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           New Password
                         </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
+                        <div className="relative">
+                          <input
+                            type="password"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                          <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <Eye size={20} />
+                          </button>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Confirm New Password
                         </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
+                        <div className="relative">
+                          <input
+                            type="password"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                          <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <Eye size={20} />
+                          </button>
+                        </div>
                       </div>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                      <button className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                        <Save size={16} className="mr-2" />
                         Update Password
                       </button>
                     </div>
                   </div>
 
-                  {/* Two-Factor Authentication */}
+                  {/* Delete Account */}
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-red-900 mb-4 flex items-center">
+                      <AlertTriangle size={20} className="mr-2 text-red-600" />
+                      Delete Account
+                    </h3>
+                    <div className="p-4 bg-red-50 rounded-lg">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="font-medium text-red-900">Delete Account Permanently</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            This action is irreversible. All your data, projects, and settings will be permanently deleted.
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="confirmDelete"
+                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="confirmDelete" className="ml-2 block text-sm text-red-600">
+                            I understand that this action cannot be undone
+                          </label>
+                        </div>
+                        <button className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                          <Trash2 size={16} className="mr-2" />
+                          Delete Account
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reports Settings */}
+            {activeTab === "reports" && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Reports Dashboard
+                </h2>
+                <div className="space-y-8">
+                  {/* Progress Report */}
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Two-Factor Authentication
+                      Progress Report
                     </h3>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Enable 2FA</p>
-                        <p className="text-sm text-gray-500">
-                          Add an extra layer of security to your account
-                        </p>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Project Completion</span>
+                          <span className="font-medium">75%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-medium text-gray-900">Tasks Completed</h4>
+                            <p className="text-2xl font-bold text-primary">24/32</p>
+                          </div>
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-medium text-gray-900">Hours Spent</h4>
+                            <p className="text-2xl font-bold text-primary">45h</p>
+                          </div>
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-medium text-gray-900">Milestones</h4>
+                            <p className="text-2xl font-bold text-primary">3/4</p>
+                          </div>
+                        </div>
                       </div>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
-                        Enable 2FA
+                    </div>
+                  </div>
+
+                  {/* Activity Summary */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Activity Summary
+                    </h3>
+                    <div className="space-y-4">
+                      {[
+                        {
+                          activity: "Research Documentation",
+                          status: "In Progress",
+                          dueDate: "Aug 25, 2025",
+                          priority: "High"
+                        },
+                        {
+                          activity: "Data Analysis",
+                          status: "Completed",
+                          dueDate: "Aug 20, 2025",
+                          priority: "Medium"
+                        },
+                        {
+                          activity: "Literature Review",
+                          status: "Pending",
+                          dueDate: "Aug 30, 2025",
+                          priority: "Low"
+                        }
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{item.activity}</h4>
+                            <p className="text-sm text-gray-500">Due: {item.dueDate}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className={`px-3 py-1 rounded-full text-sm ${
+                              item.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                              item.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {item.status}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm ${
+                              item.priority === 'High' ? 'bg-red-100 text-red-800' :
+                              item.priority === 'Medium' ? 'bg-orange-100 text-orange-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {item.priority}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Export Options */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Export Options
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button className="flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                        <FileText size={20} />
+                        Export as PDF
+                      </button>
+                      <button className="flex items-center justify-center gap-2 p-4 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                        <Table size={20} />
+                        Export as Excel
                       </button>
                     </div>
                   </div>
-
-                  {/* Login Activity */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Recent Login Activity
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          device: "MacBook Pro",
-                          location: "San Francisco, CA",
-                          time: "2 hours ago",
-                          current: true,
-                        },
-                        {
-                          device: "iPhone 13",
-                          location: "San Francisco, CA",
-                          time: "1 day ago",
-                          current: false,
-                        },
-                        {
-                          device: "Chrome Browser",
-                          location: "San Francisco, CA",
-                          time: "3 days ago",
-                          current: false,
-                        },
-                      ].map((session, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {session.device}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {session.location} • {session.time}
-                              </p>
-                            </div>
-                          </div>
-                          {session.current && (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                              Current
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Connected Services */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Connected Services
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          service: "Google Drive",
-                          status: "Connected",
-                          color: "green",
-                        },
-                        {
-                          service: "Dropbox",
-                          status: "Not Connected",
-                          color: "gray",
-                        },
-                        {
-                          service: "OneDrive",
-                          status: "Connected",
-                          color: "green",
-                        },
-                        {
-                          service: "GitHub",
-                          status: "Not Connected",
-                          color: "gray",
-                        },
-                      ].map((service, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`w-3 h-3 rounded-full ${
-                                service.color === "green"
-                                  ? "bg-green-500"
-                                  : "bg-gray-300"
-                              }`}
-                            ></div>
-                            <span className="font-medium text-gray-900">
-                              {service.service}
-                            </span>
-                          </div>
-                          <button
-                            className={`px-4 py-2 rounded-lg transition-colors ${
-                              service.status === "Connected"
-                                ? "bg-red-100 text-red-700 hover:bg-red-200"
-                                : "bg-primary text-white hover:bg-secondary hover:text-black"
-                            }`}
-                          >
-                            {service.status === "Connected"
-                              ? "Disconnect"
-                              : "Connect"}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* Appearance Settings */}
-            {activeTab === "appearance" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Appearance Settings
-                </h2>
-
-                <div className="space-y-8">
-                  {/* Theme */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Theme
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[
-                        {
-                          id: "light",
-                          label: "Light",
-                          icon: Sun,
-                          description: "Clean and bright interface",
-                        },
-                        {
-                          id: "dark",
-                          label: "Dark",
-                          icon: Moon,
-                          description: "Easy on the eyes",
-                        },
-                        {
-                          id: "system",
-                          label: "System",
-                          icon: Monitor,
-                          description: "Match your device settings",
-                        },
-                      ].map((theme) => (
-                        <label
-                          key={theme.id}
-                          className="relative cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name="theme"
-                            value={theme.id}
-                            checked={theme.id === "light"}
-                            className="sr-only"
-                          />
-                          <div
-                            className={`p-4 border-2 rounded-lg transition-all ${
-                              theme.id === "light"
-                                ? "border-primary bg-primary/5"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3 mb-2">
-                              <theme.icon size={20} className="text-gray-600" />
-                              <span className="font-medium text-gray-900">
-                                {theme.label}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                              {theme.description}
-                            </p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Timezone */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Timezone
-                    </h3>
-                    <select className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                      <option value="pst">Pacific Standard Time</option>
-                      <option value="mst">Mountain Standard Time</option>
-                      <option value="cst">Central Standard Time</option>
-                      <option value="est">Eastern Standard Time</option>
-                      <option value="utc">UTC</option>
-                    </select>
-                  </div>
-
-                  {/* Accessibility */}
-                  {/* <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Accessibility</h3>
-                    <div className="space-y-4">
-                      {[
-                        { key: 'largeText', label: 'Large Text', description: 'Increase font size for better readability' },
-                        { key: 'highContrast', label: 'High Contrast', description: 'Increase color contrast for better visibility' },
-                        { key: 'reduceMotion', label: 'Reduce Motion', description: 'Minimize animations and transitions' },
-                        { key: 'screenReader', label: 'Screen Reader Support', description: 'Optimize for screen reader compatibility' }
-                      ].map(({ key, label, description }) => (
-                        <div key={key} className="flex items-center justify-between py-2">
-                          <div>
-                            <p className="font-medium text-gray-900">{label}</p>
-                            <p className="text-sm text-gray-500">{description}</p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only"
-                            />
-                            <div className="w-11 h-6 rounded-full bg-gray-200 relative transition-colors">
-                              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
-                            </div>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div> */}
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end mt-8">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
