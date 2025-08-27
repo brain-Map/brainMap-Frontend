@@ -20,11 +20,13 @@ import {
   Plus,
   Check,
   X,
+  Edit2,
 } from "lucide-react";
 import { convertBlobUrlToFile } from "@/lib/converToFile";
 import { uploadImage } from "@/lib/storageClient";
 import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileEditor from "./ProfileEditor"
 
 interface SettingsProps {}
 
@@ -75,20 +77,16 @@ const settingsFunctions = {
 
 
 
+
+
 const SettingsPage: React.FC<SettingsProps> = () => {
   const { user } = useAuth();
-  // console.log(user?.id);
   const userId = user?.id;
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
-  
-
   const [activeTab, setActiveTab] = useState("profile");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isAddingInterest, setIsAddingInterest] = useState(false);
-  const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState({
     email: {
       projectUpdates: true,
@@ -141,6 +139,17 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   });
 
 
+   const [modalState, setModalState] = useState({
+    isOpen: false,
+    field: '',
+    value: '',
+    label: '',
+    type: 'text'
+  });
+
+  
+
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (userId) {
@@ -189,33 +198,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     // Show success message
   };
 
-  const handleAddInterest = () => {
-    if (
-      newInterest.trim() &&
-      !profileData.researchInterests.includes(newInterest.trim())
-    ) {
-      const updatedInterests = [
-        ...profileData.researchInterests,
-        newInterest.trim(),
-      ];
-      handleProfileUpdate("researchInterests", updatedInterests);
-      setNewInterest("");
-      setIsAddingInterest(false);
-    }
-  };
-
-  const handleCancelAddInterest = () => {
-    setNewInterest("");
-    setIsAddingInterest(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAddInterest();
-    } else if (e.key === "Escape") {
-      handleCancelAddInterest();
-    }
-  };
 
   //image upload begin
 
@@ -333,6 +315,23 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
           {/* Main Content */}
           <div className="flex-1">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* Profile Settings */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -366,16 +365,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     {/* Profile Avatar Preview */}
                     <div className="relative group">
                       <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
-                        {/* {oneUserData?.avatar ? (
-                          <img
-                            src={oneUserData.avatar}
-                            className="w-full h-full object-cover"
-                            alt="Profile Avatar"
-                          />
-                        ) : (
-                          <User size={60} className="text-gray-400" />
-                        )} */}
-
                         {imageUrls[0] ? (
                           <img
                             src={imageUrls[0]}
@@ -383,7 +372,15 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                             alt="Profile Avatar"
                           />
                         ) : (
+                        oneUserData?.avatar ? (
+                          <img
+                            src={oneUserData.avatar}
+                            className="w-full h-full object-cover"
+                            alt="Profile Avatar"
+                          />
+                        ) : (
                           <User size={60} className="text-gray-400" />
+                        )
                         )}
                         
                       </div>
@@ -482,213 +479,51 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     </div>
                   </div>
                 </div>
-                {/* Avatar Section - Demo Style */}
 
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.fullName}
-                      onChange={(e) =>
-                        handleProfileUpdate("fullName", e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.username}
-                      onChange={(e) =>
-                        handleProfileUpdate("username", e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      value={profileData.dateOfBirth}
-                      onChange={(e) =>
-                        handleProfileUpdate("dateOfBirth", e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender
-                    </label>
-                    <select
-                      value={profileData.gender}
-                      onChange={(e) =>
-                        handleProfileUpdate("gender", e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">
-                        Prefer not to say
-                      </option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <div className="relative">
-                      <Mail
-                        size={16}
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      />
-                      <input
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) =>
-                          handleProfileUpdate("email", e.target.value)
-                        }
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone
-                    </label>
-                    <div className="relative">
-                      <Phone
-                        size={16}
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      />
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) =>
-                          handleProfileUpdate("phone", e.target.value)
-                        }
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* About Me */}
-                <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    About Me
-                  </label>
-                  <textarea
-                    value={profileData.bio}
-                    onChange={(e) => handleProfileUpdate("bio", e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Tell us about yourself, your research interests, and academic goals..."
-                  />
-                </div>
-
-                {/* Research Interests */}
-                <div className="mb-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Research Interests
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.researchInterests.map((interest, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                      >
-                        {interest}
-                        <button
-                          onClick={() => {
-                            const newInterests =
-                              profileData.researchInterests.filter(
-                                (_, i) => i !== index
-                              );
-                            handleProfileUpdate(
-                              "researchInterests",
-                              newInterests
-                            );
-                          }}
-                          className="ml-2 hover:text-red-600"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-
-                    {/* Add Interest Input */}
-                    {isAddingInterest ? (
-                      <div className="inline-flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={newInterest}
-                          onChange={(e) => setNewInterest(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          placeholder="Enter interest..."
-                          className="px-3 py-1 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                          autoFocus
-                        />
-                        <button
-                          onClick={handleAddInterest}
-                          disabled={!newInterest.trim()}
-                          className="text-green-600 hover:text-green-700 disabled:text-gray-400"
-                        >
-                          <CheckCircle size={16} />
-                        </button>
-                        <button
-                          onClick={handleCancelAddInterest}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setIsAddingInterest(true)}
-                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 hover:border-primary hover:text-primary transition-colors"
-                      >
-                        <Plus size={14} className="mr-1" />
-                        Add Interest
-                      </button>
-                    )}
-                  </div>
-                  {profileData.researchInterests.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      No research interests added yet. Click "Add Interest" to
-                      get started.
-                    </p>
-                  )}
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
-                </div>
+                <ProfileEditor />
+                
               </div>
             )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* Notifications Settings */}
             {activeTab === "notifications" && (
