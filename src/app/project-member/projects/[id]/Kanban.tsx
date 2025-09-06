@@ -17,6 +17,9 @@ interface ApiTask {
   description: string;
   createdDate: string;
   createdTime: string;
+  dueDate?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  assignee?: string;
 }
 
 const kanbanFunction = {
@@ -61,6 +64,9 @@ const kanbanFunction = {
     kanbanColumnId: string;
     title: string;
     description: string;
+    priority?: 'Low' | 'Medium' | 'High';
+    assignee?: string;
+    dueDate?: string;
   }) => {
     try {
       const currentDate = new Date();
@@ -72,6 +78,9 @@ const kanbanFunction = {
         kanbanColumnId: taskData.kanbanColumnId,
         title: taskData.title,
         description: taskData.description,
+        priority: taskData.priority || 'Medium',
+        assignee: taskData.assignee || '',
+        dueDate: taskData.dueDate || '',
         createdDate: formattedDate,
         createdTime: formattedTime
       };
@@ -117,6 +126,17 @@ const kanbanFunction = {
       return response.data;
     } catch (error) {
       console.error('Error deleting task:', error);
+      throw error;
+    }
+  },
+
+  updateTaskColumn: async (taskId: string, newColumnId: string) => {
+     try {
+      const response = await api.put(`/api/tasks/column/${taskId}`, { columnId: newColumnId });
+      console.log('Updated Task Column:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating task column:', error);
       throw error;
     }
   }
@@ -192,9 +212,9 @@ const KanbanBoard: React.FC = () => {
                   description: task.description,
                   createdDate: task.createdDate,
                   createdTime: task.createdTime,
-                  priority: 'Medium' as const, // Default since API doesn't provide
-                  assignee: undefined,
-                  dueDate: undefined,
+                  priority: task.priority || 'Medium',
+                  assignee: task.assignee || '',
+                  dueDate: task.dueDate || '',
                   progress: 0,
                   completed: false
                 }));
@@ -299,7 +319,10 @@ const KanbanBoard: React.FC = () => {
       await kanbanFunction.addKanbanTask(kanbanId, {
         kanbanColumnId: columnId,
         title: taskData.title,
-        description: taskData.description
+        description: taskData.description,
+        priority: taskData.priority,
+        assignee: taskData.assignee,
+        dueDate: taskData.dueDate
       });
       
       // Refresh tasks by fetching them again
@@ -316,9 +339,9 @@ const KanbanBoard: React.FC = () => {
               description: task.description,
               createdDate: task.createdDate,
               createdTime: task.createdTime,
-              priority: 'Medium' as const,
-              assignee: undefined,
-              dueDate: undefined,
+              priority: task.priority || 'Medium',
+              assignee: task.assignee || '',
+              dueDate: task.dueDate || '',
               progress: 0,
               completed: false
             }));
@@ -330,7 +353,7 @@ const KanbanBoard: React.FC = () => {
           };
         })
       );
-      
+      console.log('Fetched tasks after adding:', tasks);
       console.log('Task added successfully');
     } catch (error) {
       console.error('Error adding task:', error);
@@ -361,9 +384,9 @@ const KanbanBoard: React.FC = () => {
               description: task.description,
               createdDate: task.createdDate,
               createdTime: task.createdTime,
-              priority: 'Medium' as const,
-              assignee: undefined,
-              dueDate: undefined,
+              priority: task.priority || 'Medium',
+              assignee: task.assignee || '',
+              dueDate: task.dueDate || '',
               progress: 0,
               completed: false
             }));
@@ -406,9 +429,9 @@ const KanbanBoard: React.FC = () => {
               description: task.description,
               createdDate: task.createdDate,
               createdTime: task.createdTime,
-              priority: 'Medium' as const,
-              assignee: undefined,
-              dueDate: undefined,
+              priority: task.priority || 'Medium',
+              assignee: task.assignee || '',
+              dueDate: task.dueDate || '',
               progress: 0,
               completed: false
             }));
@@ -539,32 +562,43 @@ const KanbanBoard: React.FC = () => {
     return column ? column.title : '';
   };
 
-  // const moveTask = (taskId: number, fromColumnId: string, toColumnId: string) => {
-  //   let movedTask: Task | null = null;
-
-  //   const updatedColumns = columns.map((col) => {
-  //     if (col.id === fromColumnId) {
-  //       const taskIndex = col.tasks.findIndex((task) => task.id === taskId);
-  //       if (taskIndex !== -1) {
-  //         movedTask = col.tasks[taskIndex];
-  //         const updatedTasks = [...col.tasks];
-  //         updatedTasks.splice(taskIndex, 1);
-  //         return { ...col, tasks: updatedTasks, count: updatedTasks.length };
-  //       }
-  //     }
-  //     return col;
-  //   });
-
-  //   if (movedTask) {
-  //     const finalColumns = updatedColumns.map((col) => {
-  //       if (col.id === toColumnId) {
-  //         return { ...col, tasks: [...col.tasks, movedTask!], count: col.tasks.length + 1 };
-  //       }
-  //       return col;
-  //     });
-  //     setColumns(finalColumns);
-  //   }
-  // };
+  // Move a task to another column (with backend update)
+  const moveTask = async (taskId: string, fromColumnId: string, toColumnId: string) => {
+    try {
+      // Update backend
+      await kanbanFunction.updateTaskColumn(taskId, toColumnId);
+      // Refresh tasks from backend
+      if (kanbanId) {
+        const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+        setColumns(prevColumns =>
+          prevColumns.map(column => {
+            const columnTasks = tasks
+              .filter(task => task.kanbanColumnId === column.id)
+              .map(task => ({
+                id: task.taskId,
+                title: task.title,
+                description: task.description,
+                createdDate: task.createdDate,
+                createdTime: task.createdTime,
+                priority: task.priority || 'Medium',
+                assignee: task.assignee || '',
+                dueDate: task.dueDate || '',
+                progress: 0,
+                completed: false
+              }));
+            return {
+              ...column,
+              tasks: columnTasks,
+              count: columnTasks.length
+            };
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error moving task:', error);
+      alert('Failed to move task. Please try again.');
+    }
+  };
 
   // const deleteTask = (taskId: number) => {
 
@@ -583,12 +617,13 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
     setShowMenu(false);
   };
 
-  // const handleMove = (targetColumnId: string) => {
-  //   if (targetColumnId !== currentColumnId) {
-  //     moveTask(task.id, currentColumnId, targetColumnId);
-  //   }
-  //   setShowMenu(false);
-  // };
+  // Move handler for TaskCard
+  const handleMove = async (targetColumnId: string) => {
+    if (targetColumnId !== currentColumnId) {
+      await moveTask(task.id, currentColumnId, targetColumnId);
+    }
+    setShowMenu(false);
+  };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this task?')) {
@@ -617,7 +652,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
                   .map((col) => (
                     <button
                       key={col.id}
-                      // onClick={() => handleMove(col.id)}
+                      onClick={() => handleMove(col.id)}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors duration-150"
                     >
                       {col.title}
@@ -797,8 +832,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
               <input
-                type="text"
-                placeholder="Enter due date"
+                type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
