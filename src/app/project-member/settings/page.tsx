@@ -310,46 +310,45 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">
-            Manage your account, preferences, and privacy settings
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+          </div>
+          <nav className="mt-2">
+            {settingsTabs.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center px-6 py-3 text-sm font-medium transition-colors ${
+                    activeTab === item.id
+                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-3" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <nav className="space-y-2">
-                {settingsTabs.map((tab) => (
-                  <SettingsTab
-                    key={tab.id}
-                    id={tab.id}
-                    label={tab.label}
-                    icon={tab.icon}
-                    isActive={activeTab === tab.id}
-                    onClick={setActiveTab}
-                  />
-                ))}
-              </nav>
-            </div>
-          </div>
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          {/* Profile Settings */}
+          {activeTab === "profile" && (
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Profile Settings</h1>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            
-            {/* Profile Settings */}
-            {activeTab === "profile" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Profile Information
-                </h2>
-
-                {/* Avatar Section - Demo Style */}
+                </h2>                {/* Avatar Section - Demo Style */}
                 <div className=" flex justify-center items-center p-4">
                   <div className="bg-white rounded-3xl p-8 flex flex-col items-center gap-8 w-full max-w-md relative overflow-hidden ">
                     {/* Success Message */}
@@ -493,11 +492,15 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 <ProfileEditor />
                 
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Notifications Settings */}
-            {activeTab === "notifications" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Notifications Settings */}
+          {activeTab === "notifications" && (
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Notification Settings</h1>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Notification Preferences
                 </h2>
@@ -685,11 +688,15 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Privacy Settings */}
-            {activeTab === "privacy" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Privacy Settings */}
+          {activeTab === "privacy" && (
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Privacy Settings</h1>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Privacy Settings
                 </h2>
@@ -888,11 +895,15 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Account Settings */}
-            {activeTab === "account" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Account Settings */}
+          {activeTab === "account" && (
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Account Settings</h1>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Account Settings
                 </h2>
@@ -1038,13 +1049,17 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Reports Settings */}
-            {activeTab === "reports" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* Reports Settings */}
+          {activeTab === "reports" && (
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Reports</h1>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Reports</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Reports Management</h2>
                   <button 
                     onClick={() => setModalState({ isOpen: true, field: 'newReport', value: '', label: 'New Report', type: 'text' })}
                     className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
@@ -1270,9 +1285,8 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-            )}
-
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
