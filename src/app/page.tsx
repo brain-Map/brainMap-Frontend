@@ -140,7 +140,7 @@ const successStories: SuccessStory[] = [
         </span>
       </button>
 
-      <button className="px-8 py-4 text-lg font-medium text-white border-2 border-border rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
+      <button className="px-8 py-4 text-lg font-medium text-white hover:text-black border-2 border-border rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
         Browse Experts
       </button>
     </div>
