@@ -2,6 +2,11 @@
 
 import type React from "react"
 import { DollarSign, Package, BookOpen, Star, Video, TrendingUp, Users, Activity } from "lucide-react"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { useAuth } from '@/contexts/AuthContext'; 
+import ProfileSetupPopup from "@/components/domainExpert/profileSetup";
+
 
 // Custom Icons
 const BrainIcon = () => (
@@ -37,7 +42,36 @@ interface ChartData {
   color?: string
 }
 
+interface DomainExpertProfile {
+  createdAt?: string
+  updatedAt?: string
+  // add other fields as needed
+}
+
 export default function DashboardPage() {
+  const [domainExpert, setDomainExpert] = useState<DomainExpertProfile>({});
+  const { user } = useAuth();
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+
+  useEffect(() => {
+    axios.get(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/${user?.id}/profile`)
+      .then((res) => setDomainExpert(res.data))
+      .catch((err) => console.error(err));
+  }, []);
+  
+  useEffect(() => {
+    if (
+      domainExpert &&
+      domainExpert.createdAt &&
+      domainExpert.updatedAt &&
+      domainExpert.createdAt === domainExpert.updatedAt
+    ) {
+      setShowProfilePopup(true);
+    }
+  }, [domainExpert]);
+  
+  console.log("Domain: ", domainExpert.createdAt == domainExpert.updatedAt);
+  
   const dashboardCards: DashboardCard[] = [
     {
       title: "Total Earnings",
@@ -137,8 +171,21 @@ export default function DashboardPage() {
     </div>
   )
 
+  const handleSetUpProfile = () => {
+    window.location.href = "/domain-expert/profile-completion";
+  };
+
+  const handleNotNow = () => {
+    setShowProfilePopup(false);
+  };
+
   return (
     <div className="flex-1 overflow-auto">
+      <ProfileSetupPopup
+        open={showProfilePopup}
+        onSetUpProfile={handleSetUpProfile}
+        onNotNow={handleNotNow}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

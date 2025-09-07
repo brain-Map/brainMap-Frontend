@@ -80,6 +80,16 @@ const AccountCreation = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const redirectAfterRegister = (role: string) => {
+    if (role.toLowerCase() === "mentor") {
+      router.push("/domain-expert/dashboard");
+    } else if (role.toLowerCase() === "project member") {
+      router.push("/project-member/dashboard");
+    } else {
+      router.push(`/register/profile-completion?role=${role}`);
+    }
+  };
+
   const handleAccountCreation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -88,7 +98,6 @@ const AccountCreation = () => {
     const email = accountData.email;
     const role = userType;
 
-    
     setIsSubmitting(true);
 
     // Create account using Supabase
@@ -134,32 +143,28 @@ const AccountCreation = () => {
 
     setIsSubmitting(false);
 
-    
-    
     setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    router.push(`/register/profile-completion?role=${userType}`);
-    
+    redirectAfterRegister(userType);
   };
 
   const handleGoogleSignup = async () => {
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  })
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
 
-  
-  if (error) {
-    setAlert({ message: error.message, type: 'error' });
+    if (error) {
+      setAlert({ message: error.message, type: 'error' });
+    }
+
+    setIsSubmitting(false);
+
+    localStorage.setItem("user_role", userType || "");
+
+    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
+    redirectAfterRegister(userType);
   }
-
-  setIsSubmitting(false);
-
-  localStorage.setItem("user_role", userType|| "");
-
-  setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-  router.push(`/register/profile-completion?role=${userType}`);
-}
 
   const handleBackToRoleSelection = () => {
     router.push('/register');
