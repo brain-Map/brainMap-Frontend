@@ -85,195 +85,81 @@ const successStories: SuccessStory[] = [
 
     <>
 {/* Hero section */}
- <div className="min-h-screen bg-gradient-to-br from-secondary/50 via-value3/50 to-secondary/50 flex items-center -mt-16">
-      <div className="max-w-7xl mx-auto px-6 py-40">
-        <div className="grid grid-cols-[2fr_1fr] gap-16 items-center">
-          {/* Left Content */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Manage, collaborate, and track any project {' '}
-                <span className="text-primary">with expert mentorship</span>
-              </h1>
-              
-              <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
-                  BrainMap is the universal project management platform that connects any project team with verified domain experts.
-                  </p>
-            </div>
 
-            {/* Stats */}
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" />
-                </div>
-                <div className="ml-2">
-                  <div className="text-xl font-bold text-gray-900">64,739</div>
-                  <div className="text-sm text-gray-500">Happy customers</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <div className="flex border-r border-gray-300 pr-5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <div className="ml-2">
-                  <div className="text-xl font-bold text-gray-900 pl-5">4.9/5</div>
-                  <div className="text-sm text-gray-500 pl-5">Success Rating</div>
-                </div>
-              </div>
-            </div>
+   <section className="relative min-h-screen flex items-center justify-center bg-secondary overflow-hidden">
+      
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/image/pexels-fauxels-3183183.jpg')`, // Replace with your image URL
+        }}
+      />
 
-            {/* CTA Button */}
-            <div className="space-y-4">
-              <button
-                onClick={handleGetStarted}
-                className="px-8 py-4 bg-primary hover:bg-secondary text-white hover:text-black font-bold rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
-              >
-                Let's Start with BrainMap
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+  
 
-          {/* Right Mockup Section */}
+  {/* Dark Overlay (optional for readability) */}
+  <div className="absolute inset-0 bg-black/75" />
 
+  {/* Geometric Background Elements */}
+  <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute top-1/4 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+    <div className="absolute bottom-1/3 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/3 to-accent/3 rounded-full blur-3xl" />
+  </div>
 
+  {/* Content Container */}
+  <div className="relative z-10 text-center max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+   
+    {/* Main Heading */}
+    <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-tight text-balance">
+      Connect with
+      <span className="text-primary"> Industry <br /> Experts, </span>
+      <span className="text-muted-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-normal">
+        Who Drive Results
+      </span>
+    </h1>
 
-          <div className="relative">
-            {/* Browser Mockup */}
-            <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-              {/* Browser Header */}
-              <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <div className="ml-4 bg-white rounded-lg px-3 py-1 text-sm text-gray-500 flex-1">
-                    app.brainmap.com
-                  </div>
-                </div>
-              </div>
+    {/* Subheading */}
+    <p className="text-lg sm:text-xl lg:text-2xl text-white mb-12 max-w-4xl mx-auto leading-relaxed text-pretty">
+      Join a curated network of world-class professionals and unlock new opportunities for growth, collaboration,
+      and innovation in your industry.
+    </p>
 
-              {/* App Interface */}
-              <div className="p-6 h-96 bg-gradient-to-br from-purple-50 to-blue-50">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Welcome back!</h3>
-                    <p className="text-gray-600">Let's make today productive</p>
-                  </div>
-                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">JD</span>
-                  </div>
-                </div>
+    {/* CTA Buttons */}
+    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+      <button className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
+        <span className="flex items-center gap-3">
+          Start Connecting
+          <svg
+            className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <div className="text-2xl font-bold text-blue-600">12</div>
-                    <div className="text-sm text-gray-500">Active Projects</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <div className="text-2xl font-bold text-green-600">89%</div>
-                    <div className="text-sm text-gray-500">Completion Rate</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <div className="text-2xl font-bold text-purple-600">24</div>
-                    <div className="text-sm text-gray-500">Team Members</div>
-                  </div>
-                </div>
+      <button className="px-8 py-4 text-lg font-medium text-white border-2 border-border rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
+        Browse Experts
+      </button>
+    </div>
+  </div>
 
-                {/* Project List */}
-                <div className="space-y-3">
-                  <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Website Redesign</div>
-                        <div className="text-sm text-gray-500">Due in 3 days</div>
-                      </div>
-                    </div>
-                    <div className="text-green-600 font-semibold">75%</div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-purple-600 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Mobile App MVP</div>
-                        <div className="text-sm text-gray-500">Due in 1 week</div>
-                      </div>
-                    </div>
-                    <div className="text-blue-600 font-semibold">45%</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+  {/* Scroll Indicator */}
+  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce z-10">
+    <div className="flex flex-col items-center">
+      <span className="text-sm mb-2 font-light">Discover More</span>
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    </div>
+  </div>
+</section>
 
-            {/* Decorative Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-200 rounded-full opacity-60 blur-xl"></div>
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-purple-200 rounded-full opacity-60 blur-xl"></div>
-            
-            {/* Floating notification */}
-            <div className="absolute -right-8 top-20 bg-white rounded-xl shadow-lg p-3 border border-gray-200">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-sm font-medium">Task completed!</span>
-              </div>
-            </div>
-          </div>
-
-
-
-
-
-        </div>
-
-        {/* Bottom Features */}
-        <div className="mt-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Ultimate features & amazing tools to boost your productivity
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Monitor your team seamlessly</h3>
-              <p className="text-gray-600">Track team progress in real-time with detailed analytics and performance insights.</p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <TrendingUp className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Boost productivity & efficiency</h3>
-              <p className="text-gray-600">Streamline workflows and eliminate bottlenecks with intelligent automation.</p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                <Shield className="w-8 h-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">All-in-one project health hub</h3>
-              <p className="text-gray-600">Keep your projects on track with comprehensive health monitoring and expert guidance.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>    {/* Hero section */}
+{/* Hero section */}
 
     
 
@@ -293,12 +179,6 @@ const successStories: SuccessStory[] = [
               <div className="relative w-full  rounded-lg overflow-hidden shadow-lg">
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                   <div className="text-center w-full h-full flex items-center justify-center">
-                    {/* <div className="w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-600">Video Call Interface</p> */}
                     <img
                       src="/image/3807471.jpg"
                       alt="Project Success Partner"
