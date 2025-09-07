@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Eye, EyeOff, AlertCircle, Check, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/superbaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AccountData {
   userName: string;
@@ -85,8 +86,6 @@ const AccountCreation = () => {
       router.push("/domain-expert/dashboard");
     } else if (role.toLowerCase() === "project member") {
       router.push("/project-member/dashboard");
-    } else {
-      router.push(`/register/profile-completion?role=${role}`);
     }
   };
 
@@ -118,12 +117,16 @@ const AccountCreation = () => {
         return new Response(JSON.stringify({ error: error.message }), { status: 400 });
       }
 
+      const token = localStorage.getItem("accessToken")
+      console.log("Auth: ", token || "no auth");
+      
       const userRole = role.replace(" ", "_")
       // Send user data to backend API
-      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users`, {
+      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           username: userName,

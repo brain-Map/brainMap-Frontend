@@ -49,28 +49,37 @@ interface DomainExpertProfile {
 }
 
 export default function DashboardPage() {
-  const [domainExpert, setDomainExpert] = useState<DomainExpertProfile>({});
+  const [domainExpert, setDomainExpert] = useState<boolean | null>(null); // null means loading
   const { user } = useAuth();
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  console.log("User: ", user);
+  
 
   useEffect(() => {
-    axios.get(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/${user?.id}/profile`)
-      .then((res) => setDomainExpert(res.data))
-      .catch((err) => console.error(err));
+    const token = localStorage.getItem("accessToken");
+    axios.get(
+      `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/${user?.id}/profile-status`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      }
+    )
+      .then((res) => setDomainExpert(Boolean(res.data))) // force boolean
+      .catch((err) => {
+        console.error(err);
+        setDomainExpert(false);
+      });
   }, []);
   
   useEffect(() => {
-    if (
-      domainExpert &&
-      domainExpert.createdAt &&
-      domainExpert.updatedAt &&
-      domainExpert.createdAt === domainExpert.updatedAt
-    ) {
+    console.log("statussssssssssssss: ", domainExpert);
+
+    if (domainExpert === false) {
       setShowProfilePopup(true);
     }
   }, [domainExpert]);
   
-  console.log("Domain: ", domainExpert.createdAt == domainExpert.updatedAt);
   
   const dashboardCards: DashboardCard[] = [
     {
