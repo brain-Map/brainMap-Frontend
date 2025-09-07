@@ -33,6 +33,24 @@ export interface User {
   following?: number;
   profileViews?: number;
   isVerified?: boolean;
+  avatar?: string;
+}
+
+export interface OneUser{
+    id: string;
+    firstName:string;
+    lastName:string;
+    username: string;
+    email: string;
+    mobileNumber?: string;
+    dateOfBirth?:string;
+    userRole:string;
+    createdAt:string;
+    status:string;
+    city?:string;
+    gender: string;
+    bio?:string;
+    avatar:string;
 }
 
 export interface UserAbout {
@@ -44,6 +62,17 @@ const userService = {
   getUser: async (userId: string): Promise<User> => {
     try {
       const response = await api.get(`/api/project-member/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+  getOneUserData: async (userId: string): Promise<OneUser> => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
       console.log('User Data:', response.data);
       return response.data;
     } catch (error) {
@@ -73,6 +102,7 @@ const ProjectDashboard = () => {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutText, setAboutText] = useState('');
   const [userAbout, setUserAbout] = useState<UserAbout | null>(null);
+  const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
 
   console.log('User in ProjectDashboard:', user1);
 
@@ -99,8 +129,10 @@ const ProjectDashboard = () => {
       
       try {
         const userData = await userService.getUser(userId);
+        const oneUserData = await userService.getOneUserData(userId);
         setUser(userData);
         setAboutText(userData.about || '');
+        setOneUserData(oneUserData);
       } catch (error) {
         console.error('Failed to fetch user:', error);
       }
@@ -249,9 +281,20 @@ const ProjectDashboard = () => {
             {/* Profile Card */}
             <div className=" rounded-xl p-6">
               <div className="relative mb-6">
-                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gray-300 bg-gradient-to-br from-red-500 to-red-700">
+                <div className="w-50 h-50 mx-auto rounded-full overflow-hidden  bg-gradient-to-br from-red-500 to-red-700">
                   <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-16 h-16 text-white" />
+                    {oneUserData?.avatar ? (
+                      <img
+                        src={oneUserData.avatar}
+                        alt="User Avatar"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-20 h-20 text-white" />
+                    )}
+
+
+
                   </div>
                 </div>
               </div>
@@ -266,40 +309,10 @@ const ProjectDashboard = () => {
 
               <button
               onClick={() => router.push('/project-member/settings')}
-              className="w-full bg-primary hover:bg-secondary hover:text-black text-white py-2.5 px-4 rounded-lg transition-colors duration-200 mb-6 flex items-center justify-center gap-2">
+              className="w-full bg-primary hover:bg-secondary hover:text-black text-white py-2.5 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
                 <Edit3 className="w-4 h-4" />
                 Edit Profile
               </button>
-
-              {/* <div className="flex justify-center gap-8 mb-6">
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900">{user?.followers ? user.followers : 0}</div>
-                  <div className="text-sm text-gray-500">Followers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900">{user?.following ? user.following : 0}</div>
-                  <div className="text-sm text-gray-500">Following</div>
-                </div>
-              </div> */}
-
-              <div className="space-y-3 text-sm">
-                <div className={`flex items-center gap-3 ${user?.company ? "text-gray-600" : "text-gray-400"}`}>
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  <span>{user?.company ? user.company : "Add your work place..."}</span>
-                </div>
-                <div className={`flex items-center gap-3 ${user?.location ? "text-gray-600" : "text-gray-400"}`}>
-                  <MapPin className={`w-4 h-4 text-gray-400 ${user?.location ? "text-gray-400" : "text-gray-400"}`} />
-                  <span>{user?.location ? user.location : "Add your location..."}</span>
-                </div>
-                <div className={`flex items-center gap-3 ${user?.email ? "text-gray-600" : "text-gray-400"}`}>
-                  <Mail className={`w-4 h-4 text-gray-400 ${user?.email ? "text-gray-400" : "text-gray-400"}`} />
-                  <span>{user?.email ? user.email : "Add your email..."}</span>
-                </div>
-                <div className={`flex items-center gap-3 ${user?.phone ? "text-gray-600" : "text-gray-400"}`}>
-                  <Phone className={`w-4 h-4 text-gray-400 ${user?.phone ? "text-gray-600" : "text-gray-400"}`} />
-                  <span>{user?.phone ? user.phone : "Add your phone number... "}</span>
-                </div>
-              </div>
             </div>
 
             {/* Profile Stats */}
