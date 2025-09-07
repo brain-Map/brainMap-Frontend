@@ -6,14 +6,12 @@ import JoinCommunity from '../components/JoinCommunity';
 import ExpertsFeatures from '../components/ExpertsFeatures';
 import ConnectLearnAchieveHero from '../components/ConnectLearnAchievePoster';
 import PopularServices from '../components/Carousel'
-import { ArrowRight, CheckCircle, Shield, Users,TrendingUp, Star
-} from 'lucide-react';
+import { ArrowRight} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext'; // Adjust the import path as necessary
-
 
 
 const Home: React.FC = () => {
