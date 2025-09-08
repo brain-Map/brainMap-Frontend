@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Eye, EyeOff, AlertCircle, Check, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/superbaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AccountData {
   userName: string;
@@ -80,6 +81,14 @@ const AccountCreation = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const redirectAfterRegister = (role: string) => {
+    if (role.toLowerCase() === "mentor") {
+      router.push("/domain-expert/dashboard");
+    } else if (role.toLowerCase() === "project member") {
+      router.push("/project-member/dashboard");
+    }
+  };
+
   const handleAccountCreation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -88,7 +97,6 @@ const AccountCreation = () => {
     const email = accountData.email;
     const role = userType;
 
-    
     setIsSubmitting(true);
 
     // Create account using Supabase
@@ -109,12 +117,16 @@ const AccountCreation = () => {
         return new Response(JSON.stringify({ error: error.message }), { status: 400 });
       }
 
+      const token = localStorage.getItem("accessToken")
+      console.log("Auth: ", token || "no auth");
+      
       const userRole = role.replace(" ", "_")
       // Send user data to backend API
-      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users`, {
+      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           username: userName,
@@ -134,32 +146,28 @@ const AccountCreation = () => {
 
     setIsSubmitting(false);
 
-    
-    
     setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    router.push(`/register/profile-completion?role=${userType}`);
-    
+    redirectAfterRegister(userType);
   };
 
   const handleGoogleSignup = async () => {
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  })
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
 
-  
-  if (error) {
-    setAlert({ message: error.message, type: 'error' });
+    if (error) {
+      setAlert({ message: error.message, type: 'error' });
+    }
+
+    setIsSubmitting(false);
+
+    localStorage.setItem("user_role", userType || "");
+
+    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
+    redirectAfterRegister(userType);
   }
-
-  setIsSubmitting(false);
-
-  localStorage.setItem("user_role", userType|| "");
-
-  setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-  router.push(`/register/profile-completion?role=${userType}`);
-}
 
   const handleBackToRoleSelection = () => {
     router.push('/register');

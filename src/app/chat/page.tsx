@@ -16,7 +16,7 @@ const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost
 
 export default function ChatInterface() {
   const { user } = useAuth()
-  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") || "" : ""
+  const [token, setToken] = useState<string>("")
   const userId = user?.id || ""
   const [chats, setChats] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
@@ -30,6 +30,12 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
   const [lastMessageId, setLastMessageId] = useState<number | null>(null)
+
+  // Initialize token safely on client side
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken") || ""
+    setToken(accessToken)
+  }, [])
 
   // Smooth scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -54,7 +60,7 @@ export default function ChatInterface() {
 
   // Fetch chats from API
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !token) return
     setLoading(true)
     setError(null)
     fetch(`${API_URL}/api/v1/messages/chats/${userId}/summary`, {
