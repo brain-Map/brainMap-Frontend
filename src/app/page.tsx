@@ -12,6 +12,10 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext'; // Adjust the import path as necessary
+import { cn } from '@/lib/utils';
+// import { SparklesCore } from "../components/ui/sparkles";
+// import { Vortex } from "../components/ui/vortex";
+import { HeroParallax, products } from "../components/ui/hero-parallax";
 
 
 const Home: React.FC = () => {
@@ -79,83 +83,13 @@ const successStories: SuccessStory[] = [
   }
 ];
 
+
   return (
 
     <>
 {/* Hero section */}
 
-   <section className="relative min-h-screen flex items-center justify-center bg-secondary overflow-hidden">
-      
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('/image/pexels-fauxels-3183183.jpg')`, // Replace with your image URL
-        }}
-      />
-
-  
-
-  {/* Dark Overlay (optional for readability) */}
-  <div className="absolute inset-0 bg-black/75" />
-
-  {/* Geometric Background Elements */}
-  <div className="absolute inset-0 overflow-hidden">
-    <div className="absolute top-1/4 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-    <div className="absolute bottom-1/3 -right-32 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/3 to-accent/3 rounded-full blur-3xl" />
-  </div>
-
-  {/* Content Container */}
-  <div className="relative z-10 text-center max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-   
-    {/* Main Heading */}
-    <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-tight text-balance">
-      Connect with
-      <span className="text-primary"> Industry <br /> Experts, </span>
-      <span className="text-muted-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-normal">
-        Who Drive Results
-      </span>
-    </h1>
-
-    {/* Subheading */}
-    <p className="text-lg sm:text-xl lg:text-2xl text-white mb-12 max-w-4xl mx-auto leading-relaxed text-pretty">
-      Join a curated network of world-class professionals and unlock new opportunities for growth, collaboration,
-      and innovation in your industry.
-    </p>
-
-    {/* CTA Buttons */}
-    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-      <button className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
-        <span className="flex items-center gap-3">
-          Start Connecting
-          <svg
-            className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      <button className="px-8 py-4 text-lg font-medium text-white hover:text-black border-2 border-border rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
-        Browse Experts
-      </button>
-    </div>
-  </div>
-
-  {/* Scroll Indicator */}
-  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce z-10">
-    <div className="flex flex-col items-center">
-      <span className="text-sm mb-2 font-light">Discover More</span>
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-      </svg>
-    </div>
-  </div>
-</section>
+    <HeroParallax products={products} />
 
 {/* Hero section */}
 
