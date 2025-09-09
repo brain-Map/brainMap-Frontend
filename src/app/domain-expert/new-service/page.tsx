@@ -14,12 +14,22 @@ interface Availability {
     endTime: string;
 }
 
+interface Mentor {
+    mentorId: string;
+    mentorName: string;
+    avatar: string;
+    mentorRating: number;
+    reviews: number;    
+}
+
 interface ServiceData {
     title: string;
+    thumbnail: string;
     subject: string;
     description: string;
     fee: number;
-    mentorId: string;
+    createdAt: Date | null;
+    mentor: Mentor | null;
     availabilities: Availability[];
 }
 
@@ -29,10 +39,12 @@ const NewService: React.FC = () => {
     
     const [serviceData, setServiceData] = useState<ServiceData>({
         title: "",
+        thumbnail: "",
         subject: "",
         description: "",
         fee: 0,
-        mentorId: user?.id || "",
+        createdAt: null,
+        mentor: null,
         availabilities: [],
     });
     
@@ -207,10 +219,12 @@ const NewService: React.FC = () => {
             // Reset form
             setServiceData({
                 title: "",
+                thumbnail: "",
                 subject: "",
                 description: "",
                 fee: 0,
-                mentorId: user.id,
+                createdAt: null,
+                mentor: null,
                 availabilities: [],
             });
             
