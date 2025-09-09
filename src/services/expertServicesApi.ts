@@ -3,13 +3,14 @@ import api from "@/lib/axiosClient";
 
 export interface BackendServiceData {
   title: string;
+  thumbnail: string;
   subject: string;
   description: string;
   fee: number;
   createdAt: string;
   updatedAt: string;
   mentorId: string;
-  avatar: string;
+  avatar: string | null;
   mentorName: string;
   mentorRating: number;
   reviews: number;
@@ -45,23 +46,38 @@ function mapToServiceListCard(data: BackendServiceData): ServiceListCard {
   // Ensure serviceId exists to prevent errors
   const serviceId = data.serviceId || `random-${Math.random().toString(36).substr(2, 9)}`;
   
-  return {
+  // Debug logging for thumbnail mapping
+  console.log("📋 Mapping service data:", {
+    title: data.title,
+    originalThumbnail: data.thumbnail,
+    originalAvatar: data.avatar
+  });
+  
+  const mappedService = {
     id: parseInt(serviceId.slice(0, 8), 16) || Math.floor(Math.random() * 1000), // Convert part of UUID to number or use random
     title: data.title || "Untitled Service",
     subject: data.subject || "General",
     description: data.description || "No description provided",
     fee: typeof data.fee === 'number' ? data.fee : 0,
-    thumbnail: data.avatar || "",
+    thumbnail: data.thumbnail || "", // Fixed: use thumbnail field instead of avatar
     rating: typeof data.mentorRating === 'number' ? data.mentorRating : 0,
     reviews: typeof data.reviews === 'number' ? data.reviews : 0,
     createdAt: data.createdAt || new Date().toISOString(),
     mentor: {
       name: data.mentorName || "Unknown Expert",
       role: "Domain Expert", // Default role
-      avatar: data.avatar || "",
+      avatar: data.avatar || "", // mentor avatar is separate from service thumbnail
       date: data.createdAt || new Date().toISOString(),
     },
   };
+  
+  console.log("🔄 Mapped service:", {
+    title: mappedService.title,
+    thumbnail: mappedService.thumbnail,
+    mentorAvatar: mappedService.mentor.avatar
+  });
+  
+  return mappedService;
 }
 
 export async function getExpertServices(page: number = 0, size: number = 20, sortBy: string = 'updatedAt'): Promise<ServicesResult> {

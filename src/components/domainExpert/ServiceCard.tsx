@@ -16,12 +16,12 @@ export function ServiceCard({ service }: { service: ServiceListCard }) {
   
   const {
     title,
+    thumbnail,
     subject,
     description,
     fee,
     rating,
     reviews,
-    thumbnail,
     createdAt,
     mentor
   } = service;
