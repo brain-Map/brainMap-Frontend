@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, X, Clock, BookOpen, DollarSign, Calendar } from 'lucide-react';
+import { Plus, X, Clock, BookOpen, DollarSign, Calendar, Upload, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
 import api from "@/lib/axiosClient";
+import { uploadImage } from "@/lib/storageClient";
 
 
 interface Availability {
@@ -57,6 +58,12 @@ const NewService: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     
+    // Thumbnail upload states
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+    const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    
     const daysOfWeek = [
         { value: 1, label: "Monday" },
         { value: 2, label: "Tuesday" },
@@ -81,6 +88,46 @@ const NewService: React.FC = () => {
                 ...prev,
                 [name]: value
             }));
+        }
+    };
+    
+    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setUploadError('Please select a valid image file');
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setUploadError('File size must be less than 5MB');
+                return;
+            }
+            
+            setThumbnailFile(file);
+            setUploadError(null);
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setThumbnailPreview(event.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const removeThumbnail = () => {
+        setThumbnailFile(null);
+        setThumbnailPreview("");
+        setServiceData(prev => ({ ...prev, thumbnail: "" }));
+        setUploadError(null);
+        
+        // Reset file input
+        const fileInput = document.getElementById('thumbnail') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
         }
     };
     
@@ -170,9 +217,39 @@ const NewService: React.FC = () => {
         }
         
         try {
+            let thumbnailUrl = serviceData.thumbnail;
+            
+            // Upload thumbnail if file is selected
+            if (thumbnailFile && user?.id) {
+                setIsUploadingThumbnail(true);
+                try {
+                    const uploadResult = await uploadImage({
+                        file: thumbnailFile,
+                        bucket: 'uploads',
+                        folder: 'service_listing',
+                        userId: user.id
+                    });
+                    
+                    if (uploadResult.error) {
+                        throw new Error(uploadResult.error);
+                    }
+                    
+                    thumbnailUrl = uploadResult.imageUrl;
+                    console.log('Thumbnail uploaded successfully:', thumbnailUrl);
+                } catch (uploadError: any) {
+                    console.error('Thumbnail upload failed:', uploadError);
+                    setSubmitError(`Thumbnail upload failed: ${uploadError.message}`);
+                    setIsSubmitting(false);
+                    setIsUploadingThumbnail(false);
+                    return;
+                }
+                setIsUploadingThumbnail(false);
+            }
+            
             // Prepare the payload for backend submission
             const servicePayload = {
                 title: serviceData.title.trim(),
+                thumbnail: thumbnailUrl,
                 subject: serviceData.subject,
                 description: serviceData.description.trim(),
                 fee: serviceData.fee,
@@ -210,6 +287,9 @@ const NewService: React.FC = () => {
                 mentor: null,
                 availabilities: [],
             });
+            setThumbnailFile(null);
+            setThumbnailPreview("");
+            setUploadError(null);
             
             // Redirect to services page
             router.push('/domain-expert/services');
@@ -227,6 +307,7 @@ const NewService: React.FC = () => {
     const previewJsonData = () => {
         const servicePayload = {
             title: serviceData.title.trim(),
+            thumbnail: serviceData.thumbnail || thumbnailPreview,
             subject: serviceData.subject,
             description: serviceData.description.trim(),
             fee: serviceData.fee,
@@ -255,26 +336,28 @@ const NewService: React.FC = () => {
                     
                     <form onSubmit={handleSubmit} className="p-6 space-y-8">
                         {/* Error Display */}
-                        {submitError && (
+                        {(submitError || uploadError) && (
                             <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
                                 <div className="flex">
                                     <div className="flex-shrink-0">
                                         <X className="h-5 w-5 text-red-400" />
                                     </div>
                                     <div className="ml-3">
-                                        <p className="text-sm text-red-700">{submitError}</p>
+                                        <p className="text-sm text-red-700">{submitError || uploadError}</p>
                                     </div>
                                 </div>
                             </div>
                         )}
                         
                         {/* Loading Overlay */}
-                        {isSubmitting && (
+                        {(isSubmitting || isUploadingThumbnail) && (
                             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                                 <div className="bg-white p-6 rounded-lg shadow-lg">
                                     <div className="flex items-center space-x-3">
                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                                        <span className="text-gray-700">Creating service...</span>
+                                        <span className="text-gray-700">
+                                            {isUploadingThumbnail ? 'Uploading thumbnail...' : 'Creating service...'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -306,6 +389,71 @@ const NewService: React.FC = () => {
                                     className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Enter service title"
                                 />
+                            </div>
+                            
+                            {/* Thumbnail Upload Section */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Service Thumbnail
+                                </label>
+                                <div className="flex items-start space-x-4">
+                                    {/* Upload Area */}
+                                    <div className="flex-1">
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                                            <input
+                                                type="file"
+                                                id="thumbnail"
+                                                name="thumbnail"
+                                                accept="image/*"
+                                                onChange={handleThumbnailChange}
+                                                className="hidden"
+                                                disabled={isUploadingThumbnail}
+                                            />
+                                            <label htmlFor="thumbnail" className="cursor-pointer">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                                        <Upload className="h-6 w-6 text-gray-400" />
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                        Click to upload thumbnail
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        PNG, JPG, JPEG up to 5MB
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        {uploadError && (
+                                            <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Preview */}
+                                    {thumbnailPreview && (
+                                        <div className="relative">
+                                            <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={thumbnailPreview}
+                                                    alt="Thumbnail preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={removeThumbnail}
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                                disabled={isUploadingThumbnail}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                {thumbnailFile && (
+                                    <div className="mt-2 text-sm text-gray-500">
+                                        Selected: {thumbnailFile.name} ({(thumbnailFile.size / 1024 / 1024).toFixed(2)} MB)
+                                    </div>
+                                )}
                             </div>
                             
                             {/* Service Subject */}
