@@ -1,6 +1,5 @@
 import { ServiceListCard } from "@/types/serviceListCard";
-
-const BACKEND_URL = `${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/service-listings`;
+import api from "@/lib/axiosClient";
 
 export interface BackendServiceData {
   title: string;
@@ -34,6 +33,14 @@ export interface PaginatedResponse {
   last: boolean;
 }
 
+export interface ServicesResult {
+  services: ServiceListCard[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
 function mapToServiceListCard(data: BackendServiceData): ServiceListCard {
   // Ensure serviceId exists to prevent errors
   const serviceId = data.serviceId || `random-${Math.random().toString(36).substr(2, 9)}`;
@@ -57,28 +64,13 @@ function mapToServiceListCard(data: BackendServiceData): ServiceListCard {
   };
 }
 
-export interface ServicesResult {
-  services: ServiceListCard[];
-  totalElements: number;
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-}
-
-export async function getExpertServices(page: number = 0, size: number = 20, sortBy: string = 'title'): Promise<ServicesResult> {
+export async function getExpertServices(page: number = 0, size: number = 20, sortBy: string = 'updatedAt'): Promise<ServicesResult> {
   try {
-    const url = new URL(BACKEND_URL);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('size', size.toString());
-    url.searchParams.append('sortBy', sortBy);
+    const params = { page, size, sortBy };
+    const response = await api.get<PaginatedResponse>('/api/v1/service-listing/all', { params });
     
-    const response = await fetch(url.toString());
     
-    if (!response.ok) {
-      throw new Error(`Error fetching services: ${response.statusText}`);
-    }
-    
-    const responseData = await response.json() as PaginatedResponse;
+    const responseData = response.data as PaginatedResponse;
     
     if (responseData.content && Array.isArray(responseData.content)) {
       console.log(`Found ${responseData.content.length} services in response.content`);

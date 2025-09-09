@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, X, Clock, BookOpen, DollarSign, Calendar } from 'lucide-react';
 import axios from 'axios';
+import api from "@/lib/axiosClient";
 
-const BACKEND_URL = `${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/create-service-listing`;
 
 interface Availability {
     dayOfWeek: number;
@@ -65,19 +65,6 @@ const NewService: React.FC = () => {
         { value: 5, label: "Friday" },
         { value: 6, label: "Saturday" },
         { value: 7, label: "Sunday" }
-    ];
-    
-    const subjects = [
-        "Computer Science",
-        "Software Engineering",
-        "Data Science",
-        "Artificial Intelligence",
-        "Web Development",
-        "Mobile Development",
-        "UI/UX Design",
-        "Project Management",
-        "Business Analysis",
-        "Other"
     ];
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -200,14 +187,10 @@ const NewService: React.FC = () => {
             console.log('Submitting service data as JSON:');
             console.log('Raw JSON String:', JSON.stringify(servicePayload, null, 2));
             
-            // Get access token from localStorage
-            const accessToken = localStorage.getItem('accessToken');
-            
             // Send POST request to create service endpoint
-            const response = await axios.post(BACKEND_URL, servicePayload, {
+            const response = await api.post('/api/v1/service-listing/create', servicePayload, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
                 }
             });
             
@@ -330,19 +313,16 @@ const NewService: React.FC = () => {
                                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                                     Subject *
                                 </label>
-                                <select
+                                <input
+                                    type="text"
                                     id="subject"
                                     name="subject"
                                     required
                                     value={serviceData.subject}
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">Select a subject</option>
-                                    {subjects.map(subject => (
-                                        <option key={subject} value={subject}>{subject}</option>
-                                    ))}
-                                </select>
+                                    placeholder="Enter subject"
+                                />
                             </div>
                             
                             {/* Service Description */}
