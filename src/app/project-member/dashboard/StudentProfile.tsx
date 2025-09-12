@@ -90,6 +90,16 @@ const userService = {
       console.error('Error updating user:', error);
       throw error;
     }
+  },
+
+  getProjectData: async (userId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/all/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      throw error;
+    }
   }
 };
 
@@ -103,6 +113,7 @@ const ProjectDashboard = () => {
   const [aboutText, setAboutText] = useState('');
   const [userAbout, setUserAbout] = useState<UserAbout | null>(null);
   const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
+  const [projects, setProjects] = useState<any[]>([]);
 
   console.log('User in ProjectDashboard:', user1);
 
@@ -126,18 +137,18 @@ const ProjectDashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId) return;
-      
       try {
         const userData = await userService.getUser(userId);
         const oneUserData = await userService.getOneUserData(userId);
+        const projectData = await userService.getProjectData(userId);
         setUser(userData);
         setAboutText(userData.about || '');
         setOneUserData(oneUserData);
+        setProjects(projectData);
       } catch (error) {
         console.error('Failed to fetch user:', error);
       }
     };
-
     fetchUser();
   }, [userId]);
 
@@ -321,11 +332,13 @@ const ProjectDashboard = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Project Ongoing</span>
-                  <span className="font-semibold text-gray-900">3</span>
+                  {/* <span className="font-semibold text-gray-900">3</span> */}
+                  <span className="font-semibold text-gray-900">{projects.filter(p => p.status === 'ACTIVE').length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Projects Completed</span>
-                  <span className="font-semibold text-gray-900">{completedProjects.length}</span>
+                  {/* <span className="font-semibold text-gray-900">{completedProjects.length}</span> */}
+                  <span className="font-semibold text-gray-900">{projects.filter(p => p.status === 'DONE').length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Experts Hired</span>
@@ -391,22 +404,6 @@ const ProjectDashboard = () => {
               )}
             </div>
 
-
-            {/* Fields of Interest
-            <div className="bg-white rounded-xl p-6 border border-gray-200  mb-6">
-              <h3 className="font-semibold text-lg mb-4 text-gray-900">Fields of Interest</h3>
-              <div className="flex flex-wrap gap-2">
-                {user?.fieldsOfInterest?.map((field, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-value3 text-primary rounded-full text-sm border border-value2 hover:bg-value3 transition-colors"
-                  >
-                    {field}
-                  </span>
-                ))}
-              </div>
-            </div> */}
-
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 mb-6">
               <nav className="flex space-x-8">
@@ -431,26 +428,29 @@ const ProjectDashboard = () => {
               {activeTab === 'overview' && (
                 <>
                   {/* Current Projects */}
-                  
                   <div className="bg-white rounded-xl p-6 border border-gray-200 ">
                   <h3 className="font-semibold text-xl mb-6 text-gray-900">Ongoing Projects</h3>
                   <div className="">
-                    {currentProjects.map((currentProjects) => (
-                      <div key={currentProjects.id} className=" rounded-lg p-4 hover:bg-gray-100 transition-colors border-t border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-lg font-semibold text-gray-900">{currentProjects.title}</h4>
-                          <div className="flex items-center gap-2">
-                            {/* <Star className="w-4 h-4 text-yellow-500 fill-current" /> */}
-                            <span className="text-sm text-gray-600">{currentProjects.priority}</span>
+                    {projects.filter(p => p.status === 'ACTIVE').length === 0 ? (
+                      <div className="text-gray-400 italic text-center py-8">No ongoing projects.</div>
+                    ) : (
+                      projects.filter(p => p.status === 'ACTIVE').map((project) => (
+                        <div key={project.id} className=" rounded-lg p-4 hover:bg-gray-100 transition-colors border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-semibold text-gray-900">{project.title}</h4>
+                            <div className="flex items-center gap-2">
+                              {/* <Star className="w-4 h-4 text-yellow-500 fill-current" /> */}
+                              <span className="text-sm text-gray-600">{project.priority}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm text-gray-500">
+                            <span>Team: {project.team} members</span>
+                            <span>Budget: ${project.budget?.toLocaleString?.() ?? project.budget}</span>
+                            <span>Deadline: {project.deadline ? new Date(project.deadline).toLocaleDateString() : '-'}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                          <span>Team: {currentProjects.team} members</span>
-                          <span>Budget: ${currentProjects.budget.toLocaleString()}</span>
-                          <span>Deadline: {new Date(currentProjects.deadline).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -462,22 +462,26 @@ const ProjectDashboard = () => {
                 <div className="bg-white rounded-xl p-6 border border-gray-200 ">
                   <h3 className="font-semibold text-xl mb-6 text-gray-900">Completed Projects</h3>
                   <div className="">
-                    {completedProjects.map((project) => (
-                      <div key={project.id} className="rounded-lg p-4 hover:bg-gray-100 transition-colors border-t border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-lg font-semibold text-gray-900">{project.title}</h4>
-                          <div className="flex items-center gap-2">
-                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                            <span className="text-sm text-gray-600">{project.rating}</span>
+                    {projects.filter(p => p.status !== 'ACTIVE').length === 0 ? (
+                      <div className="text-gray-400 italic text-center py-8">No completed projects.</div>
+                    ) : (
+                      projects.filter(p => p.status !== 'ACTIVE').map((project) => (
+                        <div key={project.id} className="rounded-lg p-4 hover:bg-gray-100 transition-colors border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-semibold text-gray-900">{project.title}</h4>
+                            <div className="flex items-center gap-2">
+                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                              <span className="text-sm text-gray-600">{project.rating ?? '-'}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm text-gray-500">
+                            <span>Team: {project.team} members</span>
+                            <span>Budget: ${project.budget?.toLocaleString?.() ?? project.budget}</span>
+                            <span>Completed: {project.completionDate ? new Date(project.completionDate).toLocaleDateString() : '-'}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                          <span>Team: {project.team} members</span>
-                          <span>Budget: ${project.budget.toLocaleString()}</span>
-                          <span>Completed: {new Date(project.completionDate).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               )}
