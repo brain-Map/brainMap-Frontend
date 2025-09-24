@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { paymentApiService, PaymentSessionRequest } from '@/services/paymentApi';
+import { payHereConfig } from '@/config/payhere';
 import toast from 'react-hot-toast';
 
 interface CheckoutProps {
@@ -41,6 +42,11 @@ export default function CheckoutPage({
     city,
     country
   });
+  const [showTestCards, setShowTestCards] = useState(false);
+
+  // Get PayHere configuration
+  const payHereConfigData = payHereConfig.getConfig();
+  const testCards = payHereConfig.getTestCards();
 
   const handleInputChange = (field: string, value: string) => {
     setPaymentData(prev => ({
@@ -111,6 +117,19 @@ export default function CheckoutPage({
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Checkout</h2>
             <p className="text-gray-600">Secure payment with PayHere</p>
+            
+            {/* Sandbox Mode Indicator */}
+            {payHereConfigData.isSandbox && (
+              <div className="mt-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-md">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-semibold">SANDBOX MODE</span>
+                </div>
+                <p className="text-sm mt-1">Using PayHere test environment</p>
+              </div>
+            )}
           </div>
 
           {/* Payment Summary */}
@@ -242,11 +261,58 @@ export default function CheckoutPage({
             )}
           </button>
 
+          {/* Sandbox Test Cards Information */}
+          {payHereConfigData.isSandbox && testCards && (
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-blue-900">Test Cards for Sandbox</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowTestCards(!showTestCards)}
+                  className="text-blue-600 hover:text-blue-800 text-sm underline"
+                >
+                  {showTestCards ? 'Hide' : 'Show'} Test Cards
+                </button>
+              </div>
+              
+              {showTestCards && (
+                <div className="space-y-3 text-sm">
+                  <div className="bg-white p-3 rounded border">
+                    <p className="font-medium text-gray-900 mb-1">💳 Visa</p>
+                    <p className="font-mono text-xs text-gray-600">
+                      {testCards.visa.number} | {testCards.visa.expiry} | {testCards.visa.cvv}
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <p className="font-medium text-gray-900 mb-1">💳 Mastercard</p>
+                    <p className="font-mono text-xs text-gray-600">
+                      {testCards.mastercard.number} | {testCards.mastercard.expiry} | {testCards.mastercard.cvv}
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <p className="font-medium text-gray-900 mb-1">💳 American Express</p>
+                    <p className="font-mono text-xs text-gray-600">
+                      {testCards.american_express.number} | {testCards.american_express.expiry} | {testCards.american_express.cvv}
+                    </p>
+                  </div>
+                  <p className="text-blue-700 text-xs mt-2">
+                    💡 Use these test cards on the PayHere payment page for sandbox testing
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Security Notice */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
               🔒 Your payment information is secured by PayHere
             </p>
+            {payHereConfigData.isSandbox && (
+              <p className="text-xs text-yellow-600 mt-1">
+                Currently in {payHereConfigData.mode.toUpperCase()} mode - No real charges will be made
+              </p>
+            )}
           </div>
         </div>
       </div>

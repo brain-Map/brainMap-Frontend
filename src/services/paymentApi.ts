@@ -1,4 +1,5 @@
 import api from '@/utils/api';
+import { payHereConfig } from '@/config/payhere';
 
 export interface PaymentSessionRequest {
   amount: number;
@@ -37,13 +38,36 @@ export interface PaymentStatusResponse {
 class PaymentApiService {
   /**
    * Create a new PayHere payment session
+   * Automatically includes PayHere mode and configuration
    */
   async createPaymentSession(paymentData: PaymentSessionRequest): Promise<PaymentSessionResponse> {
     try {
-      const response = await api.post('/api/payments/create-session', paymentData);
+      // Validate PayHere configuration
+      const configValidation = payHereConfig.validateConfig();
+      if (!configValidation.isValid) {
+        throw new Error(`PayHere configuration error: ${configValidation.errors.join(', ')}`);
+      }
+
+      // Add PayHere configuration to request
+      const requestPayload = {
+        ...paymentData,
+        // Include PayHere mode and configuration for backend
+        payHereMode: payHereConfig.getConfig().mode,
+        payHereMerchantId: payHereConfig.getMerchantId(),
+        payHereApiUrl: payHereConfig.getApiUrl(),
+        isSandbox: payHereConfig.isSandboxMode()
+      };
+
+      const response = await api.post('/api/payments/create-session', requestPayload);
       return response.data;
     } catch (error: any) {
       console.error('Failed to create payment session:', error);
+      
+      // Enhanced error logging for sandbox mode
+      if (payHereConfig.isSandboxMode()) {
+        console.log('PayHere Sandbox Mode - Configuration:', payHereConfig.getConfig());
+      }
+      
       throw new Error(
         error.response?.data?.message || 'Failed to create payment session'
       );
@@ -92,6 +116,20 @@ class PaymentApiService {
         error.response?.data?.message || 'Failed to cancel payment'
       );
     }
+  }
+
+  /**
+   * Get PayHere configuration info
+   */
+  getPayHereConfig() {
+    return payHereConfig.getConfig();
+  }
+
+  /**
+   * Get test card information for sandbox mode
+   */
+  getTestCards() {
+    return payHereConfig.getTestCards();
   }
 }
 
