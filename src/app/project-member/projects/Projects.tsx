@@ -235,8 +235,15 @@ const ProjectsTable: React.FC = () => {
       (filterProduct === 'Filter by product' || project.type === filterProduct)
   );
 
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-  const currentItems = filteredProjects.slice(
+  // Filter projects for tabs
+  const tabFilteredProjects = filterProduct === 'MY_PROJECTS'
+    ? allProjects.filter(p => p.id === user?.id)
+    : filterProduct === 'COLLABORATE_PROJECTS'
+      ? allProjects.filter(p => p.id !== user?.id)
+      : filteredProjects;
+
+  const totalPages = Math.ceil(tabFilteredProjects.length / itemsPerPage);
+  const currentItems = tabFilteredProjects.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -359,7 +366,21 @@ const ProjectsTable: React.FC = () => {
           
         </div>
 
-        
+        {/* Tabs for My Projects and Collaborate Projects */}
+        <div className="flex gap-4 mb-6">
+          <button
+            className={`px-4 py-2 rounded-md font-medium transition-colors border ${filterProduct === 'MY_PROJECTS' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+            onClick={() => setFilterProduct('MY_PROJECTS')}
+          >
+            My Projects
+          </button>
+          <button
+            className={`px-4 py-2 rounded-md font-medium transition-colors border ${filterProduct === 'COLLABORATE_PROJECTS' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+            onClick={() => setFilterProduct('COLLABORATE_PROJECTS')}
+          >
+            Collaborate Projects
+          </button>
+        </div>
 
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-lg ">
