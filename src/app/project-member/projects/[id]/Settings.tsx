@@ -201,44 +201,10 @@ const ProjectSettingsPage: React.FC = () => {
     setTempVisibility(null);
   };
 
-  // const removeMember = (memberId: number) => {
-  //   setMembers(members.filter((m) => m.id !== memberId));
-  // };
-
-  // const changeMemberRole = (memberId: number, newRole: MemberRole) => {
-  //   setMembers(members.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)));
-  // };
-
-  // const getRoleColor = (role: MemberRole) => {
-  //   switch (role) {
-  //     case "admin":
-  //       return "bg-red-100 text-red-800";
-  //     case "supervisor":
-  //       return "bg-purple-100 text-purple-800";
-  //     case "developer":
-  //       return "bg-blue-100 text-blue-800";
-  //     case "viewer":
-  //       return "bg-gray-100 text-gray-800";
-  //     default:
-  //       return "bg-gray-100 text-gray-800";
-  //   }
-  // };
-
-  // const getRoleIcon = (role: MemberRole) => {
-  //   switch (role) {
-  //     case "admin":
-  //       return <Shield className="w-3 h-3" />;
-  //     case "supervisor":
-  //       return <Crown className="w-3 h-3" />;
-  //     default:
-  //       return null;
-  //   }
-  // };
 
   const sidebarItems: SidebarItem[] = [
     { id: "general", label: "General", icon: Settings },
     { id: "members", label: "Members & Teams", icon: Users },
-    { id: "security", label: "Security & Access", icon: Lock },
     { id: "danger", label: "Danger Zone", icon: Trash2 },
   ];
 
@@ -553,39 +519,7 @@ const ProjectSettingsPage: React.FC = () => {
             <MembersAndTeams/>
           )}
 
-          {/* === SECURITY SECTION === */}
-          {activeSection === "security" && (
-            <div className="max-w-6xl mx-auto">
-              <h1 className="text-2xl font-bold text-gray-900 mb-8">Security & Access</h1>
-
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Access Control</h3>
-                <div className="space-y-4">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-3" />
-                    <div>
-                      <span className="font-medium">Require two-factor authentication</span>
-                      <p className="text-sm text-gray-600">All members must enable 2FA to access this project</p>
-                    </div>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-3" />
-                    <div>
-                      <span className="font-medium">Restrict repository creation</span>
-                      <p className="text-sm text-gray-600">Only supervisors and admins can create new repositories</p>
-                    </div>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-3" defaultChecked />
-                    <div>
-                      <span className="font-medium">Require supervisor approval for merges</span>
-                      <p className="text-sm text-gray-600">All pull requests must be approved by a supervisor</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-          )}
+          
 
           {/* === DANGER ZONE === */}
           {activeSection === "danger" && (
