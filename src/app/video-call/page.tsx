@@ -1,6 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+
+// Extend the Window type to include JitsiMeetExternalAPI
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI?: any
+  }
+}
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

@@ -444,9 +444,8 @@ const ProjectDashboard = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <span>Team: {project.team} members</span>
-                            <span>Budget: ${project.budget?.toLocaleString?.() ?? project.budget}</span>
-                            <span>Deadline: {project.deadline ? new Date(project.deadline).toLocaleDateString() : '-'}</span>
+                            <span>Start Date: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '-'}</span>
+                            <span>Deadline: {project.dueDate ? new Date(project.dueDate).toLocaleDateString() : '-'}</span>
                           </div>
                         </div>
                       ))
@@ -475,8 +474,8 @@ const ProjectDashboard = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <span>Team: {project.team} members</span>
-                            <span>Budget: ${project.budget?.toLocaleString?.() ?? project.budget}</span>
+                            <span>Start Date: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : '-'}</span>
+                            <span>Deadline: {project.dueDate ? new Date(project.dueDate).toLocaleDateString() : '-'}</span>
                             <span>Completed: {project.completionDate ? new Date(project.completionDate).toLocaleDateString() : '-'}</span>
                           </div>
                         </div>
