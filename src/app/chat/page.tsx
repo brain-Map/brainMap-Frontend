@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, MoreVertical, Phone, Video, Paperclip, Send } from "lucide-react"
+import { Search, MoreVertical, Phone, Video, Paperclip, Send, X } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Client } from "@stomp/stompjs"
 import SockJS from "sockjs-client"
@@ -26,6 +26,8 @@ export default function ChatInterface() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
   const stompClient = useRef<Client | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
@@ -216,21 +218,64 @@ export default function ChatInterface() {
   // Search users
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!searchQuery) {
+      if (!searchQuery.trim()) {
         setSearchResults([])
+        setSearchLoading(false)
         return
       }
-      fetch(`${API_URL}/api/v1/users/search?query=${encodeURIComponent(searchQuery)}`, {
+      setSearchLoading(true)
+      fetch(`${API_URL}/api/v1/users/chat/search?query=${encodeURIComponent(searchQuery.trim())}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.ok ? res.json() : Promise.reject(res))
         .then((data) => {
-          setSearchResults(data)
+          const users = Array.isArray(data) ? data : [data]
+          
+          const mappedResults = users
+          .filter((u: any) => u.userId !== userId)
+          .map((u: any) => ({
+            id: u.userId,
+            name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+            username: u.username || "",
+            avatar: u.avatarUrl || "/image/avatar/default.jpg",
+          }))
+          setSearchResults(mappedResults)
+          setSearchLoading(false)
         })
-        .catch(() => setSearchResults([]))
+        .catch(() => {
+          setSearchResults([])
+          setSearchLoading(false)
+        })
     }, 300)
     return () => clearTimeout(timer)
-  }, [searchQuery, token])
+  }, [searchQuery, token, userId])
+
+  // Handle user selection from search
+  const handleSelectUser = (searchedUser: any) => {
+    // Check if chat already exists
+    const existingChat = chats.find((chat) => chat.id === searchedUser.id)
+    
+    if (existingChat) {
+      setSelectedChat(existingChat)
+    } else {
+      // Create new chat entry
+      const newChat = {
+        id: searchedUser.id,
+        userId: searchedUser.id,
+        name: searchedUser.name || searchedUser.username,
+        avatar: searchedUser.avatar || "/image/avatar/default.jpg",
+        lastMessage: "",
+        time: "",
+      }
+      setChats((prev) => [newChat, ...prev])
+      setSelectedChat(newChat)
+    }
+    
+    // Close search
+    setShowSearch(false)
+    setSearchQuery("")
+    setSearchResults([])
+  }
 
   // Send message via WebSocket
   const handleSend = () => {
@@ -285,10 +330,71 @@ export default function ChatInterface() {
                 <p className="text-sm text-gray-500">Info account</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5 text-gray-500" />
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setShowSearch(!showSearch)}
+            >
+              {showSearch ? (
+                <X className="h-5 w-5 text-gray-500" />
+              ) : (
+                <Search className="h-5 w-5 text-gray-500" />
+              )}
             </Button>
           </div>
+
+          {/* Search Input */}
+          {showSearch && (
+            <div className="mt-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search users by username..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 rounded-full border-gray-200 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                />
+              </div>
+
+              {/* Search Results */}
+              {searchQuery.trim() && (
+                <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {searchLoading ? (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      Searching...
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="divide-y divide-gray-100">
+                      {searchResults.map((searchedUser) => (
+                        <div
+                          key={searchedUser.id}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => handleSelectUser(searchedUser)}
+                        >
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={`${API_URL}/${searchedUser.avatar}` || "/image/avatar/default.jpg"} />
+                            <AvatarFallback>{searchedUser.name?.[0] || searchedUser.username?.[0] || "U"}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-medium text-gray-900 truncate">
+                              {searchedUser.name || searchedUser.username}
+                            </h5>
+                            <p className="text-xs text-gray-500 truncate">
+                              @{searchedUser.username}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No users found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Chat Tabs */}
