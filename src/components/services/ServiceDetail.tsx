@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { 
   Star, 
   Clock, 
@@ -65,6 +66,7 @@ const serviceTypeLabels = {
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
+  const router = useRouter()
   const [isFavorite, setIsFavorite] = useState(false)
   const rating = service.rating || 4.8
   const reviewCount = service.reviewCount || 234
@@ -364,7 +366,10 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                   </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3">
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3"
+                  onClick={() => router.push(`/services/${service.serviceId}/book`)}
+                >
                   Book Session Now
                 </Button>
 
