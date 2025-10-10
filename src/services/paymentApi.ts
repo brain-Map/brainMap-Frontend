@@ -48,29 +48,57 @@ class PaymentApiService {
         throw new Error(`PayHere configuration error: ${configValidation.errors.join(', ')}`);
       }
 
-      // Add PayHere configuration to request
+      // Send clean payment data to backend (backend handles PayHere configuration)
       const requestPayload = {
         ...paymentData,
-        // Include PayHere mode and configuration for backend
-        payHereMode: payHereConfig.getConfig().mode,
-        payHereMerchantId: payHereConfig.getMerchantId(),
-        payHereApiUrl: payHereConfig.getApiUrl(),
-        isSandbox: payHereConfig.isSandboxMode()
+        // Optional: Include mode for backend reference (backend has final authority)
+        requestedMode: payHereConfig.getConfig().mode
       };
 
+      console.log('📤 Sending to backend:', requestPayload);
+      console.log('🔗 Backend URL:', api.defaults.baseURL + '/api/payments/create-session');
+      
       const response = await api.post('/api/payments/create-session', requestPayload);
+      
+      console.log('📥 Backend response received:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Failed to create payment session:', error);
+      console.error('❌ Payment session creation failed:', error);
+      
+      // Log detailed error information
+      if (error.response) {
+        console.log('📊 Error Status:', error.response.status);
+        console.log('📝 Error Data:', error.response.data);
+        console.log('🔐 Error Headers:', error.response.headers);
+        
+        // Specific handling for authentication errors
+        if (error.response.status === 401) {
+          console.error('🚫 AUTHENTICATION ERROR: Backend requires login token');
+          console.log('🔑 Current token:', localStorage.getItem('accessToken') ? 'Present' : 'Missing');
+        }
+      } else if (error.request) {
+        console.error('🌐 NETWORK ERROR: No response from backend');
+        console.log('📡 Request details:', error.request);
+      } else {
+        console.error('⚙️ REQUEST SETUP ERROR:', error.message);
+      }
       
       // Enhanced error logging for sandbox mode
       if (payHereConfig.isSandboxMode()) {
-        console.log('PayHere Sandbox Mode - Configuration:', payHereConfig.getConfig());
+        console.log('⚙️ PayHere Sandbox Mode - Configuration:', payHereConfig.getConfig());
       }
       
-      throw new Error(
-        error.response?.data?.message || 'Failed to create payment session'
-      );
+      // Provide specific error messages based on error type
+      let errorMessage = 'Failed to create payment session';
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in to continue.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Backend server error. Please try again later.';
+      } else if (!error.response) {
+        errorMessage = 'Cannot connect to backend server. Please check if the backend is running.';
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 

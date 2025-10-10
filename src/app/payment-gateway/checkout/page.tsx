@@ -89,7 +89,26 @@ export default function CheckoutPage({
       };
 
       // Call backend to create PayHere payment session
+      console.log('🚀 Sending payment request:', paymentRequest);
+      
       const response = await paymentApiService.createPaymentSession(paymentRequest);
+      
+      console.log('✅ Backend response:', response);
+      console.log('🔗 Redirect URL:', response.redirectUrl);
+      
+      // Check if redirect URL contains sandbox
+      if (response.redirectUrl) {
+        if (response.redirectUrl.includes('sandbox.payhere.lk')) {
+          console.log('✅ Correct: Redirecting to SANDBOX PayHere');
+        } else if (response.redirectUrl.includes('payhere.lk')) {
+          console.log('❌ WARNING: Redirecting to LIVE PayHere instead of sandbox!');
+          console.log('🔍 Full URL:', response.redirectUrl);
+        } else {
+          console.log('❓ Unknown redirect URL format:', response.redirectUrl);
+        }
+      } else {
+        console.log('❌ ERROR: No redirect URL received from backend');
+      }
       
       // Store payment info in localStorage for later use
       localStorage.setItem('currentPayment', JSON.stringify({

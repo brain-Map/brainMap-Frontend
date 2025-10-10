@@ -35,24 +35,17 @@ class PayHereConfigService {
   private getSandboxConfig(): PayHereConfig {
     return {
       mode: 'sandbox',
-      apiUrl: process.env.NEXT_PUBLIC_PAYHERE_SANDBOX_URL || 'https://sandbox.payhere.lk/pay/checkout',
-      merchantId: process.env.NEXT_PUBLIC_PAYHERE_SANDBOX_MERCHANT_ID || '1211149', // PayHere test merchant ID
+      apiUrl: 'https://sandbox.payhere.lk/pay/checkout', // Backend will use this
+      merchantId: 'backend-managed', // Backend handles merchant ID
       isSandbox: true
     };
   }
 
   private getLiveConfig(): PayHereConfig {
-    const merchantId = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID;
-    
-    if (!merchantId) {
-      console.error('NEXT_PUBLIC_PAYHERE_MERCHANT_ID is required for live mode');
-      throw new Error('PayHere merchant ID is required for live mode');
-    }
-
     return {
       mode: 'live',
-      apiUrl: process.env.NEXT_PUBLIC_PAYHERE_LIVE_URL || 'https://www.payhere.lk/pay/checkout',
-      merchantId,
+      apiUrl: 'https://www.payhere.lk/pay/checkout', // Backend will use this
+      merchantId: 'backend-managed', // Backend handles merchant ID
       isSandbox: false
     };
   }
@@ -132,8 +125,8 @@ class PayHereConfigService {
       errors.push('PayHere API URL is not configured');
     }
 
-    if (!this.config.merchantId) {
-      errors.push('PayHere Merchant ID is not configured');
+    if (!this.config.mode) {
+      errors.push('PayHere mode is not configured');
     }
 
     // URL validation
@@ -143,6 +136,7 @@ class PayHereConfigService {
       errors.push('PayHere API URL is not a valid URL');
     }
 
+    // Note: Merchant ID validation is handled by backend
     return {
       isValid: errors.length === 0,
       errors
