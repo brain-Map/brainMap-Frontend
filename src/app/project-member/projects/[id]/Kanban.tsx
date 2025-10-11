@@ -938,7 +938,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       title: string;
       description: string;
       priority?: 'Low' | 'Medium' | 'High';
-      assignee?: string;
+      assignees?: string[];
       dueDate?: string;
     }) => void;
     onCancel: () => void;
@@ -962,7 +962,6 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       if (formData.title.trim()) {
         onSubmit(columnId, formData);
         setFormData({ title: '', description: '', priority: 'Medium', assignees: [], dueDate: '' });
-        // console.log('Form Data on Submit:', formData);
         onCancel();
       }
     };
@@ -980,15 +979,30 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       }
     };
 
+    const toggleAssignee = (assigneeId: string) => {
+      setFormData(prev => ({
+        ...prev,
+        assignees: prev.assignees.includes(assigneeId)
+          ? prev.assignees.filter(id => id !== assigneeId)
+          : [...prev.assignees, assigneeId]
+      }));
+    };
+
+    const getCollaboratorName = (collab: any) => {
+      return collab.firstName && collab.lastName 
+        ? `${collab.firstName} ${collab.lastName}`
+        : collab.firstName || collab.lastName || collab.name || collab.userName || collab.email || 'Unknown';
+    };
+
     return (
       <div 
-        className="fixed inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         onClick={handleBackdropClick}
       >
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Add Task to {columnTitle}
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Add New Task to <span className="text-blue-600">{columnTitle}</span>
             </h2>
             <button
               onClick={onCancel}
@@ -998,89 +1012,165 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
             </button>
           </div>
           
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-              <input
-                type="text"
-                placeholder="Enter task title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                onKeyPress={handleKeyPress}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                autoFocus
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                placeholder="Enter task description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-24 resize-none"
-              />
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column - Basic Information */}
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-lg font-medium text-blue-900 mb-4">Task Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Task Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter a clear and descriptive task title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onKeyPress={handleKeyPress}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <textarea
+                        placeholder="Provide detailed description of the task, requirements, and any important notes..."
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-32 resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                        <select
+                          value={formData.priority}
+                          onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        >
+                          <option value="Low">🟢 Low Priority</option>
+                          <option value="Medium">🟡 Medium Priority</option>
+                          <option value="High">🔴 High Priority</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                        <input
+                          type="date"
+                          value={formData.dueDate}
+                          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-				  <div className="flex-1">
-					<label className="block text-sm font-medium text-gray-700 mb-2">Assignees</label>
-					<select
-					  multiple
-					  value={formData.assignees}
-					  onChange={e => {
-						const selected = Array.from(e.target.selectedOptions, option => option.value);
-						setFormData(prev => ({ ...prev, assignees: selected }));
-					  }}
-					  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-32"
-					>
-					  {collaborators && collaborators.map((collab: any) => (
-						<option key={collab.id || collab.userId || collab.email} value={collab.id || collab.userId || collab.email}>
-						  {collab.name || collab.userName || collab.email}
-						</option>
-					  ))}
-					</select>
-					<div className="mt-2 text-xs text-gray-500">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</div>
-				  </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
+
+              {/* Right Column - Team & Assignment */}
+              <div className="space-y-6">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="text-lg font-medium text-green-900 mb-4">Team Assignment</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Assign Team Members ({formData.assignees.length} selected)
+                    </label>
+                    
+                    {collaborators && collaborators.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {collaborators.map((collab: any) => {
+                          const collaboratorId = collab.id || collab.userId || collab.email;
+                          const isSelected = formData.assignees.includes(collaboratorId);
+                          const collaboratorName = getCollaboratorName(collab);
+                          
+                          return (
+                            <div
+                              key={collaboratorId}
+                              onClick={() => toggleAssignee(collaboratorId)}
+                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                isSelected 
+                                  ? 'bg-blue-100 border-blue-300 shadow-sm' 
+                                  : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
+                              }`}>
+                                {isSelected && (
+                                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center space-x-3 flex-1">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                                  <span className="text-white text-sm font-medium">
+                                    {collaboratorName.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{collaboratorName}</p>
+                                  {collab.email && (
+                                    <p className="text-xs text-gray-500">{collab.email}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <User className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                        <p>No team members available</p>
+                      </div>
+                    )}
+                    
+                    {formData.assignees.length > 0 && (
+                      <div className="mt-3 p-2 bg-blue-50 rounded border">
+                        <p className="text-sm text-blue-700 font-medium">
+                          Selected: {formData.assignees.length} team member{formData.assignees.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="flex gap-3 p-6 border-t border-gray-200">
-            <button
-              onClick={handleSubmit}
-              className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-secondary hover:text-black transition-colors font-medium"
-            >
-              Add Task
-            </button>
-            <button
-              onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-            >
-              Cancel
-            </button>
+          <div className="flex justify-between items-center gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-600">
+              <span className="text-red-500">*</span> Required fields
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onCancel}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!formData.title.trim()}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  formData.title.trim()
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Create Task
+              </button>
+            </div>
           </div>
         </div>
       </div>
