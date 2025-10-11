@@ -22,6 +22,17 @@ interface ApiTask {
   assignees?: string[];
 }
 
+interface UserData {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  userName?: string;
+  email?: string;
+  avatar?: string;
+  profilePicture?: string;
+}
+
 const kanbanFunction = {
   getKanban: async (projectId: string) => {
     try {
@@ -118,6 +129,17 @@ const kanbanFunction = {
     }
   },
 
+  getUser: async (userId: string) => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
   updateTask: async (taskId: string, taskData: { title: string; description: string }) => {
     try {
       const response = await api.put(`/api/tasks/${taskId}`, taskData);
@@ -162,6 +184,39 @@ const KanbanBoard: React.FC = () => {
     const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
     const [kanbanId, setKanbanId] = useState<string | null>(null);
     const [collaborators, setCollaborators] = useState<any[]>([]);
+    const [userDetails, setUserDetails] = useState<Map<string, UserData>>(new Map());
+
+    // Function to fetch user details for assignees
+    const fetchUserDetails = async (assigneeIds: string[]) => {
+      const newUserDetails = new Map(userDetails);
+      const idsToFetch = assigneeIds.filter(id => !newUserDetails.has(id));
+      
+      if (idsToFetch.length === 0) return;
+
+      try {
+        const userPromises = idsToFetch.map(async (userId) => {
+          try {
+            const userData = await kanbanFunction.getUser(userId);
+            return { id: userId, data: userData };
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            return { id: userId, data: null };
+          }
+        });
+
+        const userResults = await Promise.all(userPromises);
+        
+        userResults.forEach(({ id, data }) => {
+          if (data) {
+            newUserDetails.set(id, data);
+          }
+        });
+
+        setUserDetails(newUserDetails);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
 
     useEffect(
       () => {
@@ -214,6 +269,16 @@ const KanbanBoard: React.FC = () => {
           console.log('Fetching tasks for kanbanId:', kanbanId);
           const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
           console.log('Fetched tasks:', tasks);
+
+          // Collect all unique assignee IDs from all tasks
+          const allAssigneeIds = tasks
+            .flatMap(task => task.assignees || [])
+            .filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
+          
+          // Fetch user details for all assignees
+          if (allAssigneeIds.length > 0) {
+            await fetchUserDetails(allAssigneeIds);
+          }
 
           // Organize tasks by column
           setColumns(prevColumns => 
@@ -285,6 +350,11 @@ const KanbanBoard: React.FC = () => {
     description: string;
   };
 
+  type TaskDetailModalState = {
+    isOpen: boolean;
+    task: Task | null;
+  };
+
   const [columns, setColumns] = useState<Column[]>([]);
 
   const [newTaskForm, setNewTaskForm] = useState<NewTaskFormState>({ columnId: null, isOpen: false });
@@ -294,6 +364,10 @@ const KanbanBoard: React.FC = () => {
     isOpen: false, 
     title: '', 
     description: '' 
+  });
+  const [taskDetailModal, setTaskDetailModal] = useState<TaskDetailModalState>({
+    isOpen: false,
+    task: null
   });
 
   useEffect(() => {
@@ -357,6 +431,16 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
       
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
+      
       // Organize tasks by column
       setColumns(prevColumns => 
         prevColumns.map(column => {
@@ -402,6 +486,16 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
       
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
+      
       // Organize tasks by column
       setColumns(prevColumns => 
         prevColumns.map(column => {
@@ -446,6 +540,16 @@ const KanbanBoard: React.FC = () => {
       
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+      
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
       
       // Organize tasks by column
       setColumns(prevColumns => 
@@ -599,6 +703,17 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks from backend
       if (kanbanId) {
         const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+        
+        // Collect all unique assignee IDs from all tasks
+        const allAssigneeIds = tasks
+          .flatMap(task => task.assignees || [])
+          .filter((id, index, array) => array.indexOf(id) === index);
+        
+        // Fetch user details for all assignees
+        if (allAssigneeIds.length > 0) {
+          await fetchUserDetails(allAssigneeIds);
+        }
+        
         setColumns(prevColumns =>
           prevColumns.map(column => {
             const columnTasks = tasks
@@ -646,6 +761,13 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
     setShowMenu(false);
   };
 
+  const handleCardClick = () => {
+    setTaskDetailModal({
+      isOpen: true,
+      task: task
+    });
+  };
+
   // Move handler for TaskCard
   const handleMove = async (targetColumnId: string) => {
     if (targetColumnId !== currentColumnId) {
@@ -664,16 +786,28 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
   
 
   return (
-    <div className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative">
+    <div 
+      className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 text-sm">{task.title}</h3>
 
         <div className="relative">
-          <button onClick={() => setShowMenu(!showMenu)} className="text-gray-500 hover:text-gray-700">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click when clicking menu
+              setShowMenu(!showMenu);
+            }} 
+            className="text-gray-500 hover:text-gray-700"
+          >
             <MoreHorizontal className="w-4 h-4" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in">
+            <div 
+              className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when clicking menu items
+            >
               <div className="px-3 py-2 text-xs font-semibold text-gray-500">Move to</div>
               <div className="py-1">
                 {columns
@@ -726,10 +860,64 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <User className="w-3 h-3 text-white" />
-          </div>
-          <span className="text-sm text-gray-700">{task.assignees && task.assignees.length > 0 ? task.assignees.join(', ') : 'Unassigned'}</span>
+          {task.assignees && task.assignees.length > 0 ? (
+            <div className="flex items-center space-x-1">
+              <div className="flex -space-x-2">
+                {task.assignees.slice(0, 3).map((assigneeId, index) => {
+                  const user = userDetails.get(assigneeId);
+                  const avatarUrl = user?.avatar || user?.profilePicture;
+                  const userName = user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || user?.lastName || user?.userName || user?.email || 'Unknown';
+
+                  return (
+                    <div
+                      key={assigneeId}
+                      className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center overflow-hidden bg-blue-500"
+                      title={userName}
+                    >
+                      {avatarUrl ? (
+                        <img 
+                          src={avatarUrl} 
+                          alt={userName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white text-xs font-medium">
+                          {userName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+                {task.assignees.length > 3 && (
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      +{task.assignees.length - 3}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-gray-700 ml-2">
+                {task.assignees.length === 1 
+                  ? (() => {
+                      const user = userDetails.get(task.assignees[0]);
+                      return user?.firstName && user?.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : user?.firstName || user?.lastName || user?.userName || 'Unknown';
+                    })()
+                  : `${task.assignees.length} assignees`
+                }
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                <User className="w-3 h-3 text-gray-600" />
+              </div>
+              <span className="text-sm text-gray-700">Unassigned</span>
+            </div>
+          )}
         </div>
         <span className={`text-xs ${task.completed ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
           {task.dueDate || task.createdDate}
@@ -993,6 +1181,186 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
     );
   };
 
+  const TaskDetailModal: React.FC<{
+    task: Task | null;
+    onClose: () => void;
+    userDetails: Map<string, UserData>;
+  }> = ({ task, onClose, userDetails }) => {
+    if (!task) return null;
+
+    // Find the column name for this task
+    const getTaskColumnName = () => {
+      for (const column of columns) {
+        if (column.tasks.some(t => t.id === task.id)) {
+          return column.title;
+        }
+      }
+      return 'Unknown';
+    };
+
+    const handleBackdropClick = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    };
+
+    const formatDate = (dateString: string) => {
+      if (!dateString) return 'Not set';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const formatTime = (timeString: string) => {
+      if (!timeString) return '';
+      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    return (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={handleBackdropClick}
+      >
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Task Details
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Task Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <h3 className="text-xl font-semibold text-gray-900">{task.title}</h3>
+                </div>
+
+                {/* Task Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                    {task.description || 'No description provided'}
+                  </p>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(task.priority || 'Medium')}`}>
+                    {task.priority || 'Medium'}
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {getTaskColumnName()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Assignees */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Assignees</label>
+                  {task.assignees && task.assignees.length > 0 ? (
+                    <div className="space-y-3">
+                      {task.assignees.map((assigneeId) => {
+                        const user = userDetails.get(assigneeId);
+                        const avatarUrl = user?.avatar || user?.profilePicture;
+                        const userName = user?.firstName && user?.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user?.firstName || user?.lastName || 'Unknown User';
+                        const userEmail = user?.email || '';
+                        
+                        return (
+                          <div key={assigneeId} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
+                              {avatarUrl ? (
+                                <img 
+                                  src={avatarUrl} 
+                                  alt={userName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white font-medium">
+                                  {userName.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{userName}</p>
+                              {userEmail && <p className="text-sm text-gray-600">{userEmail}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <p className="text-gray-600">No assignees</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Dates */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Created Date</label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                      {formatDate(task.createdDate)}
+                      {task.createdTime && (
+                        <span className="block text-sm text-gray-600 mt-1">
+                          at {formatTime(task.createdTime)}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                      {task.dueDate ? formatDate(task.dueDate) : 'No due date set'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-h-screen w-full p-6">
       <div className="min-w-7xl rounded-lg">
@@ -1110,6 +1478,15 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           onCancel={() => setEditTaskForm({ taskId: null, isOpen: false, title: '', description: '' })}
           initialTitle={editTaskForm.title}
           initialDescription={editTaskForm.description}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {taskDetailModal.isOpen && (
+        <TaskDetailModal
+          task={taskDetailModal.task}
+          onClose={() => setTaskDetailModal({ isOpen: false, task: null })}
+          userDetails={userDetails}
         />
       )}
     </div>
