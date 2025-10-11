@@ -19,7 +19,7 @@ interface ApiTask {
   createdTime: string;
   dueDate?: string;
   priority?: 'Low' | 'Medium' | 'High';
-  assignee?: string;
+  assignees?: string[];
 }
 
 const kanbanFunction = {
@@ -30,6 +30,17 @@ const kanbanFunction = {
       return response.data;
     } catch (error) {
       console.error('Error fetching kanban:', error);
+      throw error;
+    }
+  },
+
+    getCollaborators: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborators/${projectId}`);
+      console.log('collaborators Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
       throw error;
     }
   },
@@ -65,7 +76,7 @@ const kanbanFunction = {
     title: string;
     description: string;
     priority?: 'Low' | 'Medium' | 'High';
-    assignee?: string;
+    assignees?: string[];
     dueDate?: string;
   }) => {
     try {
@@ -79,11 +90,13 @@ const kanbanFunction = {
         title: taskData.title,
         description: taskData.description,
         priority: taskData.priority || 'Medium',
-        assignee: taskData.assignee || '',
+        assignees: taskData.assignees || [],
         dueDate: taskData.dueDate || '',
         createdDate: formattedDate,
         createdTime: formattedTime
       };
+
+      console.log('Task Payload:', taskPayload);
       
       const response = await api.post(`/api/tasks`, taskPayload);
       console.log('Added Kanban Task:', response.data);
@@ -148,6 +161,7 @@ const KanbanBoard: React.FC = () => {
     const projectId = params.id as string; // Get the project ID from URL
     const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
     const [kanbanId, setKanbanId] = useState<string | null>(null);
+    const [collaborators, setCollaborators] = useState<any[]>([]);
 
     useEffect(
       () => {
@@ -213,7 +227,7 @@ const KanbanBoard: React.FC = () => {
                   createdDate: task.createdDate,
                   createdTime: task.createdTime,
                   priority: task.priority || 'Medium',
-                  assignee: task.assignee || '',
+                  assignees: task.assignees || [],
                   dueDate: task.dueDate || '',
                   progress: 0,
                   completed: false
@@ -235,16 +249,16 @@ const KanbanBoard: React.FC = () => {
     }, [kanbanId]); // Fetch tasks when kanbanId changes
 
   type Task = {
-    id: string; // Changed from number to string to match taskId
+    id: string;
     title: string;
     description: string;
-    priority?: 'Low' | 'Medium' | 'High'; // Made optional since API doesn't provide it
-    assignee?: string; // Made optional since API doesn't provide it
-    dueDate?: string; // Made optional, we'll use createdDate
-    progress?: number; // Made optional since API doesn't provide it
+    priority?: 'Low' | 'Medium' | 'High';
+    assignees?: string[];
+    dueDate?: string;
+    progress?: number;
     completed?: boolean;
-    createdDate: string; // Added from API
-    createdTime: string; // Added from API
+    createdDate: string;
+    createdTime: string;
   };
 
   type Column = {
@@ -282,6 +296,21 @@ const KanbanBoard: React.FC = () => {
     description: '' 
   });
 
+  useEffect(() => {
+    const fetchCollaborators = async () => {
+      try {
+        const data = await kanbanFunction.getCollaborators(projectId);
+        setCollaborators(data);
+      } catch (error) {
+        console.error('Error fetching collaborators:', error);
+      }
+    };
+
+    if (projectId) {
+      fetchCollaborators();
+    }
+  }, [projectId]);
+
   const getPriorityColor = (priority: 'Low' | 'Medium' | 'High') => {
     switch (priority) {
       case 'High': return 'bg-red-100 text-red-800';
@@ -307,7 +336,7 @@ const KanbanBoard: React.FC = () => {
     title: string;
     description: string;
     priority?: 'Low' | 'Medium' | 'High';
-    assignee?: string;
+    assignees?: string[];
     dueDate?: string;
   }) => {
     try {
@@ -321,7 +350,7 @@ const KanbanBoard: React.FC = () => {
         title: taskData.title,
         description: taskData.description,
         priority: taskData.priority,
-        assignee: taskData.assignee,
+        assignees: taskData.assignees,
         dueDate: taskData.dueDate
       });
       
@@ -340,7 +369,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -385,7 +414,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -430,7 +459,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -581,7 +610,7 @@ const KanbanBoard: React.FC = () => {
                 createdDate: task.createdDate,
                 createdTime: task.createdTime,
                 priority: task.priority || 'Medium',
-                assignee: task.assignee || '',
+                assignees: task.assignees || [],
                 dueDate: task.dueDate || '',
                 progress: 0,
                 completed: false
@@ -700,7 +729,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
             <User className="w-3 h-3 text-white" />
           </div>
-          <span className="text-sm text-gray-700">{task.assignee || 'Unassigned'}</span>
+          <span className="text-sm text-gray-700">{task.assignees && task.assignees.length > 0 ? task.assignees.join(', ') : 'Unassigned'}</span>
         </div>
         <span className={`text-xs ${task.completed ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
           {task.dueDate || task.createdDate}
@@ -725,25 +754,27 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       dueDate?: string;
     }) => void;
     onCancel: () => void;
-  }> = ({ columnId, columnTitle, onSubmit, onCancel }) => {
+    collaborators: any[];
+  }> = ({ columnId, columnTitle, onSubmit, onCancel, collaborators }) => {
     const [formData, setFormData] = useState<{
       title: string;
       description: string;
       priority?: 'Low' | 'Medium' | 'High';
-      assignee?: string;
+      assignees: string[];
       dueDate?: string;
     }>({
       title: '',
       description: '',
       priority: 'Medium',
-      assignee: '',
+      assignees: [],
       dueDate: ''
     });
 
     const handleSubmit = () => {
       if (formData.title.trim()) {
         onSubmit(columnId, formData);
-        setFormData({ title: '', description: '', priority: 'Medium', assignee: '', dueDate: '' });
+        setFormData({ title: '', description: '', priority: 'Medium', assignees: [], dueDate: '' });
+        // console.log('Form Data on Submit:', formData);
         onCancel();
       }
     };
@@ -817,16 +848,25 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
                 </select>
               </div>
               
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
-                <input
-                  type="text"
-                  placeholder="Enter assignee name"
-                  value={formData.assignee}
-                  onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-              </div>
+				  <div className="flex-1">
+					<label className="block text-sm font-medium text-gray-700 mb-2">Assignees</label>
+					<select
+					  multiple
+					  value={formData.assignees}
+					  onChange={e => {
+						const selected = Array.from(e.target.selectedOptions, option => option.value);
+						setFormData(prev => ({ ...prev, assignees: selected }));
+					  }}
+					  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-32"
+					>
+					  {collaborators && collaborators.map((collab: any) => (
+						<option key={collab.id || collab.userId || collab.email} value={collab.id || collab.userId || collab.email}>
+						  {collab.name || collab.userName || collab.email}
+						</option>
+					  ))}
+					</select>
+					<div className="mt-2 text-xs text-gray-500">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</div>
+				  </div>
             </div>
             
             <div>
@@ -1059,6 +1099,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           columnTitle={getColumnTitle(newTaskForm.columnId)}
           onSubmit={addTask}
           onCancel={() => setNewTaskForm({ columnId: null, isOpen: false })}
+          collaborators={collaborators}
         />
       )}
 
