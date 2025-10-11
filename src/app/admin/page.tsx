@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import CountChart from "@/components/admin/CountChart";
+import api from "@/utils/api";
 
 // Dashboard Icons
 const BrainIcon = () => (
@@ -35,7 +36,6 @@ const BrainIcon = () => (
 interface DashboardCard {
   title: string;
   value: string;
-  change: string;
   icon: React.ReactNode;
   color: string;
 }
@@ -50,76 +50,52 @@ interface RecentActivity {
 
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [DashboardOverview, setDashboardOverview] = useState<any>(null);
+  const [UserTrendData, setUserTrendData] = useState<any>(null);
+  useEffect(() => {
 
-  // Mock data - in real app, this would come from API
+    async function fetchOverview() {
+      try {
+        const data = await api.get('/api/v1/admin/dashboard/overview');
+        const chartData = await api.get('/api/v1/admin/dashboard/user_trend')
+        setDashboardOverview(data);
+        setUserTrendData(chartData);
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to load dashboard overview:", error);
+      }
+    }
+    
+    fetchOverview();
+  }, []);
+
   const dashboardCards: DashboardCard[] = [
     {
       title: "Total Brain Maps",
-      value: "2544",
-      change: "+12%",
+      value: DashboardOverview ? DashboardOverview.data.userCount : "0",
       icon: <Brain className="h-6 w-6" />,
       color: "bg-blue-500",
     },
     {
       title: "Active Projects",
-      value: "156",
-      change: "+8%",
+      value: DashboardOverview ? DashboardOverview.data.activeProjects : "0",
       icon: <FolderOpen className="h-6 w-6" />,
       color: "bg-green-500",
     },
     {
       title: "Pending Expert Verfications",
-      value: "89",
-      change: "+15%",
+      value: DashboardOverview ? DashboardOverview.data.pendingDomainExperts : "0",
       icon: <UserCheck className="h-6 w-6" />,
       color: "bg-purple-500",
     },
     {
       title: "Open Issues",
-      value: "12",
-      change: "+3%",
+      value: DashboardOverview ? DashboardOverview.data.openIssues : "0",
       icon: <AlertTriangle className="h-6 w-6" />,
       color: "bg-orange-500",
     },
   ];
-
-  const recentActivities: RecentActivity[] = [
-    {
-      id: 1,
-      title: "New Brain Map Created",
-      description: 'You created a new brain map for "Cognitive Neuroscience"',
-      time: "2 hours ago",
-      type: "brain-map",
-    },
-    {
-      id: 2,
-      title: "Analysis Completed",
-      description: 'Pattern analysis completed for "Memory Networks"',
-      time: "4 hours ago",
-      type: "analysis",
-    },
-    {
-      id: 3,
-      title: "Collaboration Invitation",
-      description: 'Dr. Smith invited you to collaborate on "Neural Pathways"',
-      time: "1 day ago",
-      type: "collaboration",
-    },
-    {
-      id: 4,
-      title: "Module Completed",
-      description: 'You completed "Advanced Brain Mapping Techniques"',
-      time: "2 days ago",
-      type: "learning",
-    },
-  ];
-
-  useEffect(() => {
-    // Simulate loading user data
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  }, []);
 
   if (isLoading) {
     return (
@@ -159,7 +135,6 @@ export default function AdminDashboard() {
               key={index}
               title={card.title}
               value={card.value}
-              change={card.change}
               icon={card.icon}
               color={card.color}
             />
@@ -168,38 +143,9 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <CountChart />
+          <CountChart userTrend={UserTrendData}/>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Activity
-          </h2>
-          <div className="space-y-4">
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <BrainIcon />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Admin Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
