@@ -52,46 +52,74 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [DashboardOverview, setDashboardOverview] = useState<any>(null);
   const [UserTrendData, setUserTrendData] = useState<any>(null);
+  const [ServerHealth, setServerHealth] = useState<boolean | any>(null);
   useEffect(() => {
 
     async function fetchOverview() {
       try {
-        const data = await api.get('/api/v1/admin/dashboard/overview');
-        const chartData = await api.get('/api/v1/admin/dashboard/user_trend')
-        setDashboardOverview(data);
-        setUserTrendData(chartData);
+        // Health check first
+        const healthRes = await api.get('/api/v1/admin/dashboard/helthcheck');
+        const isServerOnline = healthRes.status >= 200 && healthRes.status < 300;
+        setServerHealth(isServerOnline);
 
+        if (!isServerOnline) {
+          setIsLoading(false);
+          return; // skip fetching other data if server is down
+        }
+
+        // Fetch dashboard data only if server is healthy
+        const overviewRes = await api.get('/api/v1/admin/dashboard/overview');
+        const chartRes = await api.get('/api/v1/admin/dashboard/user_trend')
+
+
+        setDashboardOverview(overviewRes);
+        setUserTrendData(chartRes);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to load dashboard overview:", error);
+        setServerHealth(false);
+        setIsLoading(false);
       }
     }
-    
+
+    // Run once immediately
     fetchOverview();
+
+    // Refresh every 60 seconds
+    const interval = setInterval(() => {fetchOverview();}, 60000); 
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer); // cleanup
   }, []);
 
   const dashboardCards: DashboardCard[] = [
     {
       title: "Total Brain Maps",
-      value: DashboardOverview ? DashboardOverview.data.userCount : "0",
+      value: DashboardOverview?.data?.userCount || "0",
       icon: <Brain className="h-6 w-6" />,
       color: "bg-blue-500",
     },
     {
       title: "Active Projects",
-      value: DashboardOverview ? DashboardOverview.data.activeProjects : "0",
+      value: DashboardOverview?.data?.activeProjects || "0",
       icon: <FolderOpen className="h-6 w-6" />,
       color: "bg-green-500",
     },
     {
       title: "Pending Expert Verfications",
-      value: DashboardOverview ? DashboardOverview.data.pendingDomainExperts : "0",
+      value: DashboardOverview?.data?.pendingDomainExperts || "0",
       icon: <UserCheck className="h-6 w-6" />,
       color: "bg-purple-500",
     },
     {
       title: "Open Issues",
-      value: DashboardOverview ? DashboardOverview.data.openIssues : "0",
+      value: DashboardOverview?.data?.openIssues || "0",
       icon: <AlertTriangle className="h-6 w-6" />,
       color: "bg-orange-500",
     },
@@ -125,6 +153,15 @@ export default function AdminDashboard() {
                 control panel.
               </p>
             </div>
+            <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                <span className="font-medium text-gray-700">Server Status</span>
+                <div className="flex items-center gap-2">
+                  <div className={`h-3 w-3 rounded-full ${ServerHealth ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+                  <span className={`font-medium text-sm ${ServerHealth ? 'text-green-600' : 'text-red-600'}`}>
+                    {ServerHealth ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
           </div>
         </div>
 
@@ -143,7 +180,7 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <CountChart userTrend={UserTrendData}/>
+          <CountChart userTrend={UserTrendData?.data}/>
         </div>
 
 
@@ -189,31 +226,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              System Status
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Server Status</span>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                  Online
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Database</span>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                  Healthy
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Security</span>
-                <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                  2 Alerts
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

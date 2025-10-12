@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { TrendingUp, Users, Award, Shield } from "lucide-react";
+import { TrendingUp, Users, Award, Shield, TrendingDown } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -109,29 +109,39 @@ const registrationData = [
 
 // calculate growth metrics
 const growthRate = 12.2
-const avgMonthlyGrowth = 23
-const totalRegistrations = 1233
 
 export class CountChart extends Component<{ userTrend?: any }, {}> {
+  
+
   render() {
     // Use passed userTrend data if available, otherwise use the sample data
-    const chartData = this.props.userTrend && Array.isArray(this.props.userTrend)
-      ? this.props.userTrend.map((item: any) => ({
+    const chartData =this.props.userTrend?.map((item: any) => ({
           month: `${item.month} ${item.year}`,
           students: item.projectMemberCount || 0,
           experts: item.mentorCount || 0, 
           moderators: item.modaratorCount || 0,
           total: (item.projectMemberCount || 0) + (item.mentorCount || 0) + (item.modaratorCount || 0),
-        }))
-      : registrationData;
-      
-    // Calculate the latest month's growth rate if data is available
-    const latestMonthGrowth = chartData.length >= 2
-      ? ((chartData[chartData.length - 1].total - chartData[chartData.length - 2].total) / 
-         (chartData[chartData.length - 2].total || 1) * 100).toFixed(1)
-      : growthRate.toFixed(1);
-      
-    return (
+        }));
+        
+        // Calculate the latest month's growth rate if data is available
+        const latestMonthGrowth = chartData?.length >= 2
+        ?((chartData[chartData.length - 1].total - chartData[chartData.length - 2].total) / 
+        (chartData[chartData.length - 2].total || 1) * 100).toFixed(1): "0.0";
+
+        const monthlyAvg = chartData?.length
+            ? Math.round(
+                chartData.reduce((sum: number, item: any) => sum + (item.total || 0), 0) / chartData.length
+              )
+            : "N/A"
+
+        const totalRegistrations = chartData?.length
+                      ? chartData
+                          .reduce((sum: number, item: any) => sum + (item.total || 0), 0)
+                          .toLocaleString()
+                      : "N/A"
+          
+        
+        return (
       <Card className=" border-0 shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -144,9 +154,9 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-700">
-                +{latestMonthGrowth}% this month
+              {parseFloat(latestMonthGrowth) < 0 ? <TrendingDown className= "h-4 w-4 text-red-600" /> : <TrendingUp className="h-4 w-4 text-green-600" />}
+              <span className={`text-sm font-semibold ${parseFloat(latestMonthGrowth) < 0 ? 'text-red-600' : 'text-green-700'}`}>
+                {latestMonthGrowth}% this month
               </span>
             </div>
           </div>
@@ -162,7 +172,7 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Total Registrations</p>
                   <p className="text-2xl font-bold text-blue-900 leading-none">
-                    {chartData.reduce((sum: number, item: any) => sum + item.total, 0).toLocaleString()}
+                    {totalRegistrations}
                   </p>
                 </div>
               </div>
@@ -175,7 +185,7 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Avg Monthly</p>
                   <p className="text-2xl font-bold text-blue-900 leading-none">
-                    {Math.round(chartData.reduce((sum: number, item: any) => sum + item.total, 0) / (chartData.length || 1))}
+                    {monthlyAvg}
                   </p>
                 </div>
               </div>
@@ -188,7 +198,7 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Peak Month</p>
                   <p className="text-2xl font-bold text-blue-900 leading-none">
-                    {chartData.reduce((max: any, item: any) => 
+                    {chartData?.reduce((max: any, item: any) => 
                       (max.total || 0) > item.total ? max : item, {}).month || "N/A"}
                   </p>
                 </div>
@@ -259,8 +269,8 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                 </div>
                 <p className="text-sm text-gray-700">
                   {parseFloat(latestMonthGrowth) > 0 ? 'Positive' : 'Negative'} trend with {latestMonthGrowth}% growth this month. 
-                  {chartData.length >= 3 && 
-                   chartData[chartData.length-1].students > chartData[chartData.length-3].students ? 
+                  {chartData?.length >= 3 && 
+                   chartData[chartData?.length-1].students > chartData[chartData?.length-3].students ? 
                    ' Student registrations show growth over the last quarter.' : 
                    ' Student registration patterns require attention.'}
                 </p>
@@ -272,10 +282,10 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                   <h4 className="font-semibold text-gray-900">Role Balance</h4>
                 </div>
                 <p className="text-sm text-gray-700">
-                  {chartData.reduce((sum: number, item: any) => sum + item.experts, 0) > 0 ? 
+                  {chartData?.reduce((sum: number, item: any) => sum + item.experts, 0) > 0 ? 
                    'Domain expert presence is maintaining engagement.' : 
                    'More domain experts are needed to support the platform growth.'} 
-                  {chartData.reduce((sum: number, item: any) => sum + item.moderators, 0) > 0 ? 
+                  {chartData?.reduce((sum: number, item: any) => sum + item.moderators, 0) > 0 ? 
                    ' Moderator participation helps maintain quality interactions.' : 
                    ' Consider recruiting more moderators to maintain platform quality.'}
                 </p>
