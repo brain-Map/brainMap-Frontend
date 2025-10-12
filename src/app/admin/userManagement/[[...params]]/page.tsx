@@ -41,6 +41,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import api from "@/utils/api";
 
 // Extended user data for demonstration
 const allUsers = [
@@ -243,6 +244,7 @@ const allUsers = [
 ];
 
 export default function AllUsersPage() {
+  const [usersStatus, setUsersStatus] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -250,6 +252,21 @@ export default function AllUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const params = useParams();
+  
+  useEffect(() => {
+    async function fetchUsersOverview() {
+      try {
+        const usersStatusRes = await api.get('/api/v1/admin/dashboard/usersStatus');
+        setUsersStatus(usersStatusRes.data);
+      }
+      catch (error) {
+        console.error("Failed to load users overview:", error);
+      }
+    } 
+  
+    fetchUsersOverview();
+  }, []);
+  
 
   // Get unique departments for filter
   const subjects = useMemo(() => {
@@ -382,7 +399,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.length}
+                  {usersStatus?.totalUsers || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-blue-500 text-white">
@@ -390,7 +407,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+12%</span>
+              <span className={`text-sm font-medium + ${usersStatus?.currentMonthUserGrowthRate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {usersStatus?.currentMonthUserGrowthRate >= 0 ? "+": ""}{usersStatus?.currentMonthUserGrowthRate}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -400,7 +418,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Members</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.role === "Member").length}
+                   {usersStatus?.members || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-green-500 text-white">
@@ -408,7 +426,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+8%</span>
+              <span className={`text-sm font-medium + ${usersStatus?.currentMonthMemberGrowthRate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {usersStatus?.currentMonthMemberGrowthRate >= 0 ? "+": ""}{usersStatus?.currentMonthMemberGrowthRate}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -420,7 +439,7 @@ export default function AllUsersPage() {
                   Domain Experts
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.role === "Domain Expert").length}
+                   {usersStatus?.domainExperts || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-purple-500 text-white">
@@ -428,7 +447,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+15%</span>
+              <span className={`text-sm font-medium + ${usersStatus?.currentMonthExpertGrowthRate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {usersStatus?.currentMonthExpertGrowthRate >= 0 ? "+": ""}{usersStatus?.currentMonthExpertGrowthRate}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -440,7 +460,7 @@ export default function AllUsersPage() {
                   Active Users
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.status === "Active").length}
+                  {usersStatus?.activeUsers || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-emerald-500 text-white">
@@ -448,7 +468,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+5%</span>
+              <span className={`text-sm font-medium + ${usersStatus?.currentMonthActiveUserGrowthRate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {usersStatus?.currentMonthActiveUserGrowthRate >= 0 ? "+": ""}{usersStatus?.currentMonthActiveUserGrowthRate}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
