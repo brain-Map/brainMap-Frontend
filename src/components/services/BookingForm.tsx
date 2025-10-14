@@ -23,14 +23,24 @@ import { Badge } from "@/components/ui/badge"
 import { ServiceListing, ServiceAvailability } from "@/types/service"
 import { bookingApi } from "@/services/bookingApi"
 
+type ExtendedServiceListing = ServiceListing & {
+  mentorName?: string;
+  mentorAvatar?: string;
+  subject?: string;
+  hourlyRatePerPerson?: number;
+  hourlyRatePerGroup?: number;
+  serviceId: string | number;
+  mentorId: string | number;
+  title?: string;
+  availabilities?: ServiceAvailability[];
+};
+
 interface BookingFormProps {
-  service: ServiceListing & {
-    mentorName?: string
-    hourlyRate?: number
-  }
+  service: ExtendedServiceListing;
+
 }
 
-type BookingStep = "datetime" | "duration" | "details" | "confirm"
+type BookingStep = "datetime" | "duration" | "details" | "confirm";
 
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
@@ -72,11 +82,16 @@ const generateTimeSlotsFromAvailability = (availabilities: ServiceAvailability[]
 
 export function BookingForm({ service }: BookingFormProps) {
   const router = useRouter()
-  const hourlyRate = service.hourlyRate || 1000
-  
+  // Session type: 'individual' or 'group'
+  const [sessionType, setSessionType] = useState<'individual' | 'group'>('individual')
+  // Use correct rate based on session type
+  const hourlyRate = sessionType === 'individual'
+    ? service.hourlyRatePerPerson || 1000
+    : service.hourlyRatePerGroup || 2000
+
   // Multi-step state
   const [currentStep, setCurrentStep] = useState<BookingStep>("datetime")
-  
+
   // State for booking details
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [startTime, setStartTime] = useState<string>("")
@@ -87,10 +102,10 @@ export function BookingForm({ service }: BookingFormProps) {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
-  
+
   // Get service availabilities
   const availabilities = service.availabilities || []
-  
+
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
 
@@ -229,13 +244,14 @@ export function BookingForm({ service }: BookingFormProps) {
         requestedStartTime,
         requestedEndTime,
         totalPrice,
-        domainExpertId: service.mentorId.toString()
+        domainExpertId: service.mentorId.toString(),
+        sessionType,
       }
 
       console.log("Booking details:", bookingData)
 
       // Call the API
-  await bookingApi.createBooking(bookingData)
+      await bookingApi.createBooking(bookingData)
 
       // Show success message and redirect
       alert(`Booking request submitted successfully!\nTotal: Rs.${totalPrice.toLocaleString()}`)
@@ -727,6 +743,36 @@ export function BookingForm({ service }: BookingFormProps) {
       {/* Step Indicator */}
       {renderStepIndicator()}
 
+      
+      {/* Session Type Selection */}
+      <div className="mb-8">
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant={sessionType === 'individual' ? 'default' : 'outline'}
+            className={sessionType === 'individual' ? 'bg-blue-600 text-white' : ''}
+            onClick={() => setSessionType('individual')}
+          >
+            Individual Session
+          </Button>
+          <Button
+            type="button"
+            variant={sessionType === 'group' ? 'default' : 'outline'}
+            className={sessionType === 'group' ? 'bg-purple-600 text-white' : ''}
+            onClick={() => setSessionType('group')}
+          >
+            Group Session
+          </Button>
+        </div>
+        <div className="mt-2 text-sm text-gray-600">
+          {sessionType === 'individual'
+            ? `Hourly Rate: Rs.${(service.hourlyRatePerPerson || 1000).toLocaleString()} per person`
+            : `Hourly Rate: Rs.${(service.hourlyRatePerGroup || 2000).toLocaleString()} per group`}
+        </div>
+      </div>
+
+      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Booking Form */}
         <div className="lg:col-span-2">
@@ -818,6 +864,17 @@ export function BookingForm({ service }: BookingFormProps) {
 
               <Separator />
 
+              {/* Session Type Info */}
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Session Type</p>
+                <div className="bg-gray-50 rounded-lg p-2">
+                  <span className="font-medium text-blue-700">
+                    {sessionType === 'individual' ? 'Individual' : 'Group'}
+                  </span>
+                </div>
+              </div>
+              <Separator />
+
               {/* Selected Date/Time */}
               {selectedDate && startTime && endTime && (
                 <>
@@ -871,7 +928,7 @@ export function BookingForm({ service }: BookingFormProps) {
               <div className="space-y-2">
                 <div className="flex items-start gap-2 text-xs text-gray-600">
                   <User className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
-                  <span>One-on-one personalized mentorship</span>
+                  <span>{sessionType === 'individual' ? 'One-on-one personalized mentorship' : 'Group mentorship session'}</span>
                 </div>
                 <div className="flex items-start gap-2 text-xs text-gray-600">
                   <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
