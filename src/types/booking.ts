@@ -99,3 +99,48 @@ export interface BookingsListResponse {
   limit: number
   totalPages: number
 }
+
+
+///////
+
+export enum ServiceBookingStatus {
+  PENDING = "Pending",
+  ACCEPTED = "Accepted",
+  REJECTED = "Rejected",
+  CONFIRMED = "Confirmed",
+  COMPLETED = "Completed",
+  CANCELLED = "Cancelled",
+  UPDATED = "Updated",
+}
+
+export enum SessionType {
+  ONE_ON_ONE = "One-on-One",
+  GROUP = "Group",
+  WORKSHOP = "Workshop",
+}
+
+export interface ServiceBooking {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  userId: string;
+  username: string;
+  userFirstName: string;
+  userLastName: string;
+  userEmail: string;
+  userAvatar?: string;
+  duration: number;
+  projectDetails: string;
+  requestedDate: string;
+  requestedStartTime: string;
+  requestedEndTime: string;
+  totalPrice: number;
+  status: ServiceBookingStatus;
+  sessionType: SessionType;
+  acceptedDate?: string;
+  acceptedTime?: string;
+  acceptedPrice?: number;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
