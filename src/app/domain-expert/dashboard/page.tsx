@@ -71,6 +71,7 @@ export default function DashboardPage() {
         setDomainExpert(false);
       });
   }, []);
+  console.log(localStorage.getItem("accessToken"));
   
   useEffect(() => {
     console.log("statussssssssssssss: ", domainExpert);

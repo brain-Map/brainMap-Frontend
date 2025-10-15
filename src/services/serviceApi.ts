@@ -10,7 +10,7 @@ export const serviceApi = {
     size: number = 20,
     sortBy: string = 'createdAt'
   ): Promise<ServiceListingsResponse> => {
-    const response = await api.get('/api/v1/domain-experts/service-listings', {
+    const response = await api.get('/api/v1/service-listings', {
       params: {
         page,
         size,
@@ -24,7 +24,7 @@ export const serviceApi = {
    * Get a single service listing by ID
    */
   getServiceById: async (serviceId: string): Promise<ServiceListing> => {
-    const response = await api.get(`/api/v1/domain-experts/service-listings/${serviceId}`);
+    const response = await api.get(`/api/v1/service-listings/${serviceId}`);
     return response.data;
   },
 };

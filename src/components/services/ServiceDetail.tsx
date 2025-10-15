@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { 
   Star, 
   Clock, 
@@ -12,6 +13,7 @@ import {
   Info,
   Award,
   Users,
+  User,
   BookOpen,
   Video
 } from "lucide-react"
@@ -39,7 +41,6 @@ interface ServiceDetailProps {
   availabilities: Availability[]
   thumbnailUrl: string
   duration: number | null
-  serviceType: "video-session" | "chat" | "mixed"
   mentorName?: string
   mentorAvatar?: string
   mentorLevel?: number
@@ -50,8 +51,8 @@ interface ServiceDetailProps {
   mentorTotalStudents?: number
   mentorTotalSessions?: number
   mentorYearsExperience?: number
-  minPrice?: number
-  maxPrice?: number
+  hourlyRatePerPerson?: number
+  hourlyRatePerGroup?: number
   whatYouGet?: Array<{ title: string; description: string }>
 }
 
@@ -65,6 +66,7 @@ const serviceTypeLabels = {
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
+  const router = useRouter()
   const [isFavorite, setIsFavorite] = useState(false)
   const rating = service.rating || 4.8
   const reviewCount = service.reviewCount || 234
@@ -149,12 +151,6 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                       </span>
                     </div>
                     <Separator orientation="vertical" className="h-5" />
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-gray-600" />
-                      <span className="text-gray-700 font-medium">
-                        {serviceTypeLabels[service.serviceType]}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -331,15 +327,29 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
             <Card className="sticky top-8 shadow-lg">
               <CardContent className="p-6">
                 <div className="mb-6">
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {service.maxPrice ? `Rs.${service.minPrice} - Rs.${service.maxPrice}` : `Rs.${service.minPrice}`}
-                    </span>
-                    <span className="text-gray-600">/ session</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm">{service.duration || 60} minutes</span>
+                  <div className="border rounded-lg p-4 bg-white flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <User className="w-6 h-6 text-blue-600" />
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-600">Individual Session</span>
+                        <span className="text-xl font-bold text-gray-900">
+                          {service.hourlyRatePerPerson && service.hourlyRatePerPerson > 0
+                            ? `Rs. ${service.hourlyRatePerPerson.toLocaleString()}`
+                            : 'Not available'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Users className="w-6 h-6 text-green-600" />
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-600">Group Session</span>
+                        <span className="text-xl font-bold text-gray-900">
+                          {service.hourlyRatePerGroup && service.hourlyRatePerGroup > 0
+                            ? `Rs. ${service.hourlyRatePerGroup.toLocaleString()}`
+                            : 'Not available'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -347,24 +357,15 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Service Type</span>
-                    <span className="font-medium text-gray-900">
-                      {serviceTypeLabels[service.serviceType]}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Duration</span>
-                    <span className="font-medium text-gray-900">
-                      {service.duration || 60} min
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Response Time</span>
                     <span className="font-medium text-gray-900">Within 24h</span>
                   </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3">
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3"
+                  onClick={() => router.push(`/services/${service.serviceId}/book`)}
+                >
                   Book Session Now
                 </Button>
 
