@@ -27,18 +27,11 @@ interface ServicePackageFormData {
   title: string;
   description: string;
   thumbnail: File | null;
-  mentorshipType: string;
-  priceType: 'fixed' | 'flexible';
-  price: string;
-  priceMin: string;
-  priceMax: string;
-  duration: string;
-  sessionsIncluded: string;
-  maxParticipants: string;
+  hourlyRatePerPerson: string;
+  hourlyRatePerGroup: string;
   deliverables: string[];
   prerequisites: string;
   subject: string;
-  serviceType: string;
   responseTime: string;
   whatYouGet: WhatYouGetItem[];
 }
@@ -67,18 +60,11 @@ export default function CreateServicePackage() {
     title: '',
     description: '',
     thumbnail: null,
-    mentorshipType: '',
-    priceType: 'fixed',
-    price: '',
-    priceMin: '',
-    priceMax: '',
-    duration: '',
-    sessionsIncluded: '',
-    maxParticipants: '',
+    hourlyRatePerPerson: '',
+    hourlyRatePerGroup: '',
     deliverables: [],
     prerequisites: '',
     subject: '',
-    serviceType: '',
     responseTime: '',
     whatYouGet: []
   });
@@ -90,7 +76,6 @@ export default function CreateServicePackage() {
     endTime: ''
   });
 
-  // Helper for day names
   const dayNames = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
@@ -207,11 +192,8 @@ export default function CreateServicePackage() {
         title: formData.title,
         subject: formData.subject,
         description: formData.description,
-        pricingType: formData.priceType, // 'fixed' or 'flexible'
-        minPrice: Number(formData.priceMin),
-        maxPrice: formData.priceType === 'flexible' ? Number(formData.priceMax) : null,
-        serviceType: formData.serviceType,
-        mentorshipType: formData.mentorshipType,
+        hourlyRatePerPerson: Number(formData.hourlyRatePerPerson),
+        hourlyRatePerGroup: Number(formData.hourlyRatePerGroup),
         // thumbnail is handled by FormData
         availabilities: availabilitiesPayload,
         whatYouGet: formData.whatYouGet
@@ -226,7 +208,7 @@ export default function CreateServicePackage() {
       }
 
       await axios.post(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/domain-experts/${user?.id}/create-service-listing`,
+        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/service-listings/${user?.id}/create`,
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -369,145 +351,53 @@ export default function CreateServicePackage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                <select
+                  value={formData.subject}
+                  onChange={(e) => updateFormData('subject', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  required
+                >
+                  <option value="">Select subject</option>
+                  <option value="career-development">Career Development</option>
+                  <option value="technical-skills">Technical Skills</option>
+                  <option value="leadership">Leadership</option>
+                  <option value="entrepreneurship">Entrepreneurship</option>
+                  <option value="personal-growth">Personal Growth</option>
+                  <option value="academic">Academic</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                  <select
-                    value={formData.subject}
-                    onChange={(e) => updateFormData('subject', e.target.value)}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Person (Rs.) *</label>
+                  <input
+                    type="number"
+                    value={formData.hourlyRatePerPerson}
+                    onChange={(e) => updateFormData('hourlyRatePerPerson', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                    placeholder="e.g., 500"
+                    min="0"
                     required
-                  >
-                    <option value="">Select subject</option>
-                    <option value="career-development">Career Development</option>
-                    <option value="technical-skills">Technical Skills</option>
-                    <option value="leadership">Leadership</option>
-                    <option value="entrepreneurship">Entrepreneurship</option>
-                    <option value="personal-growth">Personal Growth</option>
-                    <option value="academic">Academic</option>
-                  </select>
+                  />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
-                  <select
-                    value={formData.serviceType}
-                    onChange={(e) => updateFormData('serviceType', e.target.value)}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Group (Rs.) *</label>
+                  <input
+                    type="number"
+                    value={formData.hourlyRatePerGroup}
+                    onChange={(e) => updateFormData('hourlyRatePerGroup', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                    placeholder="e.g., 2000"
+                    min="0"
                     required
-                  >
-                    <option value="">Select Type</option>
-                    <option value="video-session">Video Session</option>
-                    <option value="chat">Chat/Messaging</option>
-                    <option value="mixed">Flexible(Messaging/ Video Call)</option>
-                  </select>
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Mentorship Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Mentorship Type *</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['One-on-One', 'Group Sessions', 'Both'].map((type) => (
-                  <label key={type} className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="mentorshipType"
-                      value={type.toLowerCase().replace(' ', '-')}
-                      checked={formData.mentorshipType === type.toLowerCase().replace(' ', '-')}
-                      onChange={(e) => updateFormData('mentorshipType', e.target.value)}
-                      className="text-primary focus:ring-primary"
-                      required
-                    />
-                    <span className="ml-3 text-sm font-medium text-gray-900">{type}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Pricing Section */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-primary flex items-center">
-                Pricing
-              </h2>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Price Type *</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="priceType"
-                      value="fixed"
-                      checked={formData.priceType === 'fixed'}
-                      onChange={(e) => updateFormData('priceType', e.target.value as 'fixed' | 'flexible')}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="ml-3 text-sm font-medium text-gray-900">Fixed Price</span>
-                  </label>
-                  <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="priceType"
-                      value="flexible"
-                      checked={formData.priceType === 'flexible'}
-                      onChange={(e) => updateFormData('priceType', e.target.value as 'fixed' | 'flexible')}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="ml-3 text-sm font-medium text-gray-900">Flexible/Negotiable</span>
-                  </label>
-                </div>
-              </div>
-
-              {formData.priceType === 'fixed' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Package Price (Rs.) *</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={formData.priceMin}
-                      onChange={(e) => updateFormData('price', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                      placeholder="299"
-                      min="0"
-                      required
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Price (Rs.) *</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={formData.priceMin}
-                        onChange={(e) => updateFormData('priceMin', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                        placeholder="200"
-                        min="0"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Price (Rs.) *</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={formData.priceMax}
-                        onChange={(e) => updateFormData('priceMax', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                        placeholder="500"
-                        min="0"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* ...removed Mentorship Type and Pricing Section... */}
 
             {/* What You'll Get Section */}
             <div className="space-y-6">
