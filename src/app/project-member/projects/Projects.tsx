@@ -1,6 +1,6 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   ChevronDown,
@@ -9,12 +9,16 @@ import {
   ArrowUpDown,
   Trash2,
   AlertTriangle,
-} from 'lucide-react';
-import TodoNotesSidebar from '@/components/TodoNotesSidebar';
+} from "lucide-react";
+import TodoNotesSidebar from "@/components/TodoNotesSidebar";
 // import projects from '@/data/projects/projects';
-import Pagination from '@/components/Pagination';
-import { projectApi, CreateProjectRequest, ProjectResponse } from '@/services/projectApi';
-import { useAuth } from '@/contexts/AuthContext';
+import Pagination from "@/components/Pagination";
+import {
+  projectApi,
+  CreateProjectRequest,
+  ProjectResponse,
+} from "@/services/projectApi";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -24,23 +28,23 @@ interface DeleteConfirmationModalProps {
   isDeleting: boolean;
 }
 
-const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  projectName, 
-  isDeleting 
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  projectName,
+  isDeleting,
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm"
         onClick={!isDeleting ? onClose : undefined}
       />
-      
+
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         {/* Header */}
@@ -48,16 +52,20 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <div className="p-2 bg-red-100 rounded-full">
             <AlertTriangle className="w-5 h-5 text-red-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Delete Project</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Delete Project
+          </h2>
         </div>
 
         {/* Content */}
         <div className="mb-6">
           <p className="text-gray-700 mb-2">
-            Are you sure you want to delete <span className="font-medium">"{projectName}"</span>?
+            Are you sure you want to delete{" "}
+            <span className="font-medium">"{projectName}"</span>?
           </p>
           <p className="text-sm text-gray-500">
-            This action cannot be undone. All project data will be permanently removed.
+            This action cannot be undone. All project data will be permanently
+            removed.
           </p>
         </div>
 
@@ -94,59 +102,84 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 };
 
 const ProjectsTable: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterProduct, setFilterProduct] = useState('Filter by product');
+  const [filterProduct, setFilterProduct] = useState("Filter by product");
   const [currentPage, setCurrentPage] = useState(1);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null
+  );
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     projectId: string;
     projectName: string;
   }>({
     isOpen: false,
-    projectId: '',
-    projectName: '',
+    projectId: "",
+    projectName: "",
   });
   const user = useAuth().user;
 
-  // console.log('Current user:', user?.id);
-  
   // Backend data states
-  const [backendProjects, setBackendProjects] = useState<ProjectResponse[]>([]);
+  const [myProjects, setMyProjects] = useState<ProjectResponse[]>([]);
+  const [collaborateProjects, setCollaborateProjects] = useState<ProjectResponse[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState<string | null>(null);
-  const [showOnlyBackendProjects, setShowOnlyBackendProjects] = useState(false);
-  
+  const [selectedTab, setSelectedTab] = useState<'MY_PROJECTS' | 'COLLABORATE_PROJECTS'>('MY_PROJECTS');
+
   const itemsPerPage = 10;
-
-
-  
 
   const router = useRouter();
 
-  // Fetch projects from backend
-  const fetchProjects = async () => {
+  // Fetch My Projects
+  const fetchMyProjects = async () => {
     try {
       setIsLoadingProjects(true);
       setProjectsError(null);
-      const projects = await projectApi.getProjects(user?.id || '');
-      setBackendProjects(projects);
-      console.log('Fetched projects:', projects);
+      const projects = await projectApi.getProjects(user?.id || "");
+      setMyProjects(projects);
+      console.log("Fetched my projects:", projects);
     } catch (error: any) {
-      console.error('Error fetching projects:', error);
-      setProjectsError(error.response?.data?.message || error.message || 'Failed to fetch projects');
+      console.error("Error fetching my projects:", error);
+      setProjectsError(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch projects"
+      );
     } finally {
       setIsLoadingProjects(false);
     }
   };
 
-  // Fetch projects on component mount
+  // Fetch Collaborate Projects
+  const fetchCollaborateProjects = async () => {
+    try {
+      setIsLoadingProjects(true);
+      setProjectsError(null);
+      const projects = await projectApi.getCollaborateProjects(user?.id || "");
+      setCollaborateProjects(projects);
+      console.log("Fetched collaborate projects:", projects);
+    } catch (error: any) {
+      console.error("Error fetching collaborate projects:", error);
+      setProjectsError(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch projects"
+      );
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  // Fetch projects on tab change or mount
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (selectedTab === 'MY_PROJECTS') {
+      fetchMyProjects();
+    } else {
+      fetchCollaborateProjects();
+    }
+  }, [selectedTab, user?.id]);
 
   const toggleStar = (projectId: string) => {
     console.log(`Toggle star for project ${projectId}`);
@@ -169,70 +202,65 @@ const ProjectsTable: React.FC = () => {
     try {
       // Set loading state
       setDeletingProjectId(deleteConfirmation.projectId);
-      
+
       // Call the delete API
       await projectApi.deleteProject(deleteConfirmation.projectId);
-      
+
       // Success notification
-      alert('✅ Project deleted successfully!');
-      
+      alert("✅ Project deleted successfully!");
+
       // Refresh the projects list
-      await fetchProjects();
-      
-      console.log('Project deleted:', deleteConfirmation.projectId);
-      
+      if (selectedTab === 'MY_PROJECTS') {
+        await fetchMyProjects();
+      } else {
+        await fetchCollaborateProjects();
+      }
+
+      console.log("Project deleted:", deleteConfirmation.projectId);
     } catch (error: any) {
-      console.error('Error deleting project:', error);
-      
+      console.error("Error deleting project:", error);
+
       // Error notification
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete project';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete project";
       alert(`❌ Error: ${errorMessage}`);
     } finally {
       // Clear loading state and close modal
       setDeletingProjectId(null);
       setDeleteConfirmation({
         isOpen: false,
-        projectId: '',
-        projectName: '',
+        projectId: "",
+        projectName: "",
       });
     }
   };
 
-  const allProjects = showOnlyBackendProjects ? 
-    backendProjects.map(project => ({
+  // Format projects for table
+  const formatProjects = (projects: ProjectResponse[]) =>
+    projects.map((project) => ({
       id: project.id,
-      name: project.title || 'Untitled Project',
-      description: project.description || '',
-      type: project.type || 'Team-managed software',
-      lead: project.lead || { name: 'Unknown', initials: 'UK' },
-      starred: false, // You can add this field to your backend response
+      name: project.title || "Untitled Project",
+      description: project.description || "",
+      type: project.type || "Team-managed software",
+      lead: project.lead || { name: "Unknown", initials: "UK" },
+      starred: false,
       createdAt: project.createdAt,
       dueDate: project.dueDate,
       priority: project.priority,
-      userName: project.userName || 'Unknown User',
-      avatar: project.avatar || 'https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg', // Default avatar if not provided
-    })) :
-    [
-      ...backendProjects.map(project => ({
-        id: project.id,
-        name: project.title || 'Untitled Project',
-        description: project.description || '',
-        type: project.type || 'Team-managed software',
-        lead: project.lead || { name: 'Unknown', initials: 'UK' },
-        starred: false, // You can add this field to your backend response
-        createdAt: project.createdAt,
-        dueDate: project.dueDate,
-        priority: project.priority,
-        userName: project.userName || 'Unknown User',
-        avatar: project.avatar || 'https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg', // Default avatar if not provided
-      })),
+      userName: project.userName || "Unknown User",
+      avatar:
+        project.avatar ||
+        "https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg",
+    }));
 
-    ];
+  const allProjects = selectedTab === 'MY_PROJECTS'
+    ? formatProjects(myProjects)
+    : formatProjects(collaborateProjects);
 
   const filteredProjects = allProjects.filter(
-    (project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (filterProduct === 'Filter by product' || project.type === filterProduct)
+    (project) => filterProduct === "Filter by product" || project.type === filterProduct
   );
 
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
@@ -241,44 +269,54 @@ const ProjectsTable: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  const handleCreateProject = async (formData: { title: string; description: string; dueDate: string; priority: string }) => {
+  const handleCreateProject = async (formData: {
+    title: string;
+    description: string;
+    dueDate: string;
+    priority: string;
+  }) => {
     setIsCreatingProject(true);
-    
+
     try {
       const projectData: CreateProjectRequest = {
         title: formData.title,
         description: formData.description || undefined,
         dueDate: formData.dueDate || undefined,
         priority: formData.priority || undefined,
-        ownerId: user?.id || '', // Use the current user's ID
+        ownerId: user?.id || "",
       };
 
-      console.log('Creating project with data:', projectData);
+      console.log("Creating project with data:", projectData);
 
       const response = await projectApi.createProject(projectData);
-      
+
       alert(`✅ Project "${response.title}" created successfully!`);
-      
+
       setIsModalOpen(false);
-      
+
       // Refresh the projects list after creating a new project
-      await fetchProjects();
-      
-      console.log('Created project:', response);
-      
+      if (selectedTab === 'MY_PROJECTS') {
+        await fetchMyProjects();
+      } else {
+        await fetchCollaborateProjects();
+      }
+
+      console.log("Created project:", response);
     } catch (error: any) {
-      console.error('Error creating project:', error);
-      
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create project';
+      console.error("Error creating project:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create project";
       alert(`❌ Error: ${errorMessage}`);
     } finally {
       setIsCreatingProject(false);
     }
   };
 
-
   const handleCreateProject1 = () => {
-    router.push('/project-member/projects/create-project');
+    router.push("/project-member/projects/create-project");
   };
 
   return (
@@ -296,16 +334,19 @@ const ProjectsTable: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={fetchProjects}
+            <button
+              onClick={() => {
+                selectedTab === 'MY_PROJECTS' ? fetchMyProjects() : fetchCollaborateProjects();
+              }}
               className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               disabled={isLoadingProjects}
             >
               Refresh
             </button>
-            <button 
-              // onClick={() => setIsModalOpen(true)} 
-              onClick={() => {handleCreateProject1()}}
+            <button
+              onClick={() => {
+                handleCreateProject1();
+              }}
               className="bg-primary hover:bg-secondary text-white hover:text-black px-4 py-2 rounded-md font-medium transition-colors"
             >
               Create project
@@ -319,8 +360,10 @@ const ProjectsTable: React.FC = () => {
             <div className="flex">
               <div className="text-sm text-red-700">
                 <strong>Error loading projects:</strong> {projectsError}
-                <button 
-                  onClick={fetchProjects}
+                <button
+                  onClick={() => {
+                    selectedTab === 'MY_PROJECTS' ? fetchMyProjects() : fetchCollaborateProjects();
+                  }}
                   className="ml-2 underline hover:no-underline"
                 >
                   Try again
@@ -330,36 +373,29 @@ const ProjectsTable: React.FC = () => {
           </div>
         )}
 
-        {/* Search and Filter */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search projects"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            />
-          </div>
-
-          <div className="relative">
-            <select
-              value={filterProduct}
-              onChange={(e) => setFilterProduct(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer"
-            >
-              <option>Filter by product</option>
-              <option>Product Discovery</option>
-              <option>Team-managed software</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-          </div>
-
-          
+        {/* Tabs for My Projects and Collaborate Projects */}
+        <div className="flex gap-4 mb-6">
+          <button
+            className={`px-4 py-2 rounded-md font-medium transition-colors border ${
+              selectedTab === "MY_PROJECTS"
+                ? "bg-primary text-white border-primary"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
+            onClick={() => setSelectedTab("MY_PROJECTS")}
+          >
+            My Projects
+          </button>
+          <button
+            className={`px-4 py-2 rounded-md font-medium transition-colors border ${
+              selectedTab === "COLLABORATE_PROJECTS"
+                ? "bg-primary text-white border-primary"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
+            onClick={() => setSelectedTab("COLLABORATE_PROJECTS")}
+          >
+            Collaborate Projects
+          </button>
         </div>
-
-        
 
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-lg ">
@@ -369,14 +405,24 @@ const ProjectsTable: React.FC = () => {
                 <th className="px-6 py-3 text-left">
                   <div className="flex items-center gap-2">
                     <Star className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm font-medium text-gray-700">Name</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Name
+                    </span>
                     <ArrowUpDown className="w-3 h-3 text-gray-400" />
                   </div>
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Description</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Priority</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Lead</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Project Action</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                  Priority
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                  Lead
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
+                  Project Action
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -389,15 +435,24 @@ const ProjectsTable: React.FC = () => {
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
                           Loading projects...
                         </div>
-                      ) : filteredProjects.length === 0 && backendProjects.length === 0 ? (
+                      ) : filteredProjects.length === 0 &&
+                        (selectedTab === 'MY_PROJECTS' ? myProjects.length === 0 : collaborateProjects.length === 0) ? (
                         <div>
-                          <p className="text-lg font-medium mb-2">No projects found</p>
-                          <p className="text-sm">Create your first project to get started</p>
+                          <p className="text-lg font-medium mb-2">
+                            No projects found
+                          </p>
+                          <p className="text-sm">
+                            Create your first project to get started
+                          </p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-lg font-medium mb-2">No projects match your search</p>
-                          <p className="text-sm">Try adjusting your search or filter criteria</p>
+                          <p className="text-lg font-medium mb-2">
+                            No projects match your search
+                          </p>
+                          <p className="text-sm">
+                            Try adjusting your search or filter criteria
+                          </p>
                         </div>
                       )}
                     </div>
@@ -405,44 +460,49 @@ const ProjectsTable: React.FC = () => {
                 </tr>
               ) : (
                 currentItems.map((project) => (
-                <tr key={project.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => toggleStar(project.id)}
-                        className={`p-1 rounded transition-colors ${
-                          project.starred
-                            ? 'text-yellow-500 hover:text-yellow-600'
-                            : 'text-gray-300 hover:text-gray-400'
-                        }`}
-                      >
-                      
-                        <Star
-                          className={`w-4 h-4 ${project.starred ? 'fill-current' : ''}`}
-                        />
-                      
-                      </button>
-                      
-                      <span
-                        onClick={() => handleClick(project.id)}
-                        className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer transition-colors w-full"
-                      >
-                        {project.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {project.description
-                      ? project.description.length > 50
-                        ? project.description.slice(0, 50) + "..."
-                        : project.description
-                      : ""}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{project.priority}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        {project.avatar ? (
+                  <tr
+                    key={project.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => toggleStar(project.id)}
+                          className={`p-1 rounded transition-colors ${
+                            project.starred
+                              ? "text-yellow-500 hover:text-yellow-600"
+                              : "text-gray-300 hover:text-gray-400"
+                          }`}
+                        >
+                          <Star
+                            className={`w-4 h-4 ${
+                              project.starred ? "fill-current" : ""
+                            }`}
+                          />
+                        </button>
+
+                        <span
+                          onClick={() => handleClick(project.id)}
+                          className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer transition-colors w-full"
+                        >
+                          {project.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {project.description
+                        ? project.description.length > 50
+                          ? project.description.slice(0, 50) + "..."
+                          : project.description
+                        : ""}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {project.priority}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                          {project.avatar ? (
                             <img
                               src={project.avatar}
                               alt="avatar"
@@ -455,64 +515,54 @@ const ProjectsTable: React.FC = () => {
                               className="w-full h-full object-cover rounded-full"
                             />
                           )}
-                      </div>
-                      <span className="text-sm text-gray-900">{project.userName}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="relative inline-block text-left">
-                      <button
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        onClick={() => setDropdownOpenId(dropdownOpenId === project.id ? null : project.id)}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                      {dropdownOpenId === project.id && (
-                        <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                          <button
-                            className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 text-left rounded-t-md transition duration-150 ease-in-out"
-                            onClick={() => {
-                              console.log('Edit project:', project.id);
-                              alert('Edit functionality - Coming soon!');
-                              setDropdownOpenId(null);
-                            }}
-                          >
-                            Edit
-                          </button>
-                          <hr className="border-gray-100" />
-                          <button
-                            className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 text-left rounded-b-md transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={() => handleDelete(project.id, project.name)}
-                            disabled={deletingProjectId === project.id}
-                          >
-                            {deletingProjectId === project.id ? (
-                              <div className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                                Deleting...
-                              </div>
-                            ) : (
-                              'Delete'
-                            )}
-                          </button>
                         </div>
-
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        <span className="text-sm text-gray-900">
+                          {project.userName}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="relative inline-block text-left">
+                        <button
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                          onClick={() =>
+                            setDropdownOpenId(
+                              dropdownOpenId === project.id ? null : project.id
+                            )
+                          }
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {dropdownOpenId === project.id && (
+                          <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <button
+                              className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2 transition-colors"
+                              onClick={() =>
+                                handleDelete(project.id, project.name)
+                              }
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
-
             </tbody>
           </table>
-        </div>
 
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -520,18 +570,26 @@ const ProjectsTable: React.FC = () => {
         <TodoNotesSidebar />
       </div>
 
-      {/* Create Project Modal */}
-      {/* <CreateProjectModal
+      {/* Create Project Modal (still commented out like in your code) */}
+      {/*
+      <CreateProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateProject}
         isLoading={isCreatingProject}
-      /> */}
+      />
+      */}
 
       {/* Delete Confirmation Modal */}
-      /* <DeleteConfirmationModal
+      <DeleteConfirmationModal
         isOpen={deleteConfirmation.isOpen}
-        onClose={() => setDeleteConfirmation({ isOpen: false, projectId: '', projectName: '' })}
+        onClose={() =>
+          setDeleteConfirmation({
+            isOpen: false,
+            projectId: "",
+            projectName: "",
+          })
+        }
         onConfirm={confirmDelete}
         projectName={deleteConfirmation.projectName}
         isDeleting={deletingProjectId === deleteConfirmation.projectId}
