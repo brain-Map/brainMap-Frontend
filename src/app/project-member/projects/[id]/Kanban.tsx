@@ -19,7 +19,18 @@ interface ApiTask {
   createdTime: string;
   dueDate?: string;
   priority?: 'Low' | 'Medium' | 'High';
-  assignee?: string;
+  assignees?: string[];
+}
+
+interface UserData {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  userName?: string;
+  email?: string;
+  avatar?: string;
+  profilePicture?: string;
 }
 
 const kanbanFunction = {
@@ -30,6 +41,17 @@ const kanbanFunction = {
       return response.data;
     } catch (error) {
       console.error('Error fetching kanban:', error);
+      throw error;
+    }
+  },
+
+    getCollaborators: async (projectId: string) => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborators/${projectId}`);
+      console.log('collaborators Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
       throw error;
     }
   },
@@ -65,7 +87,7 @@ const kanbanFunction = {
     title: string;
     description: string;
     priority?: 'Low' | 'Medium' | 'High';
-    assignee?: string;
+    assignees?: string[];
     dueDate?: string;
   }) => {
     try {
@@ -79,11 +101,13 @@ const kanbanFunction = {
         title: taskData.title,
         description: taskData.description,
         priority: taskData.priority || 'Medium',
-        assignee: taskData.assignee || '',
+        assignees: taskData.assignees || [],
         dueDate: taskData.dueDate || '',
         createdDate: formattedDate,
         createdTime: formattedTime
       };
+
+      console.log('Task Payload:', taskPayload);
       
       const response = await api.post(`/api/tasks`, taskPayload);
       console.log('Added Kanban Task:', response.data);
@@ -101,6 +125,17 @@ const kanbanFunction = {
       return response.data;
     } catch (error) {
       console.error('Error fetching tasks:', error);
+      throw error;
+    }
+  },
+
+  getUser: async (userId: string) => {
+    try {
+      const response = await api.get(`/api/v1/users/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
       throw error;
     }
   },
@@ -148,6 +183,40 @@ const KanbanBoard: React.FC = () => {
     const projectId = params.id as string; // Get the project ID from URL
     const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
     const [kanbanId, setKanbanId] = useState<string | null>(null);
+    const [collaborators, setCollaborators] = useState<any[]>([]);
+    const [userDetails, setUserDetails] = useState<Map<string, UserData>>(new Map());
+
+    // Function to fetch user details for assignees
+    const fetchUserDetails = async (assigneeIds: string[]) => {
+      const newUserDetails = new Map(userDetails);
+      const idsToFetch = assigneeIds.filter(id => !newUserDetails.has(id));
+      
+      if (idsToFetch.length === 0) return;
+
+      try {
+        const userPromises = idsToFetch.map(async (userId) => {
+          try {
+            const userData = await kanbanFunction.getUser(userId);
+            return { id: userId, data: userData };
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            return { id: userId, data: null };
+          }
+        });
+
+        const userResults = await Promise.all(userPromises);
+        
+        userResults.forEach(({ id, data }) => {
+          if (data) {
+            newUserDetails.set(id, data);
+          }
+        });
+
+        setUserDetails(newUserDetails);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
 
     useEffect(
       () => {
@@ -201,6 +270,16 @@ const KanbanBoard: React.FC = () => {
           const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
           console.log('Fetched tasks:', tasks);
 
+          // Collect all unique assignee IDs from all tasks
+          const allAssigneeIds = tasks
+            .flatMap(task => task.assignees || [])
+            .filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
+          
+          // Fetch user details for all assignees
+          if (allAssigneeIds.length > 0) {
+            await fetchUserDetails(allAssigneeIds);
+          }
+
           // Organize tasks by column
           setColumns(prevColumns => 
             prevColumns.map(column => {
@@ -213,7 +292,7 @@ const KanbanBoard: React.FC = () => {
                   createdDate: task.createdDate,
                   createdTime: task.createdTime,
                   priority: task.priority || 'Medium',
-                  assignee: task.assignee || '',
+                  assignees: task.assignees || [],
                   dueDate: task.dueDate || '',
                   progress: 0,
                   completed: false
@@ -235,16 +314,16 @@ const KanbanBoard: React.FC = () => {
     }, [kanbanId]); // Fetch tasks when kanbanId changes
 
   type Task = {
-    id: string; // Changed from number to string to match taskId
+    id: string;
     title: string;
     description: string;
-    priority?: 'Low' | 'Medium' | 'High'; // Made optional since API doesn't provide it
-    assignee?: string; // Made optional since API doesn't provide it
-    dueDate?: string; // Made optional, we'll use createdDate
-    progress?: number; // Made optional since API doesn't provide it
+    priority?: 'Low' | 'Medium' | 'High';
+    assignees?: string[];
+    dueDate?: string;
+    progress?: number;
     completed?: boolean;
-    createdDate: string; // Added from API
-    createdTime: string; // Added from API
+    createdDate: string;
+    createdTime: string;
   };
 
   type Column = {
@@ -271,6 +350,11 @@ const KanbanBoard: React.FC = () => {
     description: string;
   };
 
+  type TaskDetailModalState = {
+    isOpen: boolean;
+    task: Task | null;
+  };
+
   const [columns, setColumns] = useState<Column[]>([]);
 
   const [newTaskForm, setNewTaskForm] = useState<NewTaskFormState>({ columnId: null, isOpen: false });
@@ -281,6 +365,25 @@ const KanbanBoard: React.FC = () => {
     title: '', 
     description: '' 
   });
+  const [taskDetailModal, setTaskDetailModal] = useState<TaskDetailModalState>({
+    isOpen: false,
+    task: null
+  });
+
+  useEffect(() => {
+    const fetchCollaborators = async () => {
+      try {
+        const data = await kanbanFunction.getCollaborators(projectId);
+        setCollaborators(data);
+      } catch (error) {
+        console.error('Error fetching collaborators:', error);
+      }
+    };
+
+    if (projectId) {
+      fetchCollaborators();
+    }
+  }, [projectId]);
 
   const getPriorityColor = (priority: 'Low' | 'Medium' | 'High') => {
     switch (priority) {
@@ -307,7 +410,7 @@ const KanbanBoard: React.FC = () => {
     title: string;
     description: string;
     priority?: 'Low' | 'Medium' | 'High';
-    assignee?: string;
+    assignees?: string[];
     dueDate?: string;
   }) => {
     try {
@@ -321,12 +424,22 @@ const KanbanBoard: React.FC = () => {
         title: taskData.title,
         description: taskData.description,
         priority: taskData.priority,
-        assignee: taskData.assignee,
+        assignees: taskData.assignees,
         dueDate: taskData.dueDate
       });
       
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+      
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
       
       // Organize tasks by column
       setColumns(prevColumns => 
@@ -340,7 +453,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -373,6 +486,16 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
       
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
+      
       // Organize tasks by column
       setColumns(prevColumns => 
         prevColumns.map(column => {
@@ -385,7 +508,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -418,6 +541,16 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks by fetching them again
       const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
       
+      // Collect all unique assignee IDs from all tasks
+      const allAssigneeIds = tasks
+        .flatMap(task => task.assignees || [])
+        .filter((id, index, array) => array.indexOf(id) === index);
+      
+      // Fetch user details for all assignees
+      if (allAssigneeIds.length > 0) {
+        await fetchUserDetails(allAssigneeIds);
+      }
+      
       // Organize tasks by column
       setColumns(prevColumns => 
         prevColumns.map(column => {
@@ -430,7 +563,7 @@ const KanbanBoard: React.FC = () => {
               createdDate: task.createdDate,
               createdTime: task.createdTime,
               priority: task.priority || 'Medium',
-              assignee: task.assignee || '',
+              assignees: task.assignees || [],
               dueDate: task.dueDate || '',
               progress: 0,
               completed: false
@@ -570,6 +703,17 @@ const KanbanBoard: React.FC = () => {
       // Refresh tasks from backend
       if (kanbanId) {
         const tasks: ApiTask[] = await kanbanFunction.getTasks(kanbanId);
+        
+        // Collect all unique assignee IDs from all tasks
+        const allAssigneeIds = tasks
+          .flatMap(task => task.assignees || [])
+          .filter((id, index, array) => array.indexOf(id) === index);
+        
+        // Fetch user details for all assignees
+        if (allAssigneeIds.length > 0) {
+          await fetchUserDetails(allAssigneeIds);
+        }
+        
         setColumns(prevColumns =>
           prevColumns.map(column => {
             const columnTasks = tasks
@@ -581,7 +725,7 @@ const KanbanBoard: React.FC = () => {
                 createdDate: task.createdDate,
                 createdTime: task.createdTime,
                 priority: task.priority || 'Medium',
-                assignee: task.assignee || '',
+                assignees: task.assignees || [],
                 dueDate: task.dueDate || '',
                 progress: 0,
                 completed: false
@@ -617,6 +761,13 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
     setShowMenu(false);
   };
 
+  const handleCardClick = () => {
+    setTaskDetailModal({
+      isOpen: true,
+      task: task
+    });
+  };
+
   // Move handler for TaskCard
   const handleMove = async (targetColumnId: string) => {
     if (targetColumnId !== currentColumnId) {
@@ -635,16 +786,28 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
   
 
   return (
-    <div className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative">
+    <div 
+      className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow relative cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 text-sm">{task.title}</h3>
 
         <div className="relative">
-          <button onClick={() => setShowMenu(!showMenu)} className="text-gray-500 hover:text-gray-700">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click when clicking menu
+              setShowMenu(!showMenu);
+            }} 
+            className="text-gray-500 hover:text-gray-700"
+          >
             <MoreHorizontal className="w-4 h-4" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in">
+            <div 
+              className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-lg z-20 animate-fade-in"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when clicking menu items
+            >
               <div className="px-3 py-2 text-xs font-semibold text-gray-500">Move to</div>
               <div className="py-1">
                 {columns
@@ -697,10 +860,64 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <User className="w-3 h-3 text-white" />
-          </div>
-          <span className="text-sm text-gray-700">{task.assignee || 'Unassigned'}</span>
+          {task.assignees && task.assignees.length > 0 ? (
+            <div className="flex items-center space-x-1">
+              <div className="flex -space-x-2">
+                {task.assignees.slice(0, 3).map((assigneeId, index) => {
+                  const user = userDetails.get(assigneeId);
+                  const avatarUrl = user?.avatar || user?.profilePicture;
+                  const userName = user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || user?.lastName || user?.userName || user?.email || 'Unknown';
+
+                  return (
+                    <div
+                      key={assigneeId}
+                      className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center overflow-hidden bg-blue-500"
+                      title={userName}
+                    >
+                      {avatarUrl ? (
+                        <img 
+                          src={avatarUrl} 
+                          alt={userName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white text-xs font-medium">
+                          {userName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+                {task.assignees.length > 3 && (
+                  <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">
+                      +{task.assignees.length - 3}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-gray-700 ml-2">
+                {task.assignees.length === 1 
+                  ? (() => {
+                      const user = userDetails.get(task.assignees[0]);
+                      return user?.firstName && user?.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : user?.firstName || user?.lastName || user?.userName || 'Unknown';
+                    })()
+                  : `${task.assignees.length} assignees`
+                }
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                <User className="w-3 h-3 text-gray-600" />
+              </div>
+              <span className="text-sm text-gray-700">Unassigned</span>
+            </div>
+          )}
         </div>
         <span className={`text-xs ${task.completed ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
           {task.dueDate || task.createdDate}
@@ -721,29 +938,30 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       title: string;
       description: string;
       priority?: 'Low' | 'Medium' | 'High';
-      assignee?: string;
+      assignees?: string[];
       dueDate?: string;
     }) => void;
     onCancel: () => void;
-  }> = ({ columnId, columnTitle, onSubmit, onCancel }) => {
+    collaborators: any[];
+  }> = ({ columnId, columnTitle, onSubmit, onCancel, collaborators }) => {
     const [formData, setFormData] = useState<{
       title: string;
       description: string;
       priority?: 'Low' | 'Medium' | 'High';
-      assignee?: string;
+      assignees: string[];
       dueDate?: string;
     }>({
       title: '',
       description: '',
       priority: 'Medium',
-      assignee: '',
+      assignees: [],
       dueDate: ''
     });
 
     const handleSubmit = () => {
       if (formData.title.trim()) {
         onSubmit(columnId, formData);
-        setFormData({ title: '', description: '', priority: 'Medium', assignee: '', dueDate: '' });
+        setFormData({ title: '', description: '', priority: 'Medium', assignees: [], dueDate: '' });
         onCancel();
       }
     };
@@ -761,15 +979,30 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
       }
     };
 
+    const toggleAssignee = (assigneeId: string) => {
+      setFormData(prev => ({
+        ...prev,
+        assignees: prev.assignees.includes(assigneeId)
+          ? prev.assignees.filter(id => id !== assigneeId)
+          : [...prev.assignees, assigneeId]
+      }));
+    };
+
+    const getCollaboratorName = (collab: any) => {
+      return collab.firstName && collab.lastName 
+        ? `${collab.firstName} ${collab.lastName}`
+        : collab.firstName || collab.lastName || collab.name || collab.userName || collab.email || 'Unknown';
+    };
+
     return (
       <div 
-        className="fixed inset-0 bg-black/50 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         onClick={handleBackdropClick}
       >
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Add Task to {columnTitle}
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Add New Task to <span className="text-blue-600">{columnTitle}</span>
             </h2>
             <button
               onClick={onCancel}
@@ -779,80 +1012,165 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
             </button>
           </div>
           
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-              <input
-                type="text"
-                placeholder="Enter task title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                onKeyPress={handleKeyPress}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                autoFocus
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                placeholder="Enter task description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-24 resize-none"
-              />
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column - Basic Information */}
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="text-lg font-medium text-blue-900 mb-4">Task Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Task Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter a clear and descriptive task title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onKeyPress={handleKeyPress}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <textarea
+                        placeholder="Provide detailed description of the task, requirements, and any important notes..."
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-32 resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                        <select
+                          value={formData.priority}
+                          onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        >
+                          <option value="Low">🟢 Low Priority</option>
+                          <option value="Medium">🟡 Medium Priority</option>
+                          <option value="High">🔴 High Priority</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                        <input
+                          type="date"
+                          value={formData.dueDate}
+                          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
-                <input
-                  type="text"
-                  placeholder="Enter assignee name"
-                  value={formData.assignee}
-                  onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
+
+              {/* Right Column - Team & Assignment */}
+              <div className="space-y-6">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="text-lg font-medium text-green-900 mb-4">Team Assignment</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Assign Team Members ({formData.assignees.length} selected)
+                    </label>
+                    
+                    {collaborators && collaborators.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {collaborators.map((collab: any) => {
+                          const collaboratorId = collab.id || collab.userId || collab.email;
+                          const isSelected = formData.assignees.includes(collaboratorId);
+                          const collaboratorName = getCollaboratorName(collab);
+                          
+                          return (
+                            <div
+                              key={collaboratorId}
+                              onClick={() => toggleAssignee(collaboratorId)}
+                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                isSelected 
+                                  ? 'bg-blue-100 border-blue-300 shadow-sm' 
+                                  : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
+                              }`}>
+                                {isSelected && (
+                                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center space-x-3 flex-1">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                                  <span className="text-white text-sm font-medium">
+                                    {collaboratorName.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{collaboratorName}</p>
+                                  {collab.email && (
+                                    <p className="text-xs text-gray-500">{collab.email}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <User className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                        <p>No team members available</p>
+                      </div>
+                    )}
+                    
+                    {formData.assignees.length > 0 && (
+                      <div className="mt-3 p-2 bg-blue-50 rounded border">
+                        <p className="text-sm text-blue-700 font-medium">
+                          Selected: {formData.assignees.length} team member{formData.assignees.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
             </div>
           </div>
           
-          <div className="flex gap-3 p-6 border-t border-gray-200">
-            <button
-              onClick={handleSubmit}
-              className="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-secondary hover:text-black transition-colors font-medium"
-            >
-              Add Task
-            </button>
-            <button
-              onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-            >
-              Cancel
-            </button>
+          <div className="flex justify-between items-center gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-600">
+              <span className="text-red-500">*</span> Required fields
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onCancel}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!formData.title.trim()}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  formData.title.trim()
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Create Task
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -946,6 +1264,186 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
               className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const TaskDetailModal: React.FC<{
+    task: Task | null;
+    onClose: () => void;
+    userDetails: Map<string, UserData>;
+  }> = ({ task, onClose, userDetails }) => {
+    if (!task) return null;
+
+    // Find the column name for this task
+    const getTaskColumnName = () => {
+      for (const column of columns) {
+        if (column.tasks.some(t => t.id === task.id)) {
+          return column.title;
+        }
+      }
+      return 'Unknown';
+    };
+
+    const handleBackdropClick = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    };
+
+    const formatDate = (dateString: string) => {
+      if (!dateString) return 'Not set';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const formatTime = (timeString: string) => {
+      if (!timeString) return '';
+      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    return (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={handleBackdropClick}
+      >
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto transform transition-all">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Task Details
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Task Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <h3 className="text-xl font-semibold text-gray-900">{task.title}</h3>
+                </div>
+
+                {/* Task Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg border">
+                    {task.description || 'No description provided'}
+                  </p>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(task.priority || 'Medium')}`}>
+                    {task.priority || 'Medium'}
+                  </span>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {getTaskColumnName()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Assignees */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Assignees</label>
+                  {task.assignees && task.assignees.length > 0 ? (
+                    <div className="space-y-3">
+                      {task.assignees.map((assigneeId) => {
+                        const user = userDetails.get(assigneeId);
+                        const avatarUrl = user?.avatar || user?.profilePicture;
+                        const userName = user?.firstName && user?.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user?.firstName || user?.lastName || 'Unknown User';
+                        const userEmail = user?.email || '';
+                        
+                        return (
+                          <div key={assigneeId} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
+                              {avatarUrl ? (
+                                <img 
+                                  src={avatarUrl} 
+                                  alt={userName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white font-medium">
+                                  {userName.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{userName}</p>
+                              {userEmail && <p className="text-sm text-gray-600">{userEmail}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <p className="text-gray-600">No assignees</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Dates */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Created Date</label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                      {formatDate(task.createdDate)}
+                      {task.createdTime && (
+                        <span className="block text-sm text-gray-600 mt-1">
+                          at {formatTime(task.createdTime)}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                      {task.dueDate ? formatDate(task.dueDate) : 'No due date set'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+              Close
             </button>
           </div>
         </div>
@@ -1059,6 +1557,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           columnTitle={getColumnTitle(newTaskForm.columnId)}
           onSubmit={addTask}
           onCancel={() => setNewTaskForm({ columnId: null, isOpen: false })}
+          collaborators={collaborators}
         />
       )}
 
@@ -1069,6 +1568,15 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
           onCancel={() => setEditTaskForm({ taskId: null, isOpen: false, title: '', description: '' })}
           initialTitle={editTaskForm.title}
           initialDescription={editTaskForm.description}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {taskDetailModal.isOpen && (
+        <TaskDetailModal
+          task={taskDetailModal.task}
+          onClose={() => setTaskDetailModal({ isOpen: false, task: null })}
+          userDetails={userDetails}
         />
       )}
     </div>

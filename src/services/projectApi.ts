@@ -103,6 +103,17 @@ export const projectApi = {
     }
   },
 
+  //get user collaborate projects
+  getCollaborateProjects: async (userId: string): Promise<ProjectResponse[]> => {
+    try {
+      const response = await api.get(`/project-member/projects/collaborator?userId=${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching collaborative projects:', error);
+      throw error;
+    }
+  },
+
   // Update project
   updateProject: async (id: string, projectData: Partial<CreateProjectRequest>): Promise<ProjectResponse> => {
     try {
