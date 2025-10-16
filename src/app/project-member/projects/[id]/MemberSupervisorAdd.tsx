@@ -152,9 +152,39 @@ const MembersAndTeams = () => {
 useEffect(() => {
   const fetchProjectMembers = async () => {
     try {
-      const members = await memberSearch.getProjectMember(projectId ? projectId : '');
-      console.log('Project Members:', members);
-      setMembers(members);
+      const collaborators = await memberSearch.getProjectMember(projectId ? projectId : '');
+      console.log('Project Collaborators:', collaborators);
+      
+      // Separate members and supervisors based on role
+      const membersList: Member[] = [];
+      const supervisorsList: Supervisor[] = [];
+      
+      collaborators.forEach((collaborator: any) => {
+        if (collaborator.role === 'MENTOR') {
+          // Add to supervisors list
+          supervisorsList.push({
+            id: collaborator.id,
+            name: collaborator.name,
+            email: collaborator.email,
+            avatar: collaborator.avatar,
+            role: 'supervisor',
+            department: collaborator.department || 'General'
+          });
+        } else {
+          // Add to members list
+          membersList.push({
+            id: collaborator.id,
+            name: collaborator.name,
+            email: collaborator.email,
+            avatar: collaborator.avatar,
+            role: collaborator.role as MemberRole,
+            status: collaborator.status
+          });
+        }
+      });
+      
+      setMembers(membersList);
+      setSupervisors(supervisorsList);
     } catch (error) {
       console.error('Error fetching project members:', error);
     }
@@ -170,11 +200,6 @@ useEffect(() => {
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // const changeMemberRole = (id: string, newRole: MemberRole) => {
-  //   setMembers(members.map(member => 
-  //     member.id === id ? { ...member, role: newRole } : member
-  //   ));
-  // };
 
   const removeMember = (id: string) => {
     // Remove from backend
@@ -225,6 +250,25 @@ useEffect(() => {
           department: 'General'
         };
         setSupervisors(prev => [...prev, newSupervisor]);
+
+        if (projectId) {
+          try {
+            await memberSearch.addUser({
+              id: user.id,
+              name: user.name,
+              username: user.username,
+              email: user.email,
+              avatar: user.avatar,
+              type: user.type,
+              projectId: projectId,
+              role: 'MENTOR',
+              status: 'PENDING',
+            });
+            console.log('Supervisor added to backend successfully:', user);
+          } catch (error) {
+            console.error('Error adding supervisor to backend:', error);
+          }
+        }
       } else {
         const newMember: Member = {
           id: user.id,
@@ -235,10 +279,6 @@ useEffect(() => {
         };
         setMembers(prev => [...prev, newMember]);
 
-        // // Send to backend with required info
-        // const url = window.location.pathname;
-        // const match = url.match(/project-member\/projects\/(.*?)\//);
-        // const projectId = match ? match[1] : null;
         if (projectId) {
           try {
             await memberSearch.addUser({
@@ -266,8 +306,6 @@ useEffect(() => {
     switch (role) {
       case 'OWNER':
         return 'bg-red-100 text-red-800';
-      // case 'developer':
-      //   return 'bg-blue-100 text-blue-800';
       case 'MEMBER':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -281,8 +319,6 @@ useEffect(() => {
         return <Shield className="w-3 h-3" />;
       case 'MEMBER':
         return <Code className="w-3 h-3" />;
-      // case 'VIEWER':
-      //   return <Eye className="w-3 h-3" />;
       default:
         return <Users className="w-3 h-3" />;
     }
@@ -392,15 +428,7 @@ useEffect(() => {
                 <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg transition">
                     {/* Role dropdown + badge */}
                     <div className="flex items-center space-x-3">
-                      {/* Dropdown
-                      <select
-                        value={member.role}
-                        onChange={(e) => changeMemberRole(member.id, e.target.value as MemberRole)}
-                        className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="MEMBER">Member</option>
-                        <option value="OWNER">Owner</option>
-                      </select> */}
+                    
 
                       {/* Role Badge */}
                       <span

@@ -105,13 +105,6 @@ const ProjectSettingsPage: React.FC = () => {
     fetchProjectDetails();
   }, [id]);
 
-  const [members, setMembers] = useState<Member[]>([
-    { id: 1, name: "John Doe", email: "john@example.com", role: "admin", avatar: "JD" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "developer", avatar: "JS" },
-    { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "viewer", avatar: "MJ" },
-    { id: 4, name: "Sarah Wilson", email: "sarah@example.com", role: "supervisor", avatar: "SW" },
-  ]);
-
   const [activeSection, setActiveSection] = useState<SidebarItem["id"]>("general");
   const [isEditing, setIsEditing] = useState<EditingState>({ name: false, description: false, visibility: false });
   const [tempValues, setTempValues] = useState<TempValues>({});
@@ -122,19 +115,6 @@ const ProjectSettingsPage: React.FC = () => {
     setTempVisibility(newVisibility);
     setShowPopup(true);
   };
-
-  // const handleSave = () => {
-  //   setProjectData({ ...projectData, isPublic: tempVisibility });
-  //   setShowPopup(false);
-  //   setTempVisibility(null);
-  //   // Here you would typically make an API call to save the changes
-  //   console.log('Visibility changed to:', tempVisibility ? 'Public' : 'Private');
-  // };
-
-  // const handleCancel = () => {
-  //   setShowPopup(false);
-  //   setTempVisibility(null);
-  // };
 
   // ---------------- Handlers ----------------
   const handleEdit = (field: keyof EditingState) => {
@@ -155,8 +135,6 @@ const ProjectSettingsPage: React.FC = () => {
     setProjectData({ ...projectData, isPublic: tempVisibility ?? projectData.isPublic });
     setShowPopup(false);
     setTempVisibility(null);
-    // Here you would typically make an API call to save the changes
-    // console.log('Visibility changed to:', tempVisibility);
 
     const updatedValue = tempValues[field] as string;
     const updateObj: Partial<ProjectData> = {};
