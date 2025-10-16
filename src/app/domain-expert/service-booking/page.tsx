@@ -38,6 +38,9 @@ interface ServiceBooking {
   rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
+  updatedStartTime: string;
+  updatedEndTime: string;
+  updatedPrice: number;
 }
 
 const getStatusColor = (status: string) => {
@@ -72,8 +75,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [updatePrice, setUpdatePrice] = useState("");
   const [updateDate, setUpdateDate] = useState("");
-  const [updateTime, setUpdateTime] = useState("");
+  // Separate start and end times (allows 15-minute stepping)
+  const [updateStartTime, setUpdateStartTime] = useState("");
+  const [updateEndTime, setUpdateEndTime] = useState("");
   const [updateDescription, setUpdateDescription] = useState("");
+  const [updateErrors, setUpdateErrors] = useState<{ date?: string; time?: string; general?: string }>({});
   const [rejectReason, setRejectReason] = useState("");
   const [bookings, setBookings] = useState<ServiceBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,9 +119,13 @@ const Index = () => {
 
   const handleUpdate = () => {
     if (selectedBooking) {
-      setUpdatePrice(selectedBooking.totalPrice.toString());
-      setUpdateDate(selectedBooking.requestedDate);
-      setUpdateTime(selectedBooking.requestedStartTime);
+      // Default update form to current values. Prefer updated* fields when present (for UPDATED status)
+      setUpdatePrice((selectedBooking.updatedPrice ?? selectedBooking.totalPrice)?.toString() ?? "");
+      // updatedDate may be string or undefined; fall back to requestedDate
+      setUpdateDate((selectedBooking.acceptedDate ?? (selectedBooking as any).updatedDate ?? selectedBooking.requestedDate) ?? "");
+      // Prefer updated start/end times if they exist (for UPDATED bookings), otherwise requested times
+      setUpdateStartTime(selectedBooking.updatedStartTime ?? selectedBooking.requestedStartTime ?? "");
+      setUpdateEndTime(selectedBooking.updatedEndTime ?? selectedBooking.requestedEndTime ?? "");
       setUpdateDescription("");
     }
     setDetailDialogOpen(false);
@@ -124,31 +134,85 @@ const Index = () => {
 
   const handleUpdateConfirm = async () => {
     if (!selectedBooking) return;
+    // Client-side validation
+    const validateUpdateForm = () => {
+      const errors: any = {};
+      // Date: must be today or future
+      if (!updateDate) {
+        errors.date = "Please select a date.";
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const sel = new Date(updateDate);
+        sel.setHours(0, 0, 0, 0);
+        if (sel < today) {
+          errors.date = "Date must be today or in the future.";
+        }
+      }
+
+      // Times: both required, end > start, 15-minute intervals
+      if (!updateStartTime || !updateEndTime) {
+        errors.time = "Please select both start and end times.";
+      } else {
+        const [sh, sm] = updateStartTime.split(":").map((n) => Number(n));
+        const [eh, em] = updateEndTime.split(":").map((n) => Number(n));
+        const sMinutes = sh * 60 + sm;
+        const eMinutes = eh * 60 + em;
+        if (sMinutes % 15 !== 0 || eMinutes % 15 !== 0) {
+          errors.time = "Times must be on 15-minute intervals (e.g. 09:00, 09:15).";
+        } else if (eMinutes <= sMinutes) {
+          errors.time = "End time must be after start time.";
+        }
+      }
+
+      setUpdateErrors(errors);
+      return Object.keys(errors).length === 0;
+    };
+
+    if (!validateUpdateForm()) {
+      return;
+    }
     try {
       const body: any = {};
-      if (updatePrice) body.price = Number(updatePrice);
-      if (updateDate) body.date = updateDate;
-      if (updateTime) body.time = updateTime;
-      if (updateDescription) body.description = updateDescription;
-      await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
-        body,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-        }
-      );
-      await fetchBookings();
+      if (updatePrice) body.updatedPrice = Number(updatePrice);
+      if (updateDate) body.updatedDate = updateDate;
+      if (updateStartTime) body.updatedStartTime = updateStartTime;
+      if (updateEndTime) body.updatedEndTime = updateEndTime;
+      if (updateDescription) body.reason = updateDescription;
+      console.log(body);
+        // Send update to server
+        await axios.put(
+          `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
+          body,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        await fetchBookings();
     } catch (err: any) {
       setError(err?.response?.data?.message || "Failed to update booking");
     } finally {
       setUpdateDialogOpen(false);
       setUpdatePrice("");
       setUpdateDate("");
-      setUpdateTime("");
+      setUpdateStartTime("");
+      setUpdateEndTime("");
       setUpdateDescription("");
+      setUpdateErrors({});
     }
+  };
+
+  const closeUpdateDialog = () => {
+    // Reset update form state and close dialog
+    setUpdateDialogOpen(false);
+    setUpdatePrice("");
+    setUpdateDate("");
+    setUpdateStartTime("");
+    setUpdateEndTime("");
+    setUpdateDescription("");
+    setUpdateErrors({});
   };
 
   const handleAccept = async (bookingId: string) => {
@@ -255,7 +319,7 @@ const Index = () => {
           <p className="text-blue-900">Manage your service booking requests</p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v as any)}>
           <TabsList className="mb-6">
               <TabsTrigger value="all">
                 All ({getStatusCount("all")})
@@ -337,7 +401,7 @@ const Index = () => {
                           </div>
                         </TableCell>
                         <TableCell>{booking.duration} min</TableCell>
-                        <TableCell>${booking.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>Rs.{booking.updatedPrice ? booking.updatedPrice.toFixed(2) : booking.totalPrice.toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge className={`flex items-center gap-1 ${getStatusColor(booking.status)} font-medium px-3 py-1 rounded-full`}>
                             {booking.status === "PENDING" && <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full mr-1" />}
@@ -360,7 +424,17 @@ const Index = () => {
                                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleAccept(booking.id); }} title="Accept">
                                    <Check className="w-5 h-5 text-green-600" />
                                  </Button>
-                                 <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleReject(); }} title="Reject">
+                                 <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     // ensure the booking is selected so the reject dialog has the id
+                                     setSelectedBooking(booking);
+                                     handleReject();
+                                   }}
+                                   title="Reject"
+                                 >
                                    <X className="w-5 h-5 text-red-600" />
                                  </Button>
                                </>
@@ -416,11 +490,26 @@ const Index = () => {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Date</Label>
-                    <p className="font-medium mt-1">{format(new Date(selectedBooking.requestedDate), "MMM dd, yyyy")}</p>
+                    {/* If booking was updated and has updatedStartTime / updatedEndTime or updatedDate, show updated as primary */}
+                    {selectedBooking.status === "UPDATED" && (selectedBooking.updatedStartTime || selectedBooking.updatedEndTime || (selectedBooking as any).updatedDate) ? (
+                      <div>
+                        <p className="font-medium mt-1">{format(new Date((selectedBooking as any).updatedDate ?? selectedBooking.requestedDate), "MMM dd, yyyy")}</p>
+                        <div className="text-xs text-muted-foreground">Requested: {format(new Date(selectedBooking.requestedDate), "MMM dd, yyyy")}</div>
+                      </div>
+                    ) : (
+                      <p className="font-medium mt-1">{format(new Date(selectedBooking.requestedDate), "MMM dd, yyyy")}</p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Time</Label>
-                    <p className="font-medium mt-1">{selectedBooking.requestedStartTime} - {selectedBooking.requestedEndTime}</p>
+                    {selectedBooking.status === "UPDATED" && (selectedBooking.updatedStartTime || selectedBooking.updatedEndTime) ? (
+                      <div>
+                        <p className="font-medium mt-1">{selectedBooking.updatedStartTime ?? selectedBooking.requestedStartTime} - {selectedBooking.updatedEndTime ?? selectedBooking.requestedEndTime}</p>
+                        <div className="text-xs text-muted-foreground">Requested: {selectedBooking.requestedStartTime} - {selectedBooking.requestedEndTime}</div>
+                      </div>
+                    ) : (
+                      <p className="font-medium mt-1">{selectedBooking.requestedStartTime} - {selectedBooking.requestedEndTime}</p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Duration</Label>
@@ -428,7 +517,14 @@ const Index = () => {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Price</Label>
-                    <p className="font-medium mt-1">${selectedBooking.totalPrice.toFixed(2)}</p>
+                    {selectedBooking.status === "UPDATED" && selectedBooking.updatedPrice ? (
+                      <div>
+                        <p className="font-medium mt-1">Rs.{Number(selectedBooking.updatedPrice).toFixed(2)}</p>
+                        <div className="text-xs text-muted-foreground">Requested: Rs. {selectedBooking.totalPrice.toFixed(2)}</div>
+                      </div>
+                    ) : (
+                      <p className="font-medium mt-1">${selectedBooking.totalPrice.toFixed(2)}</p>
+                    )}
                   </div>
                   <div className="col-span-2">
                     <Label className="text-muted-foreground">Status</Label>
@@ -495,17 +591,47 @@ const Index = () => {
                   onChange={(e) => setUpdateDate(e.target.value)}
                   className="rounded-md border-gray-300"
                 />
+                {updateErrors.date && <p className="text-sm text-red-600 mt-1">{updateErrors.date}</p>}
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="time">Time</Label>
-                <Input
-                  id="time"
-                  type="time"
-                  value={updateTime}
-                  onChange={(e) => setUpdateTime(e.target.value)}
-                  className="rounded-md border-gray-300"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    step={900}
+                    value={updateStartTime}
+                    onChange={(e) => setUpdateStartTime(e.target.value)}
+                    className="rounded-md border-gray-300"
+                    list="time-options"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    step={900}
+                    value={updateEndTime}
+                    onChange={(e) => setUpdateEndTime(e.target.value)}
+                    className="rounded-md border-gray-300"
+                    list="time-options"
+                  />
+                </div>
               </div>
+              <datalist id="time-options">
+                {/* generate 15-minute intervals from 00:00 to 23:45 */}
+                {Array.from({ length: 24 * 4 }).map((_, idx) => {
+                  const minutes = idx * 15;
+                  const hh = Math.floor(minutes / 60)
+                    .toString()
+                    .padStart(2, "0");
+                  const mm = (minutes % 60).toString().padStart(2, "0");
+                  const val = `${hh}:${mm}`;
+                  return <option key={val} value={val} />;
+                })}
+              </datalist>
+              {updateErrors.time && <p className="text-sm text-red-600 mt-1">{updateErrors.time}</p>}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
@@ -518,7 +644,7 @@ const Index = () => {
               </div>
             </div>
             <DialogFooter className="flex flex-row gap-3 pt-6 justify-end">
-              <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} className="min-w-[110px]">Cancel</Button>
+              <Button variant="outline" onClick={closeUpdateDialog} className="min-w-[110px]">Cancel</Button>
               <Button onClick={handleUpdateConfirm} className="min-w-[140px]">Confirm Update</Button>
             </DialogFooter>
           </DialogContent>
