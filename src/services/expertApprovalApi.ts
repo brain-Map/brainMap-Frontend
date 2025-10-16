@@ -1,0 +1,259 @@
+import api from '@/utils/api';
+
+// Types for Expert Approval System
+export interface ExpertDocument {
+  id?: number;
+  name: string;
+  type: string;
+  url?: string;
+  verified: boolean;
+  uploadedAt?: string;
+}
+
+export interface ExpertProject {
+  id?: number;
+  title: string;
+  duration: string;
+  role: string;
+  description: string;
+  technologies: string[];
+  outcome: string;
+}
+
+export interface ExpertRequest {
+  id: number;
+  userId: number;
+  name: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  profileImage?: string;
+  domain: string;
+  specialization: string;
+  education: string;
+  experience: string;
+  currentPosition: string;
+  institution: string;
+  submittedDate: string;
+  status: 'pending' | 'under_review' | 'approved' | 'rejected';
+  publications?: number;
+  citations?: number;
+  documents: ExpertDocument[];
+  bio?: string;
+  researchAreas: string[];
+  achievements: string[];
+  projects: ExpertProject[];
+  reviewedBy?: number;
+  reviewedDate?: string;
+  reviewNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpertRequestsResponse {
+  requests: ExpertRequest[];
+  totalCount: number;
+  pendingCount: number;
+  underReviewCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+}
+
+export interface UpdateExpertStatusRequest {
+  expertRequestId: number;
+  status: 'pending' | 'under_review' | 'approved' | 'rejected';
+  reviewNotes?: string;
+}
+
+export interface ExpertApprovalStats {
+  totalRequests: number;
+  pendingRequests: number;
+  underReviewRequests: number;
+  approvedRequests: number;
+  rejectedRequests: number;
+  averageReviewTime: number; // in hours
+  monthlyApprovals: number;
+}
+
+class ExpertApprovalApiService {
+  /**
+   * Get all expert approval requests with filtering and pagination
+   */
+  async getExpertRequests(
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+    search?: string,
+    domain?: string
+  ): Promise<ExpertRequestsResponse> {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(status && { status }),
+        ...(search && { search }),
+        ...(domain && { domain })
+      });
+
+      const response = await api.get(`/api/moderator/expert-requests?${params}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to fetch expert requests:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch expert requests'
+      );
+    }
+  }
+
+  /**
+   * Get a specific expert request by ID
+   */
+  async getExpertRequestById(id: number): Promise<ExpertRequest> {
+    try {
+      const response = await api.get(`/api/moderator/expert-requests/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to fetch expert request:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch expert request'
+      );
+    }
+  }
+
+  /**
+   * Update expert request status (approve, reject, under review)
+   */
+  async updateExpertStatus(request: UpdateExpertStatusRequest): Promise<ExpertRequest> {
+    try {
+      const response = await api.put(`/api/moderator/expert-requests/${request.expertRequestId}/status`, {
+        status: request.status,
+        reviewNotes: request.reviewNotes
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to update expert status:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to update expert status'
+      );
+    }
+  }
+
+  /**
+   * Bulk approve multiple expert requests
+   */
+  async bulkApproveExperts(expertRequestIds: number[]): Promise<void> {
+    try {
+      await api.post('/api/moderator/expert-requests/bulk-approve', {
+        expertRequestIds
+      });
+    } catch (error: any) {
+      console.error('Failed to bulk approve experts:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to bulk approve experts'
+      );
+    }
+  }
+
+  /**
+   * Bulk reject multiple expert requests
+   */
+  async bulkRejectExperts(expertRequestIds: number[], reason?: string): Promise<void> {
+    try {
+      await api.post('/api/moderator/expert-requests/bulk-reject', {
+        expertRequestIds,
+        reason
+      });
+    } catch (error: any) {
+      console.error('Failed to bulk reject experts:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to bulk reject experts'
+      );
+    }
+  }
+
+  /**
+   * Verify/unverify expert documents
+   */
+  async updateDocumentVerification(
+    expertRequestId: number, 
+    documentId: number, 
+    verified: boolean
+  ): Promise<void> {
+    try {
+      await api.put(`/api/moderator/expert-requests/${expertRequestId}/documents/${documentId}`, {
+        verified
+      });
+    } catch (error: any) {
+      console.error('Failed to update document verification:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to update document verification'
+      );
+    }
+  }
+
+  /**
+   * Get expert approval statistics for dashboard
+   */
+  async getExpertApprovalStats(): Promise<ExpertApprovalStats> {
+    try {
+      const response = await api.get('/api/moderator/expert-requests/stats');
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to fetch expert approval stats:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch expert approval stats'
+      );
+    }
+  }
+
+  /**
+   * Download expert document
+   */
+  async downloadDocument(expertRequestId: number, documentId: number): Promise<Blob> {
+    try {
+      const response = await api.get(
+        `/api/moderator/expert-requests/${expertRequestId}/documents/${documentId}/download`, 
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to download document:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to download document'
+      );
+    }
+  }
+
+  /**
+   * Get list of available domains for filtering
+   */
+  async getDomains(): Promise<string[]> {
+    try {
+      const response = await api.get('/api/moderator/expert-requests/domains');
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to fetch domains:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch domains'
+      );
+    }
+  }
+
+  /**
+   * Send notification to expert about status change
+   */
+  async sendStatusNotification(expertRequestId: number, message?: string): Promise<void> {
+    try {
+      await api.post(`/api/moderator/expert-requests/${expertRequestId}/notify`, {
+        message
+      });
+    } catch (error: any) {
+      console.error('Failed to send notification:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to send notification'
+      );
+    }
+  }
+}
+
+export const expertApprovalApiService = new ExpertApprovalApiService();
