@@ -78,35 +78,16 @@ export default function Page() {
     if (!validate()) return;
     setLoading(true);
     try {
-      // 1) register user with supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: accountData.email,
-        password: accountData.password,
-      });
-
-      if (error) {
-        setErrors({ email: error.message });
-        setLoading(false);
-        return;
-      }
-
-      // supabase returns user in data.user (older SDKs) or data.user
-      const userId = (data as any)?.user?.id || (data as any)?.id;
-      if (!userId) {
-        setErrors({ email: 'Could not retrieve user id from Supabase' });
-        setLoading(false);
-        return;
-      }
 
       // 2) POST to backend with user info and supabase userId
       const payload = {
         username: accountData.userName,
         email: accountData.email,
         userRole: accountData.userRole,
-        userId,
+        password: accountData.password
       };
 
-      await api.post('/api/v1/admin/create-moderator', payload);
+      await api.post('/api/v1/admin/createModeroter', payload);
 
       // success - reset form
       setAccountData({ userName: '', email: '', userRole: 'MODERATOR', password: '', confirmPassword: '' });
