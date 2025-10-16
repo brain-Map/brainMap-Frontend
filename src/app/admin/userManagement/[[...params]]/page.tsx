@@ -283,13 +283,16 @@ export default function AllUsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  // currentPage is 1-based for the UI
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);// currentPage is 1-based for the UI
+  const [itemsPerPage] = useState(5); // Use 1-based currentPage for the UI; backend expects 0-based page index
   const params = useParams();
 
-  // Use 1-based currentPage for the UI; backend expects 0-based page index
-  const [itemsPerPage] = useState(5);
+  // Extract param from URL if present
+  const allParams = params?.params as string[] | undefined;
+  const param = allParams?.[0];
 
+  // Fetch users from backend with filters and pagination
+  // useCallback to memoize the function and avoid unnecessary re-fetches
   const fetchFilteredUsers = useCallback(async () => {
     try {
       // map frontend filters to backend params
@@ -341,43 +344,6 @@ export default function AllUsersPage() {
     }
   }, [currentPage, itemsPerPage, searchTerm, roleFilter, statusFilter]);
 
-  
-  useEffect(() => {
-    async function fetchUsersOverview() {
-      try {
-        const usersStatusRes = await api.get('/api/v1/admin/dashboard/usersStatus');
-        // const userListRes = await api.get('/api/v1/admin/dashboard/userList?page=' + currentPage + '&size=' + itemsPerPage)
-        setUsersStatus(usersStatusRes.data);
-        // setUserList(userListRes.data);
-      }
-      catch (error) {
-        console.error("Failed to load users overview:", error);
-        setUsersStatus(null);
-        setUserList(null);
-      }
-    } 
-    fetchUsersOverview();
-    fetchFilteredUsers();
-  }, [fetchFilteredUsers]);
-
-
-  // Filter users based on search and filters
-  // Since server provides paginated & filtered results, use backend content directly
-  const filteredUsers = useMemo(() => {
-    return userList?.content || [];
-  }, [userList]);
-
-  // Pagination
-  const totalPages = Math.max(1, userList?.totalPages || 1);
-  const totalUsers = userList?.totalElements ?? 0;
-  const startIndex = Math.max(0, (currentPage - 1) * itemsPerPage);
-  // backend already paginates; items to render are the content
-  const paginatedUsers = filteredUsers;
-
-  //TO FILTER USER FROM PARAMS
-  const allParams = params?.params as string[] | undefined;
-  const param = allParams?.[0];
-
   // useEffect to filter users based on URL params
   useEffect(() => {
     if (param) {
@@ -426,6 +392,40 @@ export default function AllUsersPage() {
       setCurrentPage(1);
     }
   }, [param]);
+
+  // Initial fetch of users overview and user list
+  useEffect(() => {
+    async function fetchUsersOverview() {
+      try {
+        const usersStatusRes = await api.get('/api/v1/admin/dashboard/usersStatus');
+        setUsersStatus(usersStatusRes.data);
+      }
+      catch (error) {
+        console.error("Failed to load users overview:", error);
+        setUsersStatus(null);
+        setUserList(null);
+      }
+    } 
+    fetchUsersOverview();
+  },[]);
+
+  // Fetch users whenever filters or pagination change
+  useEffect(() => {
+    fetchFilteredUsers();
+  },[fetchFilteredUsers]);
+
+  // Filter users based on search and filters
+  // Since server provides paginated & filtered results, use backend content directly
+  const filteredUsers = useMemo(() => {
+    return userList?.content || [];
+  }, [userList]);
+
+  // Pagination
+  const totalPages = Math.max(1, userList?.totalPages || 1);
+  const totalUsers = userList?.totalElements ?? 0;
+  const startIndex = Math.max(0, (currentPage - 1) * itemsPerPage);
+  // backend already paginates; items to render are the content
+  const paginatedUsers = filteredUsers;
 
   const clearFilters = () => {
     setSearchTerm("");
