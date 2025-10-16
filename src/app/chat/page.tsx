@@ -628,7 +628,7 @@ export default function ChatInterface() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="text-sm font-medium">Your Groups</h5>
-                  <Button size="sm" onClick={() => setShowCreateGroup(true)}>Create</Button>
+                  {/* <Button size="sm" onClick={() => setShowCreateGroup(true)}>Create</Button> */}
                 </div>
                 {groups.length === 0 ? (
                   <div className="text-sm text-gray-500">No groups yet</div>
@@ -768,6 +768,7 @@ export default function ChatInterface() {
       </div>
     </div>
     {/* Create Group Modal */}
+    {/*
     {showCreateGroup && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
         <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -813,6 +814,7 @@ export default function ChatInterface() {
         </div>
       </div>
     )}
+      */}
     </>
   )
 }

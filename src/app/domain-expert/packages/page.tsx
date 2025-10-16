@@ -2,30 +2,34 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import axios from "axios"
 import { useAuth } from '@/contexts/AuthContext'; 
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { format } from 'date-fns';
+import { Eye, Trash, Edit } from 'lucide-react';
 
 interface Package {
   serviceId: string
   title: string
+  subject: string
   description: string
-  price: number
-  duration: string
-  features: string[]
-  subjectStream: string
-  status: string
   createdAt: string
-  lastUpdated: string
+  updatedAt?: string
+  thumbnailUrl?: string
 }
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState<Package[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { user } = useAuth();
+
+  const router = useRouter();
 
   const mentorId = user?.id
 
@@ -40,8 +44,6 @@ export default function PackagesPage() {
     })
       .then(res => {
         setPackages(Array.isArray(res.data) ? res.data : [])
-        console.log(res.data);
-        
         setLoading(false)
       })
       .catch(() => {
@@ -50,10 +52,8 @@ export default function PackagesPage() {
       });
   }, [mentorId]);
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id)
-    setShowDeleteModal(true)
-  }
+  const openDelete = (id: string) => { setDeleteId(id); setDeleteDialogOpen(true); }
+  const closeDelete = () => { setDeleteId(null); setDeleteDialogOpen(false); }
 
   const handleDeleteConfirm = async () => {
     if (!deleteId) return;
@@ -68,88 +68,79 @@ export default function PackagesPage() {
     } catch (err) {
       alert("Failed to delete package.");
     }
-    setShowDeleteModal(false);
-    setDeleteId(null);
-  }
-
-  const handleDeleteCancel = () => {
-    setShowDeleteModal(false)
-    setDeleteId(null)
+    closeDelete();
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">My Service Packages</h1>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">My Service Packages</h1>
+          <p className="text-muted-foreground">Manage and view the service packages you offer</p>
+        </div>
+
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading packages...</div>
+          <div className="text-center py-12 text-muted-foreground">Loading packages...</div>
         ) : error ? (
           <div className="text-center py-12 text-red-500">{error}</div>
+        ) : packages.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">No packages found.</div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {packages.length === 0 ? (
-                  <tr>
-                    <td colSpan={2} className="text-center py-8 text-gray-400">No packages found.</td>
-                  </tr>
-                ) : (
-                  packages.map(pkg => (
-                    <tr key={pkg.serviceId} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <a href={`/services/${pkg.serviceId}`} className="text-blue-600 hover:underline font-medium">
-                          {pkg.title}
-                        </a>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => alert('View not implemented')}
-                            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-                          >View</button>
-                          <button
-                            onClick={() => alert('Edit not implemented')}
-                            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-                          >Edit</button>
-                          <button
-                            onClick={() => handleDeleteClick(pkg.serviceId)}
-                            className="px-3 py-1 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50"
-                          >Delete</button>
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Quick Action</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                {packages.map((pkg) => (
+                  <TableRow key={pkg.serviceId} className="group hover:bg-gray-50">
+                    <TableCell className="font-semibold text-primary cursor-pointer" onClick={() => { window.location.href = `/services/${pkg.serviceId}` }}>
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div>{pkg.title}</div>
                         </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      </div>
+                    </TableCell>
+                    <TableCell>{pkg.subject ?? '-'}</TableCell>
+                    <TableCell>{pkg.createdAt ? format(new Date(pkg.createdAt), 'MMM dd, yyyy') : '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => window.location.href = `/services/${pkg.serviceId}`} title="View">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => router.push(`/services/${pkg.serviceId}/edit-service`)} title="Edit">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openDelete(pkg.serviceId)} title="Delete">
+                          <Trash className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
-            <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
-            <p className="mb-6">Are you sure you want to delete this package?</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleDeleteCancel}
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-              >Cancel</button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Package</DialogTitle>
+            <DialogDescription>Are you sure you want to delete this package? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-3">
+            <Button variant="outline" onClick={closeDelete}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
