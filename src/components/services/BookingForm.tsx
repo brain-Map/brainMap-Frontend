@@ -256,9 +256,10 @@ export function BookingForm({ service }: BookingFormProps) {
       // Show success message and redirect
       alert(`Booking request submitted successfully!\nTotal: Rs.${totalPrice.toLocaleString()}`)
       router.push(`/services/${service.serviceId}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting booking:", error)
-      alert("Failed to submit booking. Please try again.")
+      const message = error?.message || error?.response?.data?.message || 'Failed to submit booking. Please try again.'
+      alert(message)
     } finally {
       setIsSubmitting(false)
     }

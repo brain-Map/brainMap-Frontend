@@ -19,10 +19,8 @@ export default function ChatInterface() {
   const [token, setToken] = useState<string>("")
   const userId = user?.id || ""
   const [chats, setChats] = useState<any[]>([])
-  const [groups, setGroups] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
   const [selectedChat, setSelectedChat] = useState<any>(null)
-  const [selectedGroup, setSelectedGroup] = useState<any>(null)
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,22 +28,16 @@ export default function ChatInterface() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [showSearch, setShowSearch] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<string>("All")
-  const [showCreateGroup, setShowCreateGroup] = useState(false)
-  const [newGroupName, setNewGroupName] = useState("")
-  const [groupMembersToAdd, setGroupMembersToAdd] = useState<any[]>([])
   const stompClient = useRef<Client | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
   const [lastMessageId, setLastMessageId] = useState<number | null>(null)
 
-  // Initialize token safely on client side
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     setToken(accessToken)
   }, [])
 
-  // Smooth scroll to bottom function
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ 
@@ -55,18 +47,15 @@ export default function ChatInterface() {
     }
   }, [])
 
-  // Auto-scroll when new messages are added
   useEffect(() => {
     if (lastMessageId) {
       setTimeout(() => {
         scrollToBottom()
-        // Reset the lastMessageId after animation
         setTimeout(() => setLastMessageId(null), 500)
       }, 100)
     }
   }, [lastMessageId, scrollToBottom])
 
-  // Fetch chats from API
   useEffect(() => {
     if (!userId || !token) return
     setLoading(true)
@@ -96,31 +85,6 @@ export default function ChatInterface() {
       })
   }, [userId, token])
 
-  // Fetch groups for user
-  useEffect(() => {
-    if (!userId || !token) return
-    fetch(`${API_URL}/api/v1/messages/user/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        const mapped = Array.isArray(data) ? data : []
-        // map to group shape
-        const apiGroups = mapped.map((g: any) => ({
-          id: g.id || g.groupId || g.groupId,
-          name: g.name || g.groupName || `Group ${g.id}`,
-          avatar: g.avatar || "/image/avatar/default.jpg",
-          lastMessage: g.lastMessage || "",
-          time: g.time || "",
-        }))
-        setGroups(apiGroups)
-      })
-      .catch(() => {
-        setGroups([])
-      })
-  }, [userId, token])
-
-  // Handle incoming WebSocket messages
   const onPrivateMessageReceive = useCallback(
     (message: any) => {
       console.log("Received WebSocket message:", message.body);
@@ -130,7 +94,6 @@ export default function ChatInterface() {
           setError(payloadData.message || "An error occurred while processing the message.")
           return
         }
-        // Only add message if it's for the selected chat
         if (
           selectedChat &&
           ((payloadData.senderId === selectedChat.id && payloadData.receiverId === userId) ||
@@ -162,7 +125,6 @@ export default function ChatInterface() {
     [selectedChat, userId]
   )
 
-  // WebSocket connect/disconnect
   useEffect(() => {
     if (!userId || !token) return
 
@@ -212,7 +174,6 @@ export default function ChatInterface() {
     }
   }, [userId, token, onPrivateMessageReceive])
 
-  // Fetch messages for selected chat
   useEffect(() => {
     if (!selectedChat || !userId) return
     setLoading(true)
@@ -235,7 +196,6 @@ export default function ChatInterface() {
         }))
         setMessages(apiMessages)
         setLoading(false)
-        // Scroll to bottom after loading messages
         setTimeout(scrollToBottom, 100)
       })
       .catch(() => {
@@ -245,7 +205,6 @@ export default function ChatInterface() {
       })
   }, [selectedChat, userId, token, scrollToBottom])
 
-  // Search users
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!searchQuery.trim()) {
@@ -280,15 +239,12 @@ export default function ChatInterface() {
     return () => clearTimeout(timer)
   }, [searchQuery, token, userId])
 
-  // Handle user selection from search
   const handleSelectUser = (searchedUser: any) => {
-    // Check if chat already exists
     const existingChat = chats.find((chat) => chat.id === searchedUser.id)
     
     if (existingChat) {
       setSelectedChat(existingChat)
     } else {
-      // Create new chat entry
       const newChat = {
         id: searchedUser.id,
         userId: searchedUser.id,
@@ -301,172 +257,24 @@ export default function ChatInterface() {
       setSelectedChat(newChat)
     }
     
-    // Close search
     setShowSearch(false)
     setSearchQuery("")
     setSearchResults([])
   }
 
-  // Group subscription ref so we can unsubscribe when switching
-  const groupSubscriptionRef = useRef<any>(null)
-
-  // Fetch messages for group
-  const fetchGroupMessages = (groupId: string) => {
-    if (!groupId || !token) return
-    setLoading(true)
-    setError(null)
-    fetch(`${API_URL}/api/v1/messages/groups/${groupId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        const list = Array.isArray(data) ? data : data.messages || []
-        const apiMessages = list.map((m: any) => ({
-          id: m.id,
-          senderId: m.senderId,
-          receiverId: m.receiverId,
-          message: m.message,
-          avatar: m.avatar || "/image/avatar/default.jpg",
-          time: m.time || "",
-          isOwn: m.senderId === userId,
-        }))
-        setMessages(apiMessages)
-        setLoading(false)
-        setTimeout(scrollToBottom, 100)
-      })
-      .catch(() => {
-        setError("Failed to load group messages.")
-        setMessages([])
-        setLoading(false)
-      })
-  }
-
-  const subscribeToGroup = (groupId: string) => {
-    if (!stompClient.current?.connected || !groupId) return
-    try {
-      // Unsubscribe previous
-      groupSubscriptionRef.current?.unsubscribe?.()
-      groupSubscriptionRef.current = stompClient.current?.subscribe(
-        `/group/${groupId}/messages`,
-        (msg: any) => {
-          try {
-            const payload = JSON.parse(msg.body)
-            const newMessage = {
-              id: payload.id || Date.now(),
-              senderId: payload.senderId,
-              receiverId: payload.receiverId,
-              message: payload.message,
-              avatar: payload.avatar || "/image/avatar/default.jpg",
-              time: payload.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-              isOwn: payload.senderId === userId,
-            }
-            setMessages((prev) => [...prev, newMessage])
-            setLastMessageId(newMessage.id)
-            setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, lastMessage: payload.message, time: newMessage.time } : g))
-          } catch (e) {
-            console.error('Failed parsing group message', e)
-          }
-        },
-        { Authorization: `Bearer ${token}` }
-      )
-    } catch (e) {
-      console.error('Failed to subscribe to group', e)
-    }
-  }
-
-  const unsubscribeGroup = () => {
-    try {
-      groupSubscriptionRef.current?.unsubscribe?.()
-      groupSubscriptionRef.current = null
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  // Create group API call
-  const createGroup = () => {
-    if (!newGroupName.trim()) return
-    const payload: any = { name: newGroupName.trim(), members: groupMembersToAdd.map(m => m.id) }
-    console.log(JSON.stringify(payload));
-    
-    fetch(`${API_URL}/api/v1/messages/groups`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        // refresh groups
-        return fetch(`${API_URL}/api/v1/messages/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
-      })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((groupsData) => {
-        const apiGroups = (Array.isArray(groupsData) ? groupsData : []).map((g: any) => ({ id: g.id, name: g.name, avatar: g.avatar || '/image/avatar/default.jpg', lastMessage: g.lastMessage || '', time: g.time || '' }))
-        setGroups(apiGroups)
-        setShowCreateGroup(false)
-        setNewGroupName("")
-        setGroupMembersToAdd([])
-      })
-      .catch(() => {
-        setError('Failed to create group')
-      })
-  }
-
-  // Add user to group
-  const addUserToGroup = (groupId: string, userToAddId: string) => {
-    fetch(`${API_URL}/api/v1/messages/${groupId}/add-user/${userToAddId}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) return Promise.reject(res)
-        // Optionally refresh group members or UI
-      })
-      .catch(() => setError('Failed to add user to group'))
-  }
-
-  // Send message via WebSocket (private or group)
   const handleSend = () => {
-    if (!message.trim() || !stompClient.current?.connected) return
-
-    // Sending to a group
-    if (selectedGroup) {
-      const groupMessage = {
-        senderId: userId,
-        groupId: selectedGroup.id,
-        message: message.trim(),
-        status: "GROUP_MESSAGE",
-      }
-      stompClient.current.publish({
-        destination: "/app/group-message",
-        body: JSON.stringify(groupMessage),
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const newMsg = {
-        id: Date.now(),
-        senderId: userId,
-        groupId: selectedGroup.id,
-        message: message.trim(),
-        avatar: "/image/avatar/default.jpg",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isOwn: true,
-      }
-      setMessages((prev) => [...prev, newMsg])
-      setLastMessageId(newMsg.id)
-      // update group's last message
-      setGroups((prev) => prev.map((g) => g.id === selectedGroup.id ? { ...g, lastMessage: message.trim(), time: newMsg.time } : g))
-      setMessage("")
-      return
-    }
-
-    // Private message
-    if (!selectedChat) return
+    if (!message.trim() || !selectedChat || !stompClient.current?.connected) return
+    console.log("Selected to send: ", selectedChat);
+    
     const chatMessage = {
       senderId: userId,
       receiverId: selectedChat.id,
       message: message.trim(),
       status: "MESSAGE",
     }
+
+    console.log("Message to send: ", chatMessage);
+    
     stompClient.current.publish({
       destination: "/app/private-message",
       body: JSON.stringify(chatMessage),
@@ -481,13 +289,15 @@ export default function ChatInterface() {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isOwn: true,
     }
-    setMessages((prev) => [...prev, newMsg])
+    setMessages((prev) => [
+      ...prev,
+      newMsg,
+    ])
     setLastMessageId(newMsg.id)
     setMessage("")
   }
 
   return (
-    <>
     <div className="flex h-[90vh] bg-white mt-[70px]">
       {/* Sidebar */}
       <div className="w-80 border-r border-gray-200 flex flex-col">
@@ -573,24 +383,11 @@ export default function ChatInterface() {
 
         {/* Chat Tabs */}
         <div className="flex border-b border-gray-200">
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'All' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
-            onClick={() => { setActiveTab('All'); setSelectedGroup(null); unsubscribeGroup(); }}
-          >
+          <button className="flex-1 py-3 px-4 text-sm font-medium text-[#3D52A0] border-b-2 border-[#3D52A0]">
             All
           </button>
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Personal' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
-            onClick={() => { setActiveTab('Personal'); setSelectedGroup(null); unsubscribeGroup(); }}
-          >
-            Personal
-          </button>
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Groups' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('Groups')}
-          >
-            Groups
-          </button>
+          <button className="flex-1 py-3 px-4 text-sm font-medium text-gray-500">Personal</button>
+          <button className="flex-1 py-3 px-4 text-sm font-medium text-gray-500">Groups</button>
         </div>
 
         {/* Messages Section */}
@@ -602,13 +399,13 @@ export default function ChatInterface() {
                 <MoreVertical className="h-4 w-4 text-gray-400" />
               </Button>
             </div>
-            {activeTab !== 'Groups' && chats.map((chat) => (
+            {chats.map((chat) => (
               <div
-                key={`chat-${chat.id}`}
+                key={chat.id}
                 className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer ${
-                  selectedChat?.id === chat.id && !selectedGroup ? "bg-[#3D52A0]/5" : ""
+                  selectedChat?.id === chat.id ? "bg-[#3D52A0]/5" : ""
                 }`}
-                onClick={() => { setSelectedChat(chat); setSelectedGroup(null); unsubscribeGroup(); fetch(`${API_URL}/api/v1/messages/chats/${userId}/${chat.id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : Promise.reject(r)).then(d => { setMessages(d.map((m:any) => ({ id:m.id, senderId:m.senderId, receiverId:m.receiverId, message:m.message, avatar:m.avatar||'/image/avatar/default.jpg', time:m.time, isOwn:m.senderId===userId }))); setTimeout(scrollToBottom,100) }).catch(()=>{}) }}
+                onClick={() => setSelectedChat(chat)}
               >
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={chat.avatar || "/image/avatar/default.jpg"} />
@@ -623,38 +420,6 @@ export default function ChatInterface() {
                 </div>
               </div>
             ))}
-
-            {activeTab === 'Groups' && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="text-sm font-medium">Your Groups</h5>
-                  <Button size="sm" onClick={() => setShowCreateGroup(true)}>Create</Button>
-                </div>
-                {groups.length === 0 ? (
-                  <div className="text-sm text-gray-500">No groups yet</div>
-                ) : (
-                  groups.map((g) => (
-                    <div
-                      key={`group-${g.id}`}
-                      className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedGroup?.id === g.id ? 'bg-[#3D52A0]/5' : ''}`}
-                      onClick={() => { setSelectedGroup(g); setSelectedChat(null); fetchGroupMessages(g.id); unsubscribeGroup(); subscribeToGroup(g.id); }}
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={g.avatar || '/image/avatar/default.jpg'} />
-                        <AvatarFallback>{g.name?.[0] || 'G'}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-gray-900 truncate">{g.name}</h5>
-                          <span className="text-xs text-gray-500">{g.time}</span>
-                        </div>
-                        <p className="text-sm text-gray-500 truncate">{g.lastMessage}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -703,9 +468,9 @@ export default function ChatInterface() {
           className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" 
           style={{ scrollBehavior: "smooth" }}
         >
-          {messages.map((msg, idx) => (
+          {messages.map((msg) => (
             <div
-              key={msg.id ?? `message-${idx}`}
+              key={msg.id}
               className={`flex gap-3 ${msg.isOwn ? "justify-end" : ""} ${
                 msg.id === lastMessageId ? "animate-message-appear" : ""
               } transition-all duration-300 ease-out`}
@@ -767,52 +532,5 @@ export default function ChatInterface() {
         </div>
       </div>
     </div>
-    {/* Create Group Modal */}
-    {showCreateGroup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 className="text-lg font-medium mb-3">Create Group</h3>
-          <Input placeholder="Group name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="mb-3" />
-          <div className="mb-2">
-            <Input placeholder="Search users to add" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          </div>
-          <div className="max-h-40 overflow-y-auto mb-4">
-            {searchLoading ? (
-              <div className="text-sm text-gray-500">Searching...</div>
-            ) : searchResults.length > 0 ? (
-              searchResults.map((u) => (
-                <div key={`add-${u.id}`} className="flex items-center justify-between p-2">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8"><AvatarImage src={`${API_URL}/${u.avatar}`} /><AvatarFallback>{u.name?.[0] || u.username?.[0] || 'U'}</AvatarFallback></Avatar>
-                    <div>
-                      <div className="text-sm font-medium">{u.name || u.username}</div>
-                      <div className="text-xs text-gray-500">@{u.username}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <Button size="sm" onClick={() => setGroupMembersToAdd((prev) => prev.find(p=>p.id===u.id) ? prev : [...prev, u])}>Add</Button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">No users found</div>
-            )}
-          </div>
-          <div className="mb-4">
-            <div className="text-sm font-medium mb-2">Members to add:</div>
-            <div className="flex flex-wrap gap-2">
-              {groupMembersToAdd.map((m) => (
-                <Badge key={`member-${m.id}`}>{m.name || m.username}</Badge>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" onClick={() => { setShowCreateGroup(false); setNewGroupName(''); setGroupMembersToAdd([]) }}>Cancel</Button>
-            <Button onClick={createGroup}>Create</Button>
-          </div>
-        </div>
-      </div>
-    )}
-    </>
   )
 }
