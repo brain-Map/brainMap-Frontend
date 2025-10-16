@@ -163,10 +163,13 @@ export default function ExpertApprovalPage() {
   };
 
   const filteredRequests = requests.filter((request) => {
-    const matchesSearch = request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.specialization.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchTermLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || (
+      (request.name?.toLowerCase().includes(searchTermLower)) ||
+      (request.email?.toLowerCase().includes(searchTermLower)) ||
+      (request.domain?.toLowerCase().includes(searchTermLower)) ||
+      (request.specialization?.toLowerCase().includes(searchTermLower))
+    );
     
     const matchesTab = selectedTab === "all" || 
                       (selectedTab === "pending" && request.status === "pending") ||
@@ -325,13 +328,13 @@ export default function ExpertApprovalPage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{request.name}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{request.domain}</p>
-                          <p className="text-sm text-gray-500">{request.specialization}</p>
+                          <h3 className="font-medium text-gray-900">{request.name || 'Unknown'}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{request.domain || 'No domain specified'}</p>
+                          <p className="text-sm text-gray-500">{request.specialization || 'No specialization specified'}</p>
                           <div className="mt-2 flex items-center justify-between">
                             {getStatusBadge(request.status)}
                             <span className="text-xs text-gray-500">
-                              {new Date(request.submittedDate).toLocaleDateString()}
+                              {request.submittedDate ? new Date(request.submittedDate).toLocaleDateString() : 'Unknown date'}
                             </span>
                           </div>
                         </div>
@@ -473,21 +476,25 @@ export default function ExpertApprovalPage() {
                         <div>
                           <label className="text-sm font-medium text-gray-700">Research Areas</label>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {selectedRequest.researchAreas.map((area, index) => (
+                            {selectedRequest.researchAreas?.map((area, index) => (
                               <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                                 {area}
                               </span>
-                            ))}
+                            )) || <span className="text-gray-500">No research areas specified</span>}
                           </div>
                         </div>
 
                         <div>
                           <label className="text-sm font-medium text-gray-700">Achievements</label>
-                          <ul className="list-disc list-inside mt-2 space-y-1">
-                            {selectedRequest.achievements.map((achievement, index) => (
-                              <li key={index} className="text-gray-900">{achievement}</li>
-                            ))}
-                          </ul>
+                          {selectedRequest.achievements?.length > 0 ? (
+                            <ul className="list-disc list-inside mt-2 space-y-1">
+                              {selectedRequest.achievements.map((achievement, index) => (
+                                <li key={index} className="text-gray-900">{achievement}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-500 mt-2">No achievements specified</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -496,20 +503,24 @@ export default function ExpertApprovalPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents</h3>
                       <div className="space-y-2">
-                        {selectedRequest.documents.map((doc, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div className="flex items-center">
-                              <FileText className="w-5 h-5 text-gray-500 mr-3" />
-                              <span className="text-gray-900">{doc.name}</span>
-                              {doc.verified && (
-                                <Check className="w-4 h-4 text-green-600 ml-2" />
-                              )}
+                        {selectedRequest.documents?.length > 0 ? (
+                          selectedRequest.documents.map((doc, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                              <div className="flex items-center">
+                                <FileText className="w-5 h-5 text-gray-500 mr-3" />
+                                <span className="text-gray-900">{doc.name}</span>
+                                {doc.verified && (
+                                  <Check className="w-4 h-4 text-green-600 ml-2" />
+                                )}
+                              </div>
+                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                                <Download className="w-4 h-4" />
+                              </button>
                             </div>
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No documents uploaded</p>
+                        )}
                       </div>
                     </div>
 
@@ -528,11 +539,11 @@ export default function ExpertApprovalPage() {
                               <p className="text-gray-700 mb-3">{project.description}</p>
                               
                               <div className="flex flex-wrap gap-2 mb-2">
-                                {project.technologies.map((tech, techIndex) => (
+                                {project.technologies?.map((tech, techIndex) => (
                                   <span key={techIndex} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                                     {tech}
                                   </span>
-                                ))}
+                                )) || <span className="text-gray-500 text-xs">No technologies specified</span>}
                               </div>
                               
                               <div className="text-sm">
