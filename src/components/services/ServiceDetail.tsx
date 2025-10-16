@@ -51,8 +51,7 @@ interface ServiceDetailProps {
   mentorTotalStudents?: number
   mentorTotalSessions?: number
   mentorYearsExperience?: number
-  hourlyRatePerPerson?: number
-  hourlyRatePerGroup?: number
+  pricings?: { pricingId?: string; pricingType: string; price: number }[]
   whatYouGet?: Array<{ title: string; description: string }>
 }
 
@@ -327,29 +326,20 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
             <Card className="sticky top-8 shadow-lg">
               <CardContent className="p-6">
                 <div className="mb-6">
-                  <div className="border rounded-lg p-4 bg-white flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                      <User className="w-6 h-6 text-blue-600" />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-600">Individual Session</span>
-                        <span className="text-xl font-bold text-gray-900">
-                          {service.hourlyRatePerPerson && service.hourlyRatePerPerson > 0
-                            ? `Rs. ${service.hourlyRatePerPerson.toLocaleString()}`
-                            : 'Not available'}
-                        </span>
+                  <div className="border rounded-lg p-4 bg-white flex flex-col gap-3">
+                    <h3 className="text-sm font-semibold text-gray-700">Pricing</h3>
+                    {service.pricings && service.pricings.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {service.pricings.map((p) => (
+                          <div key={p.pricingId || p.pricingType} className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">{p.pricingType.charAt(0).toUpperCase() + p.pricingType.slice(1).replace('-', ' ')}</span>
+                            <span className="text-lg font-bold text-gray-900">Rs. {p.price.toLocaleString()}</span>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Users className="w-6 h-6 text-green-600" />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-600">Group Session</span>
-                        <span className="text-xl font-bold text-gray-900">
-                          {service.hourlyRatePerGroup && service.hourlyRatePerGroup > 0
-                            ? `Rs. ${service.hourlyRatePerGroup.toLocaleString()}`
-                            : 'Not available'}
-                        </span>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">No pricing set for this service.</p>
+                    )}
                   </div>
                 </div>
 

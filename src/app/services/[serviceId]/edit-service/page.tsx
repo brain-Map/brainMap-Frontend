@@ -20,6 +20,7 @@ interface ServicePackageFormData {
   price: string;
   priceMin: string;
   priceMax: string;
+  pricings?: { pricingId?: string; pricingType: string; price: number | string }[];
   duration: string;
   sessionsIncluded: string;
   maxParticipants: string;
@@ -69,7 +70,8 @@ export default function EditServicePackage() {
     subject: '',
     serviceType: '',
     responseTime: '',
-    whatYouGet: []
+    whatYouGet: [],
+    pricings: []
   });
 
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -110,7 +112,8 @@ export default function EditServicePackage() {
           subject: service.subject || '',
           serviceType: service.serviceType || '',
           responseTime: service.responseTime || '',
-          whatYouGet: service.whatYouGet || []
+          whatYouGet: service.whatYouGet || [],
+          pricings: service.pricings ? service.pricings.map((p:any) => ({ pricingId: p.pricingId, pricingType: p.pricingType, price: p.price })) : []
         });
         setAvailabilities(service.availabilities || []);
         if (service.thumbnailUrl) setPhotoPreview(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${service.thumbnailUrl}`);
@@ -223,13 +226,20 @@ export default function EditServicePackage() {
         startTime: a.startTime,
         endTime: a.endTime
       }));
+      // Validate pricings
+      if (formData.pricings) {
+        for (const p of formData.pricings) {
+          if (!p.pricingType || typeof p.pricingType !== 'string') throw new Error('Invalid pricing type');
+          const priceNum = Number(p.price);
+          if (isNaN(priceNum) || priceNum <= 0) throw new Error('Pricing price must be a positive number');
+        }
+      }
+
       const packagePayload: any = {
         title: formData.title,
         subject: formData.subject,
         description: formData.description,
-        pricingType: formData.priceType,
-        minPrice: Number(formData.priceMin),
-        maxPrice: formData.priceType === 'flexible' ? Number(formData.priceMax) : null,
+        pricings: formData.pricings ? formData.pricings.map((p:any) => ({ pricingType: p.pricingType, price: Number(p.price) })) : [],
         serviceType: formData.serviceType,
         mentorshipType: formData.mentorshipType,
         availabilities: availabilitiesPayload,
@@ -392,9 +402,8 @@ export default function EditServicePackage() {
                     placeholder="e.g., Mentorship, Consulting"
                     required
                   />
-                </div>
-              </div>
-            </div>
+        </div>
+      </div>
 
             {/* Mentorship Type */}
             <div>
@@ -419,77 +428,62 @@ export default function EditServicePackage() {
 
             {/* Pricing Section */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-primary flex items-center">
-                Pricing
-              </h2>
+              <h2 className="text-2xl font-bold text-primary flex items-center">Pricing</h2>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Price Type *</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded-lg border font-medium transition-colors ${
-                      formData.priceType === 'fixed'
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
-                    }`}
-                    onClick={() => updateFormData('priceType', 'fixed')}
-                  >
-                    Fixed Price
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded-lg border font-medium transition-colors ${
-                      formData.priceType === 'flexible'
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'
-                    }`}
-                    onClick={() => updateFormData('priceType', 'flexible')}
-                  >
-                    Flexible Price
-                  </button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pricings</label>
+                <p className="text-sm text-gray-500 mb-3">Manage pricing entries (type + price). Removing all pricings will send an empty array.</p>
+
+                <div className="space-y-3">
+                  {(formData.pricings || []).length === 0 && (
+                    <p className="text-sm text-gray-500">No pricings set for this service.</p>
+                  )}
+
+                  {(formData.pricings || []).map((p, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <select
+                        value={(p as any).pricingType || ''}
+                        onChange={(e) => updateFormData('pricings', (formData.pricings || []).map((row, i) => i === idx ? { ...row, pricingType: e.target.value } : row))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg w-2/5"
+                      >
+                        <option value="">Select type</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="project-based">Project-based</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={(p as any).price as any}
+                        onChange={(e) => updateFormData('pricings', (formData.pricings || []).map((row, i) => i === idx ? { ...row, price: e.target.value } : row))}
+                        placeholder="Price (Rs.)"
+                        className="px-3 py-2 border border-gray-300 rounded-lg w-2/5"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateFormData('pricings', (formData.pricings || []).filter((_, i) => i !== idx))}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg"
+                        title="Remove pricing"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => updateFormData('pricings', [...(formData.pricings || []), { pricingType: '', price: '' }])}
+                      className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-800 transition-colors shadow"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Pricing
+                    </button>
+                  </div>
                 </div>
               </div>
-              {formData.priceType === 'fixed' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={formData.priceMin}
-                    onChange={e => updateFormData('priceMin', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., 100"
-                    required
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Min Price *</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.priceMin}
-                      onChange={e => updateFormData('priceMin', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                      placeholder="e.g., 100"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Price *</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.priceMax}
-                      onChange={e => updateFormData('priceMax', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                      placeholder="e.g., 500"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
+            </div>
             </div>
 
             {/* What You'll Get Section */}

@@ -85,9 +85,15 @@ export function BookingForm({ service }: BookingFormProps) {
   // Session type: 'individual' or 'group'
   const [sessionType, setSessionType] = useState<'individual' | 'group'>('individual')
   // Use correct rate based on session type
+  // derive rates from pricings array if present
+  const findPrice = (type: string) => {
+    const p = (service as any).pricings?.find((x: any) => x.pricingType === type)
+    return p ? Number(p.price) : undefined
+  }
+
   const hourlyRate = sessionType === 'individual'
-    ? service.hourlyRatePerPerson || 1000
-    : service.hourlyRatePerGroup || 2000
+    ? (findPrice('hourly') ?? (service.hourlyRatePerPerson || 1000))
+    : (findPrice('hourly') ?? (service.hourlyRatePerGroup || 2000))
 
   // Multi-step state
   const [currentStep, setCurrentStep] = useState<BookingStep>("datetime")
@@ -766,9 +772,13 @@ export function BookingForm({ service }: BookingFormProps) {
           </Button>
         </div>
         <div className="mt-2 text-sm text-gray-600">
-          {sessionType === 'individual'
-            ? `Hourly Rate: Rs.${(service.hourlyRatePerPerson || 1000).toLocaleString()} per person`
-            : `Hourly Rate: Rs.${(service.hourlyRatePerGroup || 2000).toLocaleString()} per group`}
+          {(() => {
+            const individual = (service as any).pricings?.find((p:any) => p.pricingType === 'hourly')?.price ?? service.hourlyRatePerPerson
+            const group = (service as any).pricings?.find((p:any) => p.pricingType === 'hourly')?.price ?? service.hourlyRatePerGroup
+            return sessionType === 'individual'
+              ? `Hourly Rate: Rs.${(individual || 1000).toLocaleString()} per person`
+              : `Hourly Rate: Rs.${(group || 2000).toLocaleString()} per group`
+          })()}
         </div>
       </div>
 

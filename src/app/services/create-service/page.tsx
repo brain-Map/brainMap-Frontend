@@ -27,8 +27,7 @@ interface ServicePackageFormData {
   title: string;
   description: string;
   thumbnail: File | null;
-  hourlyRatePerPerson: string;
-  hourlyRatePerGroup: string;
+  pricings: { pricingType: string; price: string }[];
   deliverables: string[];
   prerequisites: string;
   subject: string;
@@ -60,8 +59,7 @@ export default function CreateServicePackage() {
     title: '',
     description: '',
     thumbnail: null,
-    hourlyRatePerPerson: '',
-    hourlyRatePerGroup: '',
+    pricings: [],
     deliverables: [],
     prerequisites: '',
     subject: '',
@@ -82,6 +80,24 @@ export default function CreateServicePackage() {
 
   const updateFormData = (field: keyof ServicePackageFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const allowedPricingTypes = ["hourly", "monthly", "project-based", "yearly"];
+
+  const addPricingRow = () => {
+    setFormData(prev => ({ ...prev, pricings: [...prev.pricings, { pricingType: '', price: '' }] }));
+  };
+
+  const updatePricingRow = (index: number, key: 'pricingType' | 'price', value: string) => {
+    setFormData(prev => {
+      const next = [...prev.pricings];
+      next[index] = { ...next[index], [key]: value };
+      return { ...prev, pricings: next };
+    });
+  };
+
+  const removePricingRow = (index: number) => {
+    setFormData(prev => ({ ...prev, pricings: prev.pricings.filter((_, i) => i !== index) }));
   };
 
   const handleThumbnailUpload = (file: File) => {
@@ -187,13 +203,23 @@ export default function CreateServicePackage() {
         endTime: a.endTime
       }));
 
+      // Validate pricings client-side
+      for (const p of formData.pricings) {
+        if (!allowedPricingTypes.includes(p.pricingType)) {
+          throw new Error('Invalid pricing type: ' + p.pricingType);
+        }
+        const priceNum = Number(p.price);
+        if (isNaN(priceNum) || priceNum <= 0) {
+          throw new Error('Pricing price must be a positive number');
+        }
+      }
+
       // Prepare payload as per backend requirements
       const packagePayload = {
         title: formData.title,
         subject: formData.subject,
         description: formData.description,
-        hourlyRatePerPerson: Number(formData.hourlyRatePerPerson),
-        hourlyRatePerGroup: Number(formData.hourlyRatePerGroup),
+        pricings: formData.pricings.map(p => ({ pricingType: p.pricingType, price: Number(p.price) })),
         // thumbnail is handled by FormData
         availabilities: availabilitiesPayload,
         whatYouGet: formData.whatYouGet
@@ -369,30 +395,58 @@ export default function CreateServicePackage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Person (Rs.) *</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRatePerPerson}
-                    onChange={(e) => updateFormData('hourlyRatePerPerson', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., 500"
-                    min="0"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Group (Rs.) *</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRatePerGroup}
-                    onChange={(e) => updateFormData('hourlyRatePerGroup', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., 2000"
-                    min="0"
-                    required
-                  />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pricings</label>
+                <p className="text-sm text-gray-500 mb-3">Add one or more pricing entries (type + price). Avoid duplicate types.</p>
+
+                <div className="space-y-3">
+                  {formData.pricings.length === 0 && (
+                    <p className="text-sm text-gray-500">No pricings added yet. Click "Add Pricing" to add one.</p>
+                  )}
+
+                  {formData.pricings.map((p, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <select
+                        value={p.pricingType}
+                        onChange={(e) => updatePricingRow(idx, 'pricingType', e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg w-2/5"
+                      >
+                        <option value="">Select type</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="project-based">Project-based</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={p.price}
+                        onChange={(e) => updatePricingRow(idx, 'price', e.target.value)}
+                        placeholder="Price (Rs.)"
+                        className="px-3 py-2 border border-gray-300 rounded-lg w-2/5"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePricingRow(idx)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-lg"
+                        title="Remove pricing"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={addPricingRow}
+                      className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-800 transition-colors shadow"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Pricing
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
