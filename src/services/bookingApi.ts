@@ -53,10 +53,19 @@ export const bookingApi = {
    */
   createBooking: async (bookingData: CreateBookingRequest): Promise<BookingResponse> => {
     try {
+      console.debug('Creating booking with payload:', bookingData);
       const response = await api.post(`${BOOKING_API_BASE}/service-booking`, bookingData);
       return response.data;
     } catch (error) {
-      console.error('Error creating booking:', error);
+      const err: any = error;
+      console.error('Error creating booking:', err.message || err);
+      if (err.response) {
+        console.error('Booking create response status:', err.response.status);
+        console.error('Booking create response data:', err.response.data);
+        // If server provided a message, throw that for UI clarity
+        const serverMsg = err.response.data?.message || err.response.data;
+        throw new Error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg));
+      }
       throw error;
     }
   },
@@ -69,8 +78,9 @@ export const bookingApi = {
     statusUpdate: Omit<BookingStatusUpdate, 'bookingId'>
   ): Promise<BookingResponse> => {
     try {
+      // Use template variable to build the correct endpoint path
       const response = await api.patch(
-        `${BOOKING_API_BASE}/service-booking/{bookingId}/review`,
+        `${BOOKING_API_BASE}/service-booking/${bookingId}/review`,
         statusUpdate
       );
       return response.data;
@@ -85,7 +95,7 @@ export const bookingApi = {
    */
   approveBooking: async (bookingId: string, notes?: string): Promise<BookingResponse> => {
     return bookingApi.updateBookingStatus(bookingId, {
-      status: 'approved',
+      status: 'accepted',
       notes,
     });
   },

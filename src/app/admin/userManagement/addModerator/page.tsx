@@ -140,7 +140,6 @@ export default function Page() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information Card */}
           <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -237,12 +236,17 @@ export default function Page() {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-6">
-            <Button type="button" variant="outline" onClick={handleCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              className="hover:cursor-pointer"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-primary hover:bg-secondary text-white"
+              className="bg-primary hover:bg-secondary text-white hover:cursor-pointer"
             >
               Create User
             </Button>
@@ -251,4 +255,4 @@ export default function Page() {
       </div>
     </div>
   );
-
+}

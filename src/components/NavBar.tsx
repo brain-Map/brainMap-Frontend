@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Upload,
   Search,
@@ -26,6 +26,7 @@ import {
   Crown,
   MessageCircle,
 } from 'lucide-react';
+import NotificationBadge from '@/components/NotificationBadge';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -48,6 +49,7 @@ const NavBar: React.FC = () => {
   const [isAuthDropdownOpen, setIsAuthDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
+  const router = useRouter();
 
   console.log('user in NavBar:', user);
   
@@ -449,16 +451,17 @@ const NavBar: React.FC = () => {
 
               {/* Notifications and Chat */}
               {(userRole === 'Project Member' || userRole === 'Mentor') && (
-                <button className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
+                <button onClick={() => router.push('/chat')} className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
                   <MessageCircle className="w-5 h-5 text-gray-600 group-hover:text-primary" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                 </button>
               )}
               
-              <button className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
-                <Bell className="w-5 h-5 text-gray-600 group-hover:text-primary" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
+              {/* Notification badge replaces simple bell */}
+              <div className="p-2.5">
+                {/* NotificationBadge is client-side; it reads token from localStorage in demo, but we also pass user id */}
+                <NotificationBadge compact userId={user?.id} token={typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null} />
+              </div>
 
               {/* Auth Section */}
               {user ? (

@@ -282,20 +282,14 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">
-            Manage your account, preferences, and privacy settings
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full">
 
         <div className="flex gap-8">
           {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="w-64 flex-shrink-0 h-[100vh] sticky top-0">
+            <div className="bg-white border-r border-gray-200 p-4 h-full">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
               <nav className="space-y-2">
                 {settingsTabs.map((tab) => (
                   <SettingsTab
@@ -312,7 +306,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 p-8 max-w-7xl mx-auto">
 
 
 
@@ -1192,34 +1186,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     </select>
                   </div>
 
-                  {/* Accessibility */}
-                  {/* <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Accessibility</h3>
-                    <div className="space-y-4">
-                      {[
-                        { key: 'largeText', label: 'Large Text', description: 'Increase font size for better readability' },
-                        { key: 'highContrast', label: 'High Contrast', description: 'Increase color contrast for better visibility' },
-                        { key: 'reduceMotion', label: 'Reduce Motion', description: 'Minimize animations and transitions' },
-                        { key: 'screenReader', label: 'Screen Reader Support', description: 'Optimize for screen reader compatibility' }
-                      ].map(({ key, label, description }) => (
-                        <div key={key} className="flex items-center justify-between py-2">
-                          <div>
-                            <p className="font-medium text-gray-900">{label}</p>
-                            <p className="text-sm text-gray-500">{description}</p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only"
-                            />
-                            <div className="w-11 h-6 rounded-full bg-gray-200 relative transition-colors">
-                              <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
-                            </div>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div> */}
                 </div>
 
                 {/* Save Button */}

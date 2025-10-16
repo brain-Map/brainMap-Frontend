@@ -56,7 +56,7 @@ export function Sidebar() {
     {
       title: "Appointment Requests",
       icon: BookOpen,
-      url: "/domain-expert/requests",
+      url: "/domain-expert/service-booking",
       count: "3",
     },
     {

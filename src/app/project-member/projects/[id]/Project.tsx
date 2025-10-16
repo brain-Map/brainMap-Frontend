@@ -4,6 +4,7 @@ import { Calendar, List, Video , Plus, Edit, MessageSquare, Clock, CheckCircle, 
 // import projects from '@/data/projects/projects';
 import KanbanBoard from './Kanban';
 import ProjectSettingsPage from './Settings';
+import ProjectChat from './ProjectChat';
 import { projectApi, ProjectResponse } from '@/services/projectApi';
 import api from '@/utils/api';
 import { useParams } from 'next/navigation';
@@ -482,10 +483,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
       
 
         {activeTab === 'Message' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Messages</h2>
-            <p className="text-gray-700">Team chat or message threads.</p>
-          </div>
+          <ProjectChat projectId={params.id} projectTitle={project?.name}/>
         )}
 
 
