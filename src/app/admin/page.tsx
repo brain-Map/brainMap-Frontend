@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import CountChart from "@/components/admin/CountChart";
+import api from "@/utils/api";
 
 // Dashboard Icons
 const BrainIcon = () => (
@@ -35,7 +36,6 @@ const BrainIcon = () => (
 interface DashboardCard {
   title: string;
   value: string;
-  change: string;
   icon: React.ReactNode;
   color: string;
 }
@@ -50,76 +50,80 @@ interface RecentActivity {
 
 export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [DashboardOverview, setDashboardOverview] = useState<any>(null);
+  const [UserTrendData, setUserTrendData] = useState<any>(null);
+  const [ServerHealth, setServerHealth] = useState<boolean | any>(null);
+  useEffect(() => {
 
-  // Mock data - in real app, this would come from API
+    async function fetchOverview() {
+      try {
+        // Health check first
+        const healthRes = await api.get('/api/v1/admin/dashboard/helthcheck');
+        const isServerOnline = healthRes.status >= 200 && healthRes.status < 300;
+        setServerHealth(isServerOnline);
+
+        if (!isServerOnline) {
+          setIsLoading(false);
+          return; // skip fetching other data if server is down
+        }
+
+        // Fetch dashboard data only if server is healthy
+        const overviewRes = await api.get('/api/v1/admin/dashboard/overview');
+        const chartRes = await api.get('/api/v1/admin/dashboard/user_trend')
+
+
+        setDashboardOverview(overviewRes);
+        setUserTrendData(chartRes);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to load dashboard overview:", error);
+        setServerHealth(false);
+        setIsLoading(false);
+      }
+    }
+
+    // Run once immediately
+    fetchOverview();
+
+    // Refresh every 60 seconds
+    const interval = setInterval(() => {fetchOverview();}, 60000); 
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer); // cleanup
+  }, []);
+
   const dashboardCards: DashboardCard[] = [
     {
       title: "Total Brain Maps",
-      value: "2544",
-      change: "+12%",
+      value: DashboardOverview?.data?.userCount || "0",
       icon: <Brain className="h-6 w-6" />,
       color: "bg-blue-500",
     },
     {
       title: "Active Projects",
-      value: "156",
-      change: "+8%",
+      value: DashboardOverview?.data?.activeProjects || "0",
       icon: <FolderOpen className="h-6 w-6" />,
       color: "bg-green-500",
     },
     {
       title: "Pending Expert Verfications",
-      value: "89",
-      change: "+15%",
+      value: DashboardOverview?.data?.pendingDomainExperts || "0",
       icon: <UserCheck className="h-6 w-6" />,
       color: "bg-purple-500",
     },
     {
       title: "Open Issues",
-      value: "12",
-      change: "+3%",
+      value: DashboardOverview?.data?.openIssues || "0",
       icon: <AlertTriangle className="h-6 w-6" />,
       color: "bg-orange-500",
     },
   ];
-
-  const recentActivities: RecentActivity[] = [
-    {
-      id: 1,
-      title: "New Brain Map Created",
-      description: 'You created a new brain map for "Cognitive Neuroscience"',
-      time: "2 hours ago",
-      type: "brain-map",
-    },
-    {
-      id: 2,
-      title: "Analysis Completed",
-      description: 'Pattern analysis completed for "Memory Networks"',
-      time: "4 hours ago",
-      type: "analysis",
-    },
-    {
-      id: 3,
-      title: "Collaboration Invitation",
-      description: 'Dr. Smith invited you to collaborate on "Neural Pathways"',
-      time: "1 day ago",
-      type: "collaboration",
-    },
-    {
-      id: 4,
-      title: "Module Completed",
-      description: 'You completed "Advanced Brain Mapping Techniques"',
-      time: "2 days ago",
-      type: "learning",
-    },
-  ];
-
-  useEffect(() => {
-    // Simulate loading user data
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  }, []);
 
   if (isLoading) {
     return (
@@ -149,6 +153,15 @@ export default function AdminDashboard() {
                 control panel.
               </p>
             </div>
+            <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                <span className="font-medium text-gray-700">Server Status</span>
+                <div className="flex items-center gap-2">
+                  <div className={`h-3 w-3 rounded-full ${ServerHealth ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+                  <span className={`font-medium text-sm ${ServerHealth ? 'text-green-600' : 'text-red-600'}`}>
+                    {ServerHealth ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
           </div>
         </div>
 
@@ -159,7 +172,6 @@ export default function AdminDashboard() {
               key={index}
               title={card.title}
               value={card.value}
-              change={card.change}
               icon={card.icon}
               color={card.color}
             />
@@ -168,38 +180,9 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <CountChart />
+          <CountChart userTrend={UserTrendData?.data}/>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Activity
-          </h2>
-          <div className="space-y-4">
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <BrainIcon />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Admin Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -243,31 +226,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              System Status
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Server Status</span>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                  Online
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Database</span>
-                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                  Healthy
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Security</span>
-                <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                  2 Alerts
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

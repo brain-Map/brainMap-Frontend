@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { TrendingUp, Users, Award, Shield } from "lucide-react";
+import { TrendingUp, Users, Award, Shield, TrendingDown } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -23,7 +23,7 @@ import {
 const registrationData = [
   {
     month: "Jan 2024",
-    students: 45,
+    students: 4,
     experts: 8,
     moderators: 1,
     total: 54,
@@ -44,7 +44,7 @@ const registrationData = [
   },
   {
     month: "Apr 2024",
-    students: 89,
+    students: 9,
     experts: 18,
     moderators: 1,
     total: 108,
@@ -52,7 +52,7 @@ const registrationData = [
   {
     month: "May 2024",
     students: 134,
-    experts: 22,
+    experts: 2,
     moderators: 3,
     total: 159,
   },
@@ -108,23 +108,40 @@ const registrationData = [
 ];
 
 // calculate growth metrics
-const currentMonth = registrationData[registrationData.length - 1];
-const previousMonth = registrationData[registrationData.length - 2];
-const growthRate = (
-  ((currentMonth.total - previousMonth.total) / previousMonth.total) *
-  100
-).toFixed(1);
+const growthRate = 12.2
 
-const totalRegistrations = registrationData.reduce(
-  (sum, month) => sum + month.total,
-  0
-);
-const avgMonthlyGrowth = (totalRegistrations / registrationData.length).toFixed(
-  0
-);
-export class CountChart extends Component {
+export class CountChart extends Component<{ userTrend?: any }, {}> {
+  
+
   render() {
-    return (
+    // Use passed userTrend data if available, otherwise use the sample data
+    const chartData =this.props.userTrend?.map((item: any) => ({
+          month: `${item.month} ${item.year}`,
+          students: item.projectMemberCount || 0,
+          experts: item.mentorCount || 0, 
+          moderators: item.modaratorCount || 0,
+          total: (item.projectMemberCount || 0) + (item.mentorCount || 0) + (item.modaratorCount || 0),
+        }));
+        
+        // Calculate the latest month's growth rate if data is available
+        const latestMonthGrowth = chartData?.length >= 2
+        ?((chartData[chartData.length - 1].total - chartData[chartData.length - 2].total) / 
+        (chartData[chartData.length - 2].total || 1) * 100).toFixed(1): "0.0";
+
+        const monthlyAvg = chartData?.length
+            ? Math.round(
+                chartData.reduce((sum: number, item: any) => sum + (item.total || 0), 0) / chartData.length
+              )
+            : "N/A"
+
+        const totalRegistrations = chartData?.length
+                      ? chartData
+                          .reduce((sum: number, item: any) => sum + (item.total || 0), 0)
+                          .toLocaleString()
+                      : "N/A"
+          
+        
+        return (
       <Card className=" border-0 shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -133,13 +150,13 @@ export class CountChart extends Component {
                 User Registration Trends
               </CardTitle>
               <CardDescription className="text-sm text-gray-500">
-                Monthly user registrations over the past 12 months
+                Monthly user registrations
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-700">
-                +{growthRate}% this month
+              {parseFloat(latestMonthGrowth) < 0 ? <TrendingDown className= "h-4 w-4 text-red-600" /> : <TrendingUp className="h-4 w-4 text-green-600" />}
+              <span className={`text-sm font-semibold ${parseFloat(latestMonthGrowth) < 0 ? 'text-red-600' : 'text-green-700'}`}>
+                {latestMonthGrowth}% this month
               </span>
             </div>
           </div>
@@ -154,7 +171,9 @@ export class CountChart extends Component {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Total Registrations</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">{totalRegistrations.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                    {totalRegistrations}
+                  </p>
                 </div>
               </div>
 
@@ -165,7 +184,9 @@ export class CountChart extends Component {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Avg Monthly</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">{avgMonthlyGrowth}</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                    {monthlyAvg}
+                  </p>
                 </div>
               </div>
 
@@ -176,14 +197,17 @@ export class CountChart extends Component {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Peak Month</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">Dec 2024</p>
+                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                    {chartData?.reduce((max: any, item: any) => 
+                      (max.total || 0) > item.total ? max : item, {}).month || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
             {/* Line Chart */}
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={registrationData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis dataKey="month" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
@@ -244,8 +268,11 @@ export class CountChart extends Component {
                   <h4 className="font-semibold text-gray-900">Growth Trend</h4>
                 </div>
                 <p className="text-sm text-gray-700">
-                  Strong upward trend with {growthRate}% growth this month. Student registrations show consistent growth,
-                  indicating healthy platform adoption.
+                  {parseFloat(latestMonthGrowth) > 0 ? 'Positive' : 'Negative'} trend with {latestMonthGrowth}% growth this month. 
+                  {chartData?.length >= 3 && 
+                   chartData[chartData?.length-1].students > chartData[chartData?.length-3].students ? 
+                   ' Student registrations show growth over the last quarter.' : 
+                   ' Student registration patterns require attention.'}
                 </p>
               </div>
 
@@ -255,8 +282,12 @@ export class CountChart extends Component {
                   <h4 className="font-semibold text-gray-900">Role Balance</h4>
                 </div>
                 <p className="text-sm text-gray-700">
-                  Domain expert registrations are growing steadily, maintaining a healthy student-to-expert ratio for
-                  quality educational support.
+                  {chartData?.reduce((sum: number, item: any) => sum + item.experts, 0) > 0 ? 
+                   'Domain expert presence is maintaining engagement.' : 
+                   'More domain experts are needed to support the platform growth.'} 
+                  {chartData?.reduce((sum: number, item: any) => sum + item.moderators, 0) > 0 ? 
+                   ' Moderator participation helps maintain quality interactions.' : 
+                   ' Consider recruiting more moderators to maintain platform quality.'}
                 </p>
               </div>
             </div>
