@@ -22,19 +22,6 @@ export interface OneUser{
 }
 
 const settingsFunctions = {
-//   updateUserProfileAvatar: async (userId: string, imageUrl: string) => {
-//     if (!userId || !imageUrl) return;
-
-//     try {
-//       await api.put("/api/v1/users/avatar", {
-//         userId: userId,
-//         avatar: imageUrl,
-//       });
-//     } catch (error) {
-//       console.error("Error updating user profile avatar:", error);
-//     }
-//   },
-
 
     getOneUserData: async (userId: string): Promise<OneUser> => {
     try {
@@ -45,14 +32,24 @@ const settingsFunctions = {
       console.error('Error fetching user:', error);
       throw error;
     }
-  },
+  },  
+
+  updateUserProfile: async (userId: string, userData: Partial<OneUser>) => {
+    try {
+      const response = await api.put(`/api/v1/users/${userId}`, userData);
+      console.log('Updated User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
 
 };
 
 const ProfileEditor = () => {
     const { user } = useAuth();
       const userId = user?.id;
-  // Sample user data - replace with your actual data
     const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
   
 
@@ -78,7 +75,7 @@ const ProfileEditor = () => {
   });
 
   const openModal = (
-    field: keyof OneUser | 'fullName' | 'phone' | 'dateOfBirth' | 'gender' | 'email' | 'username' | 'bio',
+    field: keyof OneUser | 'fullName' | 'mobileNumber' | 'dateOfBirth' | 'gender' | 'email' | 'username' | 'bio',
     label: string,
     type: string = 'text'
   ) => {
@@ -86,7 +83,7 @@ const ProfileEditor = () => {
 
     if (field === 'fullName') {
       value = `${oneUserData?.firstName} ${oneUserData?.lastName}`;
-    } else if (field === 'phone') {
+    } else if (field === 'mobileNumber') {
       value = oneUserData?.mobileNumber || '';
     } else if (field === 'dateOfBirth') {
       // Handle date formatting
@@ -119,29 +116,57 @@ const ProfileEditor = () => {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const { field, value } = modalState;
     
+    if (!userId || !oneUserData) return;
+
+    let updateData: Partial<OneUser> = {};
+
     if (field === 'fullName') {
       const [firstName, ...lastNameParts] = value.split(' ');
-      setOneUserData(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          firstName: firstName || '',
-          lastName: lastNameParts.join(' ') || ''
-        };
-      });
-    } else if (field === 'phone') {
-      setOneUserData(prev => {
-        if (!prev) return prev;
-        return { ...prev, mobileNumber: value };
-      });
+      updateData = {
+        firstName: firstName || '',
+        lastName: lastNameParts.join(' ') || ''
+      };
+    } else if (field === 'mobileNumber') {
+      updateData = { mobileNumber: value };
     } else {
-      setOneUserData(prev => {
-        if (!prev) return prev;
-        return { ...prev, [field]: value };
-      });
+      updateData = { [field]: value };
+    }
+
+    try {
+      // Call the API to update user data
+      await settingsFunctions.updateUserProfile(userId, updateData);
+      
+      // Update local state after successful API call
+      if (field === 'fullName') {
+        const [firstName, ...lastNameParts] = value.split(' ');
+        setOneUserData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            firstName: firstName || '',
+            lastName: lastNameParts.join(' ') || ''
+          };
+        });
+      } else if (field === 'mobileNumber') {
+        setOneUserData(prev => {
+          if (!prev) return prev;
+          return { ...prev, mobileNumber: value };
+        });
+      } else {
+        setOneUserData(prev => {
+          if (!prev) return prev;
+          return { ...prev, [field]: value };
+        });
+      }
+      
+      console.log('User profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update user profile:', error);
+      // Optionally show an error notification to the user
+      alert('Failed to update profile. Please try again.');
     }
     
     closeModal();
@@ -229,9 +254,9 @@ const ProfileEditor = () => {
         />
         
         <EditableField
-          label="Phone"
+          label="Mobile Number"
           value={oneUserData?.mobileNumber ?? ''}
-          onClick={() => openModal('phone', 'Phone', 'tel')}
+          onClick={() => openModal('mobileNumber', 'Mobile Number', 'tel')}
           icon={<Phone size={16} />}
         />
       </div>
