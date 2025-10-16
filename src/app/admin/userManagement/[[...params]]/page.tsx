@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import api from "@/utils/api";
+import { set } from "date-fns";
 
 interface User {
   id: string;
@@ -53,205 +54,6 @@ interface User {
   updatedAt: string | null;
   avatar: string | null;
 }
-// Extended user data for demonstration
-const allUsers = [
-  {
-    id: 1,
-    name: "Sachith Dhanshka",
-    email: "john.smith@university.edu",
-    role: "Member",
-    status: "Active",
-    activities: 5,
-    lastActive: "2 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Computer Science",
-    university: "MIT",
-    year: "3rd Year",
-  },
-  {
-    id: 2,
-    name: "Dr. Isuru Naveen",
-    email: "sarah.wilson@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 12,
-    lastActive: "1 day ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jan 2024",
-    subject: "Mathematics",
-    university: "Harvard University",
-    experience: "15+ years",
-  },
-  {
-    id: 3,
-    name: "Dinuka Sahan",
-    email: "mike.j@Member.edu",
-    role: "Member",
-    status: "Inactive",
-    activities: 3,
-    lastActive: "1 week ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Aug 2024",
-    subject: "Physics",
-    university: "Stanford",
-    year: "2nd Year",
-  },
-  {
-    id: 4,
-    name: "Prof. Nadun Madusanka",
-    email: "emily.davis@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 8,
-    lastActive: "30 minutes ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Mar 2024",
-    subject: "Chemistry",
-    university: "CalTech",
-    experience: "20+ years",
-  },
-  {
-    id: 5,
-    name: "Kavinda Dimuthu",
-    email: "alex.chen@university.edu",
-    role: "Member",
-    status: "Active",
-    activities: 6,
-    lastActive: "4 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Oct 2024",
-    subject: "Engineering",
-    university: "UC Berkeley",
-    year: "4th Year",
-  },
-  {
-    id: 6,
-    name: "Eraji Thenuwara",
-    email: "lisa.r@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 4,
-    lastActive: "1 hour ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Biology",
-    university: "Yale University",
-    year: "1st Year",
-  },
-  {
-    id: 7,
-    name: "Dr. Kasun Dananjaya",
-    email: "james.wilson@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 15,
-    lastActive: "3 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Feb 2024",
-    subject: "Computer Science",
-    university: "Princeton",
-    experience: "12+ years",
-  },
-  {
-    id: 8,
-    name: "Virat Kholi",
-    email: "maria.g@Member.edu",
-    role: "Member",
-    status: "Inactive",
-    activities: 2,
-    lastActive: "2 weeks ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jul 2024",
-    subject: "Literature",
-    university: "Columbia",
-    year: "2nd Year",
-  },
-  {
-    id: 9,
-    name: "Admin User",
-    email: "admin@brainmap.com",
-    role: "Moderator",
-    status: "Active",
-    activities: 0,
-    lastActive: "5 minutes ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jan 2024",
-    subject: "Administration",
-    university: "BrainMap Platform",
-    role_type: "System Admin",
-  },
-  {
-    id: 10,
-    name: "David Beckham",
-    email: "david.b@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 7,
-    lastActive: "6 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Aug 2024",
-    subject: "Mathematics",
-    university: "Oxford",
-    year: "3rd Year",
-  },
-  {
-    id: 11,
-    name: "Dr. Lionel Messi",
-    email: "rachel.green@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 11,
-    lastActive: "2 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Apr 2024",
-    subject: "Psychology",
-    university: "Cambridge",
-    experience: "18+ years",
-  },
-  {
-    id: 12,
-    name: "Tom Anderson",
-    email: "tom.a@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 9,
-    lastActive: "1 hour ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Engineering",
-    university: "MIT",
-    year: "4th Year",
-  },
-  {
-    id: 13,
-    name: "Jessica Smith",
-    email: "jessica.s@banned.edu",
-    role: "Member",
-    status: "Banned",
-    activities: 0,
-    lastActive: "1 month ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jun 2024",
-    subject: "Computer Science",
-    university: "Local College",
-    year: "2nd Year",
-  },
-  {
-    id: 14,
-    name: "Robert Johnson",
-    email: "robert.j@banned.com",
-    role: "Domain Expert",
-    status: "Banned",
-    activities: 0,
-    lastActive: "3 weeks ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "May 2024",
-    subject: "Physics",
-    university: "Banned Institution",
-    experience: "5+ years",
-  },
-];
 
 // Define interface for user status response
 interface UserStatus {
@@ -342,57 +144,10 @@ export default function AllUsersPage() {
     } catch (error) {
       console.error('Failed to load users:', error);
     }
-  }, [currentPage, itemsPerPage, searchTerm, roleFilter, statusFilter]);
+  }, [currentPage, itemsPerPage, statusFilter, roleFilter, searchTerm]);
 
   // useEffect to filter users based on URL params
-  useEffect(() => {
-    if (param) {
-      // Map URL params to actual role names
-      const roleMapping: Record<string, string> = {
-        members: "Member",
-        member: "Member",
-        "domain-experts": "Domain Expert",
-        "domain-expert": "Domain Expert",
-        moderators: "Moderator",
-        moderator: "Moderator",
-      };
-
-      // Map URL params to actual status names
-      const statusMapping: Record<string, string> = {
-        "active-users": "Active",
-        "inactive-users": "Inactive",
-        "banned-users": "Banned",
-        "all-users": "all"
-      };
-
-      // Check if the param is for status filtering
-      if (statusMapping[param.toLowerCase()]) {
-        const mappedStatus = statusMapping[param.toLowerCase()];
-        setStatusFilter(mappedStatus);
-        setRoleFilter("all"); // Reset role filter when filtering by status
-        setCurrentPage(1);
-      }
-      // Check if the param is for role filtering
-      else if (roleMapping[param.toLowerCase()]) {
-        const mappedRole = roleMapping[param.toLowerCase()];
-        setRoleFilter(mappedRole);
-        setStatusFilter("all"); // Reset status filter when filtering by role
-        setCurrentPage(1);
-      }
-      // If param doesn't match any mapping, reset filters
-      else {
-        setRoleFilter("all");
-        setStatusFilter("all");
-        setCurrentPage(1);
-      }
-    } else {
-      // If no param, show all users
-      setRoleFilter("all");
-      setStatusFilter("all");
-      setCurrentPage(1);
-    }
-  }, [param]);
-
+  
   // Initial fetch of users overview and user list
   useEffect(() => {
     async function fetchUsersOverview() {
@@ -403,16 +158,10 @@ export default function AllUsersPage() {
       catch (error) {
         console.error("Failed to load users overview:", error);
         setUsersStatus(null);
-        setUserList(null);
       }
     } 
     fetchUsersOverview();
   },[]);
-
-  // Fetch users whenever filters or pagination change
-  useEffect(() => {
-    fetchFilteredUsers();
-  },[fetchFilteredUsers]);
 
   // Filter users based on search and filters
   // Since server provides paginated & filtered results, use backend content directly
@@ -433,6 +182,51 @@ export default function AllUsersPage() {
     setStatusFilter("all");
     setCurrentPage(1);
   };
+
+  useEffect(() => {
+  if (!param) return;
+
+  const roleMapping: Record<string, string> = {
+    "members": "Member",
+    "domain-experts": "Domain Expert",
+    "moderators": "Moderator",
+    "admins": "Admin"
+  };
+
+  const statusMapping: Record<string, string> = {
+    "active-users": "Active",
+    "inactive-users": "Inactive",
+    "banned-users": "Banned",
+  };
+
+  const lower = param.toLowerCase();
+
+  if (roleMapping[lower]) {
+    setRoleFilter(roleMapping[lower]);
+    setStatusFilter("all");
+    setCurrentPage(1); // ← reset page to first for filtered results
+    console.log("rolemaped! ", lower)
+    console.log("Role Filter:", roleFilter, "Status Filter:", statusFilter);
+  } else if (statusMapping[lower]) {
+    setStatusFilter(statusMapping[lower]);
+    setRoleFilter("all");
+    setCurrentPage(1); // ← reset page to first for filtered results
+  } else {
+    setRoleFilter("all");
+    setStatusFilter("all");
+    setCurrentPage(1);
+  }
+}, [param]);
+
+useEffect(() => {
+  console.log("Role Filter changed:", roleFilter, "Status Filter:", statusFilter);
+}, [roleFilter, statusFilter]);
+
+
+  useEffect(() => {
+    // Reset to first page whenever filters change
+    fetchFilteredUsers();
+  }, [fetchFilteredUsers, roleFilter, statusFilter, searchTerm]);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -621,7 +415,7 @@ export default function AllUsersPage() {
                   Users ({userList?.numberOfElements || "N/A"} of {totalUsers || "N/A"})
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {filteredUsers.length === allUsers.length
+                  {(filteredUsers.length <= itemsPerPage)
                     ? "Showing all users"
                     : `Filtered results: ${filteredUsers.length} users found`}
                 </p>
