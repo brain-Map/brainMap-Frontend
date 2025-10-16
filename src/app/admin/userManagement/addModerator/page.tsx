@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from '@/lib/superbaseClient';
+import api from '@/utils/api';
 import {
   Card,
   CardContent,
@@ -28,386 +30,93 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 
-type UserRole = "domain-expert" | "moderator" | "member" | "";
-
-interface FormData {
-  fullName: string;
+interface AccountData {
+  userName: string;
   email: string;
+  userRole: string;
   password: string;
   confirmPassword: string;
-  role: UserRole;
-
-  // Domain Expert fields
-  education: string;
-  qualifications: string;
-  workExperience: string;
-
-  // Moderator fields
-  areasOfResponsibility: string[];
-  assignedCategories: string[];
-  availabilitySchedule: string;
-
-  // Member fields
-  memberEducation: string;
-  interests: string[];
 }
-
-export default function AddNewUser() {
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
-    education: "",
-    qualifications: "",
-    workExperience: "",
-    areasOfResponsibility: [],
-    assignedCategories: [],
-    availabilitySchedule: "",
-    memberEducation: "",
-    interests: [],
+export default function Page() {
+  // Form data state
+  const [accountData, setAccountData] = useState<AccountData>({
+    userName: '',
+    email: '',
+    userRole: 'MODERATOR',
+    password: '',
+    confirmPassword: ''
   });
 
-  const [newResponsibility, setNewResponsibility] = useState("");
-  const [newCategory, setNewCategory] = useState("");
-  const [newInterest, setNewInterest] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>(
-    {}
-  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const handleArrayAdd = (
-    field: "areasOfResponsibility" | "assignedCategories" | "interests",
-    value: string
-  ) => {
-    if (value.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: [...prev[field], value.trim()],
-      }));
-
-      // Clear the input fields
-      if (field === "areasOfResponsibility") setNewResponsibility("");
-      if (field === "assignedCategories") setNewCategory("");
-      if (field === "interests") setNewInterest("");
-    }
-  };
-
-  const handleArrayRemove = (
-    field: "areasOfResponsibility" | "assignedCategories" | "interests",
-    index: number
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
-    }));
-  };
-
-  const validateForm = () => {
-    const newErrors: Partial<Record<keyof FormData, string>> = {};
-
-    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords don't match";
-    if (!formData.role) newErrors.role = "Role selection is required";
-
-    setErrors(newErrors as Partial<Record<keyof FormData, string>>);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log("Form submitted:", formData);
-      // Handle form submission here
-    }
+  const handleInputChange = (field: keyof AccountData, value: string) => {
+    setAccountData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
   const handleCancel = () => {
-    setFormData({
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
-      education: "",
-      qualifications: "",
-      workExperience: "",
-      areasOfResponsibility: [],
-      assignedCategories: [],
-      availabilitySchedule: "",
-      memberEducation: "",
-      interests: [],
-    });
+    // simple reset
+    setAccountData({ userName: '', email: '', userRole: 'MODERATOR', password: '', confirmPassword: '' });
     setErrors({});
   };
 
-  const renderRoleSpecificFields = () => {
-    switch (formData.role) {
-      case "domain-expert":
-        return (
-          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-blue-600" />
-                Domain Expert Information
-              </CardTitle>
-              <CardDescription>
-                Additional information required for domain expert role
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="education">Education Background</Label>
-                <Textarea
-                  id="education"
-                  placeholder="Enter educational qualifications, degrees, and institutions..."
-                  value={formData.education}
-                  onChange={(e) =>
-                    handleInputChange("education", e.target.value)
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!accountData.userName.trim()) e.userName = 'User name is required';
+    if (!accountData.email.trim()) e.email = 'Email is required';
+    // simple email regex
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountData.email)) e.email = 'Invalid email address';
+    if (!accountData.password) e.password = 'Password is required';
+    if (accountData.password !== accountData.confirmPassword) e.confirmPassword = 'Passwords do not match';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
-              <div className="space-y-2">
-                <Label htmlFor="qualifications">
-                  Professional Qualifications
-                </Label>
-                <Textarea
-                  id="qualifications"
-                  placeholder="Enter certifications, licenses, and professional qualifications..."
-                  value={formData.qualifications}
-                  onChange={(e) =>
-                    handleInputChange("qualifications", e.target.value)
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      // 1) register user with supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: accountData.email,
+        password: accountData.password,
+      });
 
-              <div className="space-y-2">
-                <Label htmlFor="workExperience">Work Experience</Label>
-                <Textarea
-                  id="workExperience"
-                  placeholder="Enter relevant work experience, positions held, and achievements..."
-                  value={formData.workExperience}
-                  onChange={(e) =>
-                    handleInputChange("workExperience", e.target.value)
-                  }
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        );
+      if (error) {
+        setErrors({ email: error.message });
+        setLoading(false);
+        return;
+      }
 
-      case "moderator":
-        return (
-          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-600" />
-                Moderator Information
-              </CardTitle>
-              <CardDescription>
-                Configuration for moderator responsibilities and schedule
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="responsibilities">
-                  Areas of Responsibility
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add area of responsibility..."
-                    value={newResponsibility}
-                    onChange={(e) => setNewResponsibility(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" &&
-                      handleArrayAdd("areasOfResponsibility", newResponsibility)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      handleArrayAdd("areasOfResponsibility", newResponsibility)
-                    }
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.areasOfResponsibility.map(
-                    (responsibility, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="cursor-pointer"
-                      >
-                        {responsibility}
-                        <button
-                          onClick={() =>
-                            handleArrayRemove("areasOfResponsibility", index)
-                          }
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    )
-                  )}
-                </div>
-              </div>
+      // supabase returns user in data.user (older SDKs) or data.user
+      const userId = (data as any)?.user?.id || (data as any)?.id;
+      if (!userId) {
+        setErrors({ email: 'Could not retrieve user id from Supabase' });
+        setLoading(false);
+        return;
+      }
 
-              <div className="space-y-2">
-                <Label htmlFor="categories">Assigned Categories</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add assigned category..."
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" &&
-                      handleArrayAdd("assignedCategories", newCategory)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      handleArrayAdd("assignedCategories", newCategory)
-                    }
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.assignedCategories.map((category, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="cursor-pointer"
-                    >
-                      {category}
-                      <button
-                        onClick={() =>
-                          handleArrayRemove("assignedCategories", index)
-                        }
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+      // 2) POST to backend with user info and supabase userId
+      const payload = {
+        username: accountData.userName,
+        email: accountData.email,
+        userRole: accountData.userRole,
+        userId,
+      };
 
-              <div className="space-y-2">
-                <Label htmlFor="availability">Availability Schedule</Label>
-                <Textarea
-                  id="availability"
-                  placeholder="Enter preferred working hours, time zones, and availability schedule..."
-                  value={formData.availabilitySchedule}
-                  onChange={(e) =>
-                    handleInputChange("availabilitySchedule", e.target.value)
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        );
+      await api.post('/api/v1/admin/create-moderator', payload);
 
-      case "member":
-        return (
-          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
-                Member Information
-              </CardTitle>
-              <CardDescription>
-                Additional information for platform member
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="memberEducation">Education Background</Label>
-                <Textarea
-                  id="memberEducation"
-                  placeholder="Enter educational background and current study level..."
-                  value={formData.memberEducation}
-                  onChange={(e) =>
-                    handleInputChange("memberEducation", e.target.value)
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="interests">Areas of Interest</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add area of interest..."
-                    value={newInterest}
-                    onChange={(e) => setNewInterest(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" &&
-                      handleArrayAdd("interests", newInterest)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleArrayAdd("interests", newInterest)}
-                    variant="outline"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.interests.map((interest, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="cursor-pointer"
-                    >
-                      {interest}
-                      <button
-                        onClick={() => handleArrayRemove("interests", index)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      default:
-        return null;
+      // success - reset form
+      setAccountData({ userName: '', email: '', userRole: 'MODERATOR', password: '', confirmPassword: '' });
+      setErrors({});
+      // TODO: show toast or redirect
+    } catch (err: any) {
+      console.error(err);
+      setErrors({ general: err?.message || 'An error occurred' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -445,22 +154,20 @@ export default function AddNewUser() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Label htmlFor="userName">User Name *</Label>
                   <Input
-                    id="fullName"
-                    placeholder="Enter full name"
-                    value={formData.fullName}
-                    onChange={(e) =>
-                      handleInputChange("fullName", e.target.value)
-                    }
+                    id="userName"
+                    placeholder="Enter user name"
+                    value={accountData.userName}
+                    onChange={(e) => handleInputChange("userName", e.target.value)}
                     className={
-                      errors.fullName
+                      errors.userName
                         ? "border-red-500"
                         : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     }
                   />
-                  {errors.fullName && (
-                    <p className="text-red-500 text-sm">{errors.fullName}</p>
+                  {errors.userName && (
+                    <p className="text-red-500 text-sm">{errors.userName}</p>
                   )}
                 </div>
 
@@ -470,7 +177,7 @@ export default function AddNewUser() {
                     id="email"
                     type="email"
                     placeholder="Enter email address"
-                    value={formData.email}
+                    value={accountData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className={
                       errors.email
@@ -491,10 +198,8 @@ export default function AddNewUser() {
                     id="password"
                     type="password"
                     placeholder="Enter password"
-                    value={formData.password}
-                    onChange={(e) =>
-                      handleInputChange("password", e.target.value)
-                    }
+                    value={accountData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
                     className={
                       errors.password
                         ? "border-red-500"
@@ -512,10 +217,8 @@ export default function AddNewUser() {
                     id="confirmPassword"
                     type="password"
                     placeholder="Confirm password"
-                    value={formData.confirmPassword}
-                    onChange={(e) =>
-                      handleInputChange("confirmPassword", e.target.value)
-                    }
+                    value={accountData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     className={
                       errors.confirmPassword
                         ? "border-red-500"
@@ -527,125 +230,6 @@ export default function AddNewUser() {
                       {errors.confirmPassword}
                     </p>
                   )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* modarator informaions */}
-          <Card className="mt-6 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-600" />
-                Moderator Responsibilities
-              </CardTitle>
-              <CardDescription>
-                Configuration for moderator responsibilities and schedule
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-300 rounded-lg bg-gray-50">
-                  {[
-                    { value: "REVIEW_INQUIRIES", label: "Review Inquiries" },
-                    { value: "HANDLE_REPORTS", label: "Handle Reports" },
-                    { value: "VERIFY_EXPERTS", label: "Verify Experts" },
-                    { value: "MONITOR_POSTS", label: "Monitor Posts" },
-                    { value: "MANAGE_TAGS", label: "Manage Tags" },
-                    { value: "BAN_USERS", label: "Ban Users" },
-                    {
-                      value: "SEND_NOTIFICATIONS",
-                      label: "Send Notifications",
-                    },
-                    {
-                      value: "VIEW_USER_ACTIVITY",
-                      label: "View User Activity",
-                    },
-                    { value: "LOCK_COMMENTS", label: "Lock Comments" },
-                    { value: "ESCALATE_ISSUES", label: "Escalate Issues" },
-                  ].map((responsibility) => (
-                    <div
-                      key={responsibility.value}
-                      className="flex items-center space-x-2"
-                    >
-                      <input
-                        type="checkbox"
-                        id={responsibility.value}
-                        checked={formData.areasOfResponsibility.includes(
-                          responsibility.value
-                        )}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              areasOfResponsibility: [
-                                ...prev.areasOfResponsibility,
-                                responsibility.value,
-                              ],
-                            }));
-                          } else {
-                            setFormData((prev) => ({
-                              ...prev,
-                              areasOfResponsibility:
-                                prev.areasOfResponsibility.filter(
-                                  (item) => item !== responsibility.value
-                                ),
-                            }));
-                          }
-                        }}
-                        className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
-                      />
-                      <label
-                        htmlFor={responsibility.value}
-                        className="text-sm font-medium text-gray-900 cursor-pointer"
-                      >
-                        {responsibility.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.areasOfResponsibility.map(
-                    (responsibility, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="cursor-pointer"
-                      >
-                        {responsibility}
-                        <button
-                          onClick={() =>
-                            handleArrayRemove("areasOfResponsibility", index)
-                          }
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.assignedCategories.map((category, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="cursor-pointer"
-                    >
-                      {category}
-                      <button
-                        onClick={() =>
-                          handleArrayRemove("assignedCategories", index)
-                        }
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
                 </div>
               </div>
             </CardContent>
@@ -667,4 +251,4 @@ export default function AddNewUser() {
       </div>
     </div>
   );
-}
+
