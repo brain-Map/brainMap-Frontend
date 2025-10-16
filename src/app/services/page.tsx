@@ -62,10 +62,9 @@ console.log(sessionStorage.getItem("accessToken"));
       service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesSubject = !selectedSubject || service.subject === selectedSubject
-    const matchesType = !selectedServiceType || service.serviceType === selectedServiceType
+    const matchesCategory = !selectedSubject || service.category === selectedSubject
 
-    return matchesSearch && matchesSubject && matchesType
+    return matchesSearch && matchesSearch
   })
 
   return (

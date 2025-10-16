@@ -30,6 +30,8 @@ interface ServicePackageFormData {
   serviceType: string;
   responseTime: string;
   whatYouGet: WhatYouGetItem[];
+  category?: string;
+  availabilityModes?: string[];
 }
 
 interface Availability {
@@ -72,6 +74,8 @@ export default function EditServicePackage() {
     responseTime: '',
     whatYouGet: [],
     pricings: []
+    ,category: '',
+    availabilityModes: []
   });
 
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -114,6 +118,8 @@ export default function EditServicePackage() {
           responseTime: service.responseTime || '',
           whatYouGet: service.whatYouGet || [],
           pricings: service.pricings ? service.pricings.map((p:any) => ({ pricingId: p.pricingId, pricingType: p.pricingType, price: p.price })) : []
+          ,category: service.category || '',
+          availabilityModes: service.availabilityModes || []
         });
         setAvailabilities(service.availabilities || []);
         if (service.thumbnailUrl) setPhotoPreview(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${service.thumbnailUrl}`);
@@ -237,7 +243,8 @@ export default function EditServicePackage() {
 
       const packagePayload: any = {
         title: formData.title,
-        subject: formData.subject,
+        category: formData.category,
+        availabilityModes: formData.availabilityModes || [],
         description: formData.description,
         pricings: formData.pricings ? formData.pricings.map((p:any) => ({ pricingType: p.pricingType, price: Number(p.price) })) : [],
         serviceType: formData.serviceType,
@@ -404,6 +411,38 @@ export default function EditServicePackage() {
                   />
         </div>
       </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={formData.category || ''}
+                  onChange={(e) => updateFormData('category' as any, e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  placeholder="e.g., Career, Research, Technical"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Availability Modes</label>
+                <div className="flex gap-3">
+                  {['HOURLY','MONTHLY','PROJECT_BASED'].map(opt => (
+                    <label key={opt} className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(formData.availabilityModes || []).includes(opt)}
+                        onChange={(e) => {
+                          const modes = new Set(formData.availabilityModes || []);
+                          if (e.target.checked) modes.add(opt);
+                          else modes.delete(opt);
+                          updateFormData('availabilityModes' as any, Array.from(modes));
+                        }}
+                      />
+                      <span className="text-sm text-gray-700">{opt.replace('_',' ').toLowerCase()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
             {/* Mentorship Type */}
             <div>

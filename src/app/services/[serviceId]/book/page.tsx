@@ -11,6 +11,7 @@ import { BookingForm } from "@/components/services/BookingForm"
 interface ServiceDetailData extends ServiceListing {
   mentorName?: string
   hourlyRate?: number
+  mentorAvatar?: string
 }
 
 export default function BookSessionPage() {
@@ -29,14 +30,26 @@ export default function BookSessionPage() {
         
         // Fetch service data from backend
         const serviceData = await serviceApi.getServiceById(serviceId)
+        console.log("Service data: ", serviceData);
         
-        // Add mentor info and hourly rate
+        
+        // Map backend response to the service shape expected by BookingForm
+        const backendAvatar = serviceData.mentorAvatar
+        const mentorAvatar = backendAvatar
+          ? `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL || `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT || 3000}`}/${backendAvatar}`
+          : '/image/avatar/default.jpg'
+
         const serviceWithMentorInfo: ServiceDetailData = {
           ...serviceData,
-          mentorName: `${serviceData.mentorFirstName} ${serviceData.mentorLastName}`,
-          mentorAvatar: `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
-          // Use fee as hourly rate, or default to 1000
-          hourlyRate: serviceData.fee || 1000,
+          mentorName: `${serviceData.mentorFirstName || ''} ${serviceData.mentorLastName || ''}`.trim(),
+          mentorAvatar,
+          // Use fee as fallback hourlyRate if pricing not provided
+          hourlyRate: (serviceData as any).fee || undefined,
+          // pass through availabilityModes and pricings as returned by backend
+          // (BookingForm expects properties like `availabilityModes`, `pricings`, `availabilities`)
+          availabilityModes: serviceData.availabilityModes || [],
+          pricings: serviceData.pricings || [],
+          availabilities: serviceData.availabilities || [],
         }
         
         setService(serviceWithMentorInfo)

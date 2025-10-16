@@ -38,8 +38,8 @@ interface ServiceDetailProps {
   createdAt: string
   updatedAt: string
   mentorId: string
-  availabilities: Availability[]
   thumbnailUrl: string
+  availabilityModes?: string[]
   duration: number | null
   mentorName?: string
   mentorAvatar?: string
@@ -64,6 +64,19 @@ const serviceTypeLabels = {
 
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+const availabilityModeLabels: Record<string, string> = {
+  HOURLY: "Hourly",
+  MONTHLY: "Monthly",
+  PROJECT_BASED: "Project Based",
+}
+
+// Metadata for nicer chips: icon, label, colors and short description
+const availabilityModeMeta: Record<string, { label: string; colorClass: string; icon?: any; description?: string }> = {
+  HOURLY: { label: "Hourly", colorClass: "bg-green-50 text-green-700", icon: Clock, description: "Book this mentor by the hour" },
+  MONTHLY: { label: "Monthly", colorClass: "bg-blue-50 text-blue-700", icon: Calendar, description: "Monthly recurring mentorship" },
+  PROJECT_BASED: { label: "Project Based", colorClass: "bg-purple-50 text-purple-700", icon: Award, description: "Project-based work with milestone pricing" },
+}
+
 export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const router = useRouter()
   const [isFavorite, setIsFavorite] = useState(false)
@@ -72,14 +85,6 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const mentorLevel = service.mentorLevel || 2
   const thumbnailUrl = "/image/default_card.jpg"
   
-  // Group availabilities by day
-  const availabilityByDay = service.availabilities.reduce((acc, avail) => {
-    if (!acc[avail.dayOfWeek]) {
-      acc[avail.dayOfWeek] = []
-    }
-    acc[avail.dayOfWeek].push(avail)
-    return acc
-  }, {} as Record<number, Availability[]>)
 
   const handleShare = () => {
     if (navigator.share) {
@@ -196,38 +201,24 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                     <Calendar className="w-5 h-5 text-blue-600" />
                     Availability Schedule
                   </h2>
-                  {service.availabilities.length > 0 ? (
-                    <div className="space-y-3">
-                      {Object.entries(availabilityByDay)
-                        .sort(([a], [b]) => Number(a) - Number(b))
-                        .map(([day, slots]) => (
+                  {/* Availability Modes chips */}
+                  {service.availabilityModes && service.availabilityModes.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {service.availabilityModes.map((m) => {
+                        const meta = availabilityModeMeta[m] || { label: availabilityModeLabels[m] || m, colorClass: 'bg-gray-100 text-gray-700' }
+                        const Icon = meta.icon
+                        return (
                           <div
-                            key={day}
-                            className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                            key={m}
+                            title={meta.description}
+                            className={`flex items-center gap-2 px-3 py-1 rounded-full ${meta.colorClass}`}
                           >
-                            <div className="min-w-[100px]">
-                              <p className="font-semibold text-gray-900">
-                                {dayNames[Number(day)]}
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {slots.map((slot, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  className="bg-white text-gray-700 border-gray-300"
-                                >
-                                  {slot.startTime} - {slot.endTime}
-                                </Badge>
-                              ))}
-                            </div>
+                            {Icon ? <Icon className="w-4 h-4" /> : null}
+                            <span className="text-xs font-medium">{meta.label}</span>
                           </div>
-                        ))}
+                        )
+                      })}
                     </div>
-                  ) : (
-                    <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
-                      No availability set. Please contact the mentor for scheduling.
-                    </p>
                   )}
                 </div>
               </CardContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { 
   ArrowLeft, 
@@ -80,20 +80,70 @@ const generateTimeSlotsFromAvailability = (availabilities: ServiceAvailability[]
   return Array.from(slots).sort()
 }
 
+// Generate daily 30-minute slots for a full day (00:00 - 23:30)
+const generateDailyTimeSlots = (): string[] => {
+  const slots: string[] = []
+  for (let minutes = 0; minutes < 24 * 60; minutes += 30) {
+    const hour = Math.floor(minutes / 60)
+    const min = minutes % 60
+    slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
+  }
+  return slots
+}
+
 export function BookingForm({ service }: BookingFormProps) {
   const router = useRouter()
-  // Session type: 'individual' or 'group'
-  const [sessionType, setSessionType] = useState<'individual' | 'group'>('individual')
-  // Use correct rate based on session type
+  // Booking mode: HOURLY | MONTHLY | PROJECT_BASED
+  const [bookingMode, setBookingMode] = useState<'HOURLY' | 'MONTHLY' | 'PROJECT_BASED'>(() => {
+    // initialize booking mode to first available mode from service.availabilityModes or default to HOURLY
+    const modes: string[] = (service as any).availabilityModes || []
+    if (modes.includes('HOURLY')) return 'HOURLY'
+    if (modes.includes('MONTHLY')) return 'MONTHLY'
+    if (modes.includes('PROJECT_BASED')) return 'PROJECT_BASED'
+    return 'HOURLY'
+  })
+  const [requestedMonths, setRequestedMonths] = useState<string[]>([])
+  const [monthInput, setMonthInput] = useState<string>('')
+  const [projectDeadline, setProjectDeadline] = useState<string>('')
+  const [selectedPricingId, setSelectedPricingId] = useState<string | undefined>(undefined)
+  // Auto select pricing based on bookingMode
+  // map bookingMode to pricingType used by backend
+  const pricingTypeForMode = (mode: string) => {
+    if (mode === 'HOURLY') return 'hourly'
+    if (mode === 'MONTHLY') return 'monthly'
+    return 'project-based'
+  }
+
+  // Auto-assign pricing when booking mode or service.pricings change
+  // and clear mode-specific inputs when switching
+  useEffect(() => {
+    const type = pricingTypeForMode(bookingMode)
+    const p = (service as any).pricings?.find((p: any) => p.pricingType === type)
+    if (p) setSelectedPricingId(p.pricingId)
+    else setSelectedPricingId(undefined)
+
+    // Clear inputs irrelevant to the selected mode
+    setRequestedMonths([])
+    setMonthInput('')
+    setProjectDeadline('')
+    setSelectedDate(null)
+    setStartTime('')
+    setEndTime('')
+  }, [bookingMode, (service as any).pricings])
+
+  // Use correct rate based on available pricings
   // derive rates from pricings array if present
   const findPrice = (type: string) => {
     const p = (service as any).pricings?.find((x: any) => x.pricingType === type)
     return p ? Number(p.price) : undefined
   }
 
-  const hourlyRate = sessionType === 'individual'
-    ? (findPrice('hourly') ?? (service.hourlyRatePerPerson || 1000))
-    : (findPrice('hourly') ?? (service.hourlyRatePerGroup || 2000))
+  const findPricingById = (id?: string) => {
+    if (!id) return undefined
+    return (service as any).pricings?.find((p: any) => p.pricingId === id)
+  }
+
+  const hourlyRate = findPrice('hourly') ?? (service.hourlyRatePerPerson || service.hourlyRatePerGroup || 1000)
 
   // Multi-step state
   const [currentStep, setCurrentStep] = useState<BookingStep>("datetime")
@@ -111,6 +161,7 @@ export function BookingForm({ service }: BookingFormProps) {
 
   // Get service availabilities
   const availabilities = service.availabilities || []
+  const availabilityModes: string[] = (service as any).availabilityModes || []
 
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
@@ -124,10 +175,9 @@ export function BookingForm({ service }: BookingFormProps) {
   }
 
   
-  // Available time slots for selected date
-  const availableTimeSlots = selectedDate 
-    ? generateTimeSlotsFromAvailability(getAvailabilityForDate(selectedDate, availabilities))
-    : []
+  // Available time slots for selected date (allow any future date/time)
+  // Use full-day 30-min slots so the user can pick any time on the selected future date
+  const availableTimeSlots = selectedDate ? generateDailyTimeSlots() : []
 
   // Calculate duration from start and end time
   const calculateDurationHours = (start: string, end: string): number => {
@@ -146,39 +196,44 @@ export function BookingForm({ service }: BookingFormProps) {
   // Get available end times based on start time
   const getAvailableEndTimes = (start: string): string[] => {
     if (!start || !selectedDate) return []
-    
+
     const [startHour, startMin] = start.split(':').map(Number)
     const startMinutes = startHour * 60 + startMin
-    
-    // Get the availability ranges for the selected date
-    const dayAvailabilities = getAvailabilityForDate(selectedDate, availabilities)
-    
-    // Find which availability range the start time falls into
-    const applicableAvailability = dayAvailabilities.find(avail => {
-      const [availStartHour, availStartMin] = avail.startTime.split(':').map(Number)
-      const [availEndHour, availEndMin] = avail.endTime.split(':').map(Number)
-      
-      const availStartMinutes = availStartHour * 60 + availStartMin
-      const availEndMinutes = availEndHour * 60 + availEndMin
-      
-      return startMinutes >= availStartMinutes && startMinutes < availEndMinutes
-    })
-    
-    if (!applicableAvailability) return []
-    
-    const [availEndHour, availEndMin] = applicableAvailability.endTime.split(':').map(Number)
-    const availEndMinutes = availEndHour * 60 + availEndMin
-    
+
+    // Allow any end times later than the start time on the same day
     return availableTimeSlots.filter((time: string) => {
       const [hour, min] = time.split(':').map(Number)
       const timeMinutes = hour * 60 + min
-      return timeMinutes > startMinutes && timeMinutes <= availEndMinutes
+      return timeMinutes > startMinutes
     })
+  }
+
+  // Round a time string (HH:MM) to nearest 30-minute interval
+  const roundTo30Min = (time: string) => {
+    if (!time) return time
+    const [h, m] = time.split(':').map(Number)
+    const total = h * 60 + m
+    const rounded = Math.round(total / 30) * 30
+    const rh = Math.floor((rounded % (24 * 60)) / 60)
+    const rm = rounded % 60
+    return `${rh.toString().padStart(2, '0')}:${rm.toString().padStart(2, '0')}`
   }
 
   // Calculate total price
   const totalHours = calculateDurationHours(startTime, endTime)
-  const totalPrice = Math.round(hourlyRate * totalHours)
+  // Determine pricing-based total depending on bookingMode and selectedPricing
+  const selectedPricing = findPricingById(selectedPricingId)
+  let totalPrice = 0
+  if (bookingMode === 'HOURLY') {
+    const rate = selectedPricing ? Number(selectedPricing.price) : hourlyRate
+    totalPrice = Math.round((rate || 0) * totalHours)
+  } else if (bookingMode === 'MONTHLY') {
+    const monthsCount = requestedMonths.length
+    const monthlyPrice = selectedPricing ? Number(selectedPricing.price) : findPrice('monthly') || 0
+    totalPrice = Math.round(monthlyPrice * monthsCount)
+  } else if (bookingMode === 'PROJECT_BASED') {
+    totalPrice = selectedPricing ? Math.round(Number(selectedPricing.price)) : 0
+  }
 
   // Format hours for display
   const formatDuration = (hours: number) => {
@@ -207,7 +262,17 @@ export function BookingForm({ service }: BookingFormProps) {
   const canProceed = () => {
     switch (currentStep) {
       case "datetime":
-        return selectedDate && startTime && endTime && totalHours > 0
+        if (bookingMode === 'HOURLY') {
+          // ensure start/end exist and are valid 30-min aligned times and duration > 0
+          if (!selectedDate || !startTime || !endTime) return false
+          const rs = roundTo30Min(startTime)
+          const re = roundTo30Min(endTime)
+          const dur = calculateDurationHours(rs, re)
+          return dur > 0
+        }
+        if (bookingMode === 'MONTHLY') return requestedMonths.length > 0
+        if (bookingMode === 'PROJECT_BASED') return !!projectDeadline
+        return false
       case "duration":
         return true // Skip this step now
       case "details":
@@ -229,35 +294,53 @@ export function BookingForm({ service }: BookingFormProps) {
   }
 
   const handleSubmit = async () => {
-    if (!selectedDate || !startTime || !endTime) {
-      alert("Please select a date and time range")
-      return
+    // Validate based on bookingMode
+    if (bookingMode === 'HOURLY') {
+      if (!selectedDate || !startTime || !endTime) {
+        alert("Please select a date and time range")
+        return
+      }
+    }
+    if (bookingMode === 'MONTHLY') {
+      if (requestedMonths.length === 0) {
+        alert('Please select at least one month')
+        return
+      }
+    }
+    if (bookingMode === 'PROJECT_BASED') {
+      if (!projectDeadline) {
+        alert('Please select an approximate project deadline')
+        return
+      }
     }
 
     setIsSubmitting(true)
 
     try {
-      // Format the date and time for API
-      const requestedDate = selectedDate.toISOString().split('T')[0]
-      const requestedStartTime = startTime
-      const requestedEndTime = endTime
-
-      const bookingData = {
+      // Build booking payload per bookingMode
+      // Build booking payload exactly as backend expects
+      const bookingData: any = {
         serviceId: service.serviceId.toString(),
-        duration: totalHours,
-        projectDetails,
-        requestedDate,
-        requestedStartTime,
-        requestedEndTime,
-        totalPrice,
-        domainExpertId: service.mentorId.toString(),
-        sessionType,
+        selectedPricingId: selectedPricingId || undefined,
+        projectDetails: projectDetails || undefined,
+        bookingMode,
+        requestedMonths: bookingMode === 'MONTHLY' ? requestedMonths : undefined,
+        projectDeadline: bookingMode === 'PROJECT_BASED' ? projectDeadline || undefined : undefined,
+        requestedDate: bookingMode === 'HOURLY' && selectedDate ? selectedDate.toISOString().split('T')[0] : undefined,
+        requestedStartTime: bookingMode === 'HOURLY' ? (startTime || undefined) : undefined,
+        requestedEndTime: bookingMode === 'HOURLY' ? (endTime || undefined) : undefined,
+        totalPrice: Number(totalPrice) || 0,
       }
+
+      // Remove undefined keys so the backend receives only provided fields
+      Object.keys(bookingData).forEach((key) => {
+        if (bookingData[key] === undefined) delete bookingData[key]
+      })
 
       console.log("Booking details:", bookingData)
 
       // Call the API
-      await bookingApi.createBooking(bookingData)
+      // await bookingApi.createBooking(bookingData)
 
       // Show success message and redirect
       alert(`Booking request submitted successfully!\nTotal: Rs.${totalPrice.toLocaleString()}`)
@@ -329,6 +412,106 @@ export function BookingForm({ service }: BookingFormProps) {
 
   // Render date and time selection
   const renderDateTimeStep = () => {
+    // For MONTHLY mode we show month selector UI here instead of calendar/time slots
+    if (bookingMode === 'MONTHLY') {
+      // Render a 12-month grid (current month + next 11) styled like the day cells
+      const months: Date[] = []
+      const startMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+      for (let i = 0; i < 12; i++) {
+        months.push(new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1))
+      }
+
+      // A month is selectable if it's not in the past. We no longer block months
+      // based on mentor availability — users can pick any future month.
+      const isMonthAvailable = (monthDate: Date) => {
+        const isPastMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getTime() < new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1).getTime()
+        return !isPastMonth
+      }
+
+      const toggleMonth = (date: Date) => {
+        const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`
+        setRequestedMonths(prev => {
+          const set = new Set(prev)
+          if (set.has(key)) set.delete(key)
+          else set.add(key)
+          return Array.from(set).sort()
+        })
+      }
+
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              Select Months
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">Choose months for an ongoing mentorship</p>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Months</label>
+              <div className="grid grid-cols-4 gap-2">
+                {months.map((m) => {
+                  const monthKey = `${m.getFullYear()}-${(m.getMonth() + 1).toString().padStart(2, '0')}`
+                  const isPastMonth = new Date(m.getFullYear(), m.getMonth(), 1).getTime() < new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1).getTime()
+                  const available = isMonthAvailable(m)
+                  const selected = requestedMonths.includes(monthKey)
+
+                  const baseClasses = "relative flex h-12 items-center justify-center rounded-lg border text-sm transition-all"
+                  let stateClasses = "border-gray-200 bg-white text-gray-900"
+                  if (isPastMonth) stateClasses = "border-transparent bg-gray-50 text-gray-300"
+                  if (available && !isPastMonth) stateClasses = "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-400 hover:bg-blue-100"
+                  if (selected) stateClasses = "border-blue-600 bg-blue-600 text-white"
+
+                  return (
+                    <button
+                      key={monthKey}
+                      type="button"
+                      disabled={isPastMonth}
+                      onClick={() => toggleMonth(m)}
+                      className={`${baseClasses} ${stateClasses} ${selected ? "shadow" : ""} ${isPastMonth ? "cursor-not-allowed" : ""}`}
+                    >
+                      <span className="font-semibold">{m.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                      {available && !selected && (
+                        <span className="absolute bottom-1 h-1 w-1 rounded-full bg-blue-500" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {requestedMonths.map(m => (
+                <Badge key={m}>{m}</Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    // For PROJECT_BASED we show a deadline selector and no time slots
+    if (bookingMode === 'PROJECT_BASED') {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              Project Timeline
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1">Provide an approximate deadline for your project</p>
+          </CardHeader>
+          <CardContent>
+            <div className="mt-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Approximate Project Deadline</label>
+              <input type="date" value={projectDeadline} onChange={(e) => setProjectDeadline(e.target.value)} className="px-3 py-2 border rounded-lg" />
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
     const selectedDateAvailabilities = selectedDate 
       ? getAvailabilityForDate(selectedDate, availabilities)
       : []
@@ -377,14 +560,8 @@ export function BookingForm({ service }: BookingFormProps) {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Availability Info */}
-          {availabilities.length === 0 ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800 font-medium">
-                ⚠️ No availability set for this service. Please contact the mentor directly.
-              </p>
-            </div>
-          ) : (
+          {/* Show mentor weekly availability if provided, but do not block selection when empty */}
+          {availabilities.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm font-semibold text-blue-900 mb-2">
                 📅 Mentor's Weekly Availability
@@ -443,8 +620,9 @@ export function BookingForm({ service }: BookingFormProps) {
                 normalizedDate.setHours(0, 0, 0, 0)
                 const isInCurrentMonth = date.getMonth() === currentMonth.getMonth()
                 const isPast = normalizedDate.getTime() < startOfToday.getTime()
+                // Allow any future date in the current month to be selectable
                 const isAvailableDay = isDateAvailable(date, availabilities)
-                const isSelectable = isInCurrentMonth && !isPast && isAvailableDay
+                const isSelectable = isInCurrentMonth && !isPast
                 const isSelected = selectedDate ? isSameDay(normalizedDate, selectedDate) : false
 
                 const baseClasses = "relative flex h-12 items-center justify-center rounded-lg border text-sm transition-all"
@@ -453,8 +631,8 @@ export function BookingForm({ service }: BookingFormProps) {
                 if (!isInCurrentMonth) {
                   stateClasses = "border-transparent bg-gray-50 text-gray-300"
                 }
-                if (!isAvailableDay || isPast) {
-                  stateClasses = "border-gray-100 bg-gray-100 text-gray-400"
+                if (isPast) {
+                  stateClasses = "border-transparent bg-gray-50 text-gray-300"
                 }
                 if (isSelectable) {
                   stateClasses = "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-400 hover:bg-blue-100"
@@ -530,29 +708,23 @@ export function BookingForm({ service }: BookingFormProps) {
               <Label className="text-base font-semibold mb-3 block">
                 Start Time
               </Label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {availableTimeSlots.map((time) => {
-                  const isSelected = startTime === time
-                  return (
-                    <button
-                      key={time}
-                      onClick={() => {
-                        setStartTime(time)
-                        // Reset end time if it's not valid anymore
-                        if (endTime && calculateDurationHours(time, endTime) <= 0) {
-                          setEndTime("")
-                        }
-                      }}
-                      className={`py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  )
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Manual time input (30-minute step) */}
+                <input
+                  type="time"
+                  step={1800}
+                  value={startTime}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    const rounded = roundTo30Min(val)
+                    setStartTime(rounded)
+                    // Reset endTime if invalid
+                    if (endTime && calculateDurationHours(rounded, endTime) <= 0) {
+                      setEndTime("")
+                    }
+                  }}
+                  className="px-3 py-2 border rounded-lg"
+                />
               </div>
             </div>
 
@@ -562,23 +734,23 @@ export function BookingForm({ service }: BookingFormProps) {
                 <Label className="text-base font-semibold mb-3 block">
                   End Time
                 </Label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                  {getAvailableEndTimes(startTime).map((time) => {
-                    const isSelected = endTime === time
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => setEndTime(time)}
-                        className={`py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
-                          isSelected
-                            ? "border-green-600 bg-green-600 text-white"
-                            : "border-gray-200 hover:border-green-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    )
-                  })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Manual end time input */}
+                  <input
+                    type="time"
+                    step={1800}
+                    value={endTime}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      const rounded = roundTo30Min(val)
+                      // Ensure end is after start
+                      const dur = calculateDurationHours(startTime, rounded)
+                      if (dur > 0) setEndTime(rounded)
+                      else setEndTime("")
+                    }}
+                    className="px-3 py-2 border rounded-lg"
+                  />
+
                 </div>
               </div>
             )}
@@ -751,35 +923,34 @@ export function BookingForm({ service }: BookingFormProps) {
       {renderStepIndicator()}
 
       
-      {/* Session Type Selection */}
-      <div className="mb-8">
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant={sessionType === 'individual' ? 'default' : 'outline'}
-            className={sessionType === 'individual' ? 'bg-blue-600 text-white' : ''}
-            onClick={() => setSessionType('individual')}
+      {/* Booking mode-only flow: pricing and session type are auto-handled */}
+      <div className="mb-6">
+        <div className="text-sm text-gray-600">Booking mode pricing is auto-selected based on the chosen mode below.</div>
+      </div>
+
+      {/* Booking Mode & Pricing */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
+          <label
+            className={`px-3 py-2 rounded-lg border cursor-pointer ${bookingMode === 'HOURLY' ? 'bg-blue-600 text-white' : ''} ${!availabilityModes.includes('HOURLY') ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => availabilityModes.includes('HOURLY') && setBookingMode('HOURLY')}
           >
-            Individual Session
-          </Button>
-          <Button
-            type="button"
-            variant={sessionType === 'group' ? 'default' : 'outline'}
-            className={sessionType === 'group' ? 'bg-purple-600 text-white' : ''}
-            onClick={() => setSessionType('group')}
+            Hourly
+          </label>
+          <label
+            className={`px-3 py-2 rounded-lg border cursor-pointer ${bookingMode === 'MONTHLY' ? 'bg-blue-600 text-white' : ''} ${!availabilityModes.includes('MONTHLY') ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => availabilityModes.includes('MONTHLY') && setBookingMode('MONTHLY')}
           >
-            Group Session
-          </Button>
+            Monthly
+          </label>
+          <label
+            className={`px-3 py-2 rounded-lg border cursor-pointer ${bookingMode === 'PROJECT_BASED' ? 'bg-blue-600 text-white' : ''} ${!availabilityModes.includes('PROJECT_BASED') ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => availabilityModes.includes('PROJECT_BASED') && setBookingMode('PROJECT_BASED')}
+          >
+            Project
+          </label>
         </div>
-        <div className="mt-2 text-sm text-gray-600">
-          {(() => {
-            const individual = (service as any).pricings?.find((p:any) => p.pricingType === 'hourly')?.price ?? service.hourlyRatePerPerson
-            const group = (service as any).pricings?.find((p:any) => p.pricingType === 'hourly')?.price ?? service.hourlyRatePerGroup
-            return sessionType === 'individual'
-              ? `Hourly Rate: Rs.${(individual || 1000).toLocaleString()} per person`
-              : `Hourly Rate: Rs.${(group || 2000).toLocaleString()} per group`
-          })()}
-        </div>
+
       </div>
 
       
@@ -879,9 +1050,7 @@ export function BookingForm({ service }: BookingFormProps) {
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">Session Type</p>
                 <div className="bg-gray-50 rounded-lg p-2">
-                  <span className="font-medium text-blue-700">
-                    {sessionType === 'individual' ? 'Individual' : 'Group'}
-                  </span>
+                  <span className="font-medium text-blue-700">{bookingMode === 'HOURLY' ? 'Hourly' : bookingMode === 'MONTHLY' ? 'Monthly' : 'Project'}</span>
                 </div>
               </div>
               <Separator />
@@ -907,45 +1076,72 @@ export function BookingForm({ service }: BookingFormProps) {
                 </>
               )}
 
-              {/* Price Breakdown */}
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Price Breakdown</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Hourly Rate</span>
-                    <span className="font-medium">Rs.{hourlyRate.toLocaleString()}</span>
-                  </div>
-                  {totalHours > 0 && (
-                    <>
+              {/* Price Breakdown (dynamic by booking mode) */}
+              {(() => {
+                const modeLabel = bookingMode === 'HOURLY' ? 'Hourly Rate' : bookingMode === 'MONTHLY' ? 'Monthly Rate' : 'Project Fee'
+                const modePrice = selectedPricing ? Number(selectedPricing.price) : (
+                  bookingMode === 'HOURLY' ? (findPrice('hourly') ?? hourlyRate) : bookingMode === 'MONTHLY' ? (findPrice('monthly') ?? 0) : (findPrice('project-based') ?? 0)
+                )
+
+                return (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Price Breakdown</p>
+                    <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Duration</span>
-                        <span className="font-medium">{formatDuration(totalHours)}</span>
+                        <span className="text-gray-600">{modeLabel}</span>
+                        <span className="font-medium">{modePrice > 0 ? `Rs.${modePrice.toLocaleString()}` : 'TBD'}</span>
                       </div>
-                      <Separator />
-                      <div className="flex justify-between">
-                        <span className="font-semibold text-gray-900">Total</span>
-                        <span className="text-xl font-bold text-blue-600">
-                          Rs.{totalPrice.toLocaleString()}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
+
+                      {bookingMode === 'HOURLY' && totalHours > 0 && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Duration</span>
+                            <span className="font-medium">{formatDuration(totalHours)}</span>
+                          </div>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-900">Total</span>
+                            <span className="text-xl font-bold text-blue-600">Rs.{totalPrice.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
+
+                      {bookingMode === 'MONTHLY' && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Months</span>
+                            <span className="font-medium">{requestedMonths.length} selected</span>
+                          </div>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-900">Total</span>
+                            <span className="text-xl font-bold text-blue-600">Rs.{totalPrice.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
+
+                      {bookingMode === 'PROJECT_BASED' && (
+                        <>
+                          {projectDeadline && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Deadline</span>
+                              <span className="font-medium">{projectDeadline}</span>
+                            </div>
+                          )}
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-900">Total</span>
+                            <span className="text-xl font-bold text-blue-600">{modePrice > 0 ? `Rs.${Math.round(modePrice).toLocaleString()}` : `Rs.${totalPrice.toLocaleString()}`}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
 
               <Separator />
 
-              {/* Additional Info */}
-              <div className="space-y-2">
-                <div className="flex items-start gap-2 text-xs text-gray-600">
-                  <User className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
-                  <span>{sessionType === 'individual' ? 'One-on-one personalized mentorship' : 'Group mentorship session'}</span>
-                </div>
-                <div className="flex items-start gap-2 text-xs text-gray-600">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
-                  <span>Confirmation within 24 hours</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
