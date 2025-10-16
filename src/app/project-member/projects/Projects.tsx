@@ -240,7 +240,7 @@ const ProjectsTable: React.FC = () => {
   // Format projects for table
   const formatProjects = (projects: ProjectResponse[]) =>
     projects.map((project) => ({
-      id: project.id,
+      id: project.id || (project as any).projectId || (project as any).projectID || (project as any).project_id || undefined,
       name: project.title || "Untitled Project",
       description: project.description || "",
       type: project.type || "Team-managed software",
@@ -259,6 +259,7 @@ const ProjectsTable: React.FC = () => {
     ? formatProjects(myProjects)
     : formatProjects(collaborateProjects);
 
+
   const filteredProjects = allProjects.filter(
     (project) => filterProduct === "Filter by product" || project.type === filterProduct
   );
@@ -268,6 +269,7 @@ const ProjectsTable: React.FC = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  
 
   const handleCreateProject = async (formData: {
     title: string;
