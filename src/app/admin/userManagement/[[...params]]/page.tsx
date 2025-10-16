@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,6 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  UserPlus,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -284,17 +283,72 @@ export default function AllUsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  // currentPage is 1-based for the UI
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
   const params = useParams();
+
+  // Use 1-based currentPage for the UI; backend expects 0-based page index
+  const [itemsPerPage] = useState(5);
+
+  const fetchFilteredUsers = useCallback(async () => {
+    try {
+      // map frontend filters to backend params
+      const roleMapToBackend: Record<string, string> = {
+        'Member': 'PROJECT_MEMBER',
+        'Domain Expert': 'MENTOR',
+        'Moderator': 'MODERATOR',
+        'Admin': 'ADMIN'
+      };
+
+      const statusMapToBackend: Record<string, string> = {
+        'Active': 'ACTIVE',
+        'Inactive': 'INACTIVE',
+        'Banned': 'BANNED'
+      };
+
+      const apiPage = Math.max(0, currentPage - 1);
+      let url = `/api/v1/admin/dashboard/userList?page=${apiPage}&size=${itemsPerPage}`;
+
+      if (roleFilter && roleFilter !== 'all') {
+        const backendRole = roleMapToBackend[roleFilter];
+        if (backendRole) url += `&userRole=${backendRole}`;
+      }
+
+      if (statusFilter && statusFilter !== 'all') {
+        const backendStatus = statusMapToBackend[statusFilter];
+        if (backendStatus) url += `&userStatus=${backendStatus}`;
+      }
+
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+
+      const userListRes = await api.get(url);
+      const data = userListRes?.data;
+      if (data) {
+        setUserList(data);
+
+        // synchronize UI page with backend returned page number (backend likely 0-based)
+        const fetchedPage = typeof data.pageable?.pageNumber === 'number' ? data.pageable.pageNumber : apiPage;
+        const uiPage = fetchedPage + 1;
+        if (uiPage !== currentPage) {
+          // update without causing infinite loop; this will trigger a refetch only when necessary
+          setCurrentPage(uiPage);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  }, [currentPage, itemsPerPage, searchTerm, roleFilter, statusFilter]);
+
   
   useEffect(() => {
     async function fetchUsersOverview() {
       try {
         const usersStatusRes = await api.get('/api/v1/admin/dashboard/usersStatus');
-        const userListRes = await api.get('/api/v1/admin/dashboard/userList?page=' + (currentPage - 1) + '&size=' + itemsPerPage)
+        // const userListRes = await api.get('/api/v1/admin/dashboard/userList?page=' + currentPage + '&size=' + itemsPerPage)
         setUsersStatus(usersStatusRes.data);
-        setUserList(userListRes.data);
+        // setUserList(userListRes.data);
       }
       catch (error) {
         console.error("Failed to load users overview:", error);
@@ -303,51 +357,22 @@ export default function AllUsersPage() {
       }
     } 
     fetchUsersOverview();
-  }, []);
+    fetchFilteredUsers();
+  }, [fetchFilteredUsers]);
 
 
   // Filter users based on search and filters
+  // Since server provides paginated & filtered results, use backend content directly
   const filteredUsers = useMemo(() => {
-    if (!userList?.content) return [];
-    
-    return userList.content.filter((user: User) => {
-      const matchesSearch =
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        
-      // Map backend userRole to frontend role filter
-      const roleMap: Record<string, string> = {
-        'PROJECT_MEMBER': 'Member',
-        'MENTOR': 'Domain Expert',
-        'MODERATOR': 'Moderator',
-        'ADMIN': 'Admin'
-      };
-      
-      // Map backend status to frontend status filter
-      const statusMap: Record<string, string> = {
-        'ACTIVE': 'Active',
-        'INACTIVE': 'Inactive',
-        'BANNED': 'Banned'
-      };
-      
-      const mappedRole = roleMap[user.userRole] || '';
-      const mappedStatus = statusMap[user.status] || '';
-      
-      const matchesRole = roleFilter === "all" || mappedRole === roleFilter;
-      const matchesStatus = statusFilter === "all" || mappedStatus === statusFilter;
-
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [userList, searchTerm, roleFilter, statusFilter]);
+    return userList?.content || [];
+  }, [userList]);
 
   // Pagination
-  const totalPages = userList?.totalPages || 1;
-  const totalUsers = userList?.totalElements || 0;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const totalPages = Math.max(1, userList?.totalPages || 1);
+  const totalUsers = userList?.totalElements ?? 0;
+  const startIndex = Math.max(0, (currentPage - 1) * itemsPerPage);
+  // backend already paginates; items to render are the content
+  const paginatedUsers = filteredUsers;
 
   //TO FILTER USER FROM PARAMS
   const allParams = params?.params as string[] | undefined;
