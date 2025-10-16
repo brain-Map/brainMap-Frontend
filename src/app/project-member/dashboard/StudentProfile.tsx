@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/utils/api';
 import { useRouter } from 'next/navigation';
+import ServiceListTabs from './expert';
 
 
 export interface User {
@@ -486,42 +487,7 @@ const ProjectDashboard = () => {
               )}
 
               {activeTab === 'experts' && (
-                  <div className="bg-white rounded-xl p-6 border border-gray-200">
-                    <h3 className="font-semibold text-xl mb-6 text-gray-900">Hired Domain Experts</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {hiredExperts.map((expert) => (
-                        <div
-                          key={expert.id}
-                          className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 max-w-sm"
-                        >
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-md">
-                              <User className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="text-lg font-semibold text-gray-900">{expert.name}</h4>
-                              <p className="text-sm text-gray-500">{expert.expertise}</p>
-                            </div>
-                          </div>
-
-                          <div className="text-sm text-gray-600 mb-4 grid grid-cols-2 gap-y-2">
-                            <div><span className="font-medium text-gray-900">Rate:</span> ${expert.hourlyRate}/hr</div>
-                            <div><span className="font-medium text-gray-900">Hours:</span> {expert.totalHours}</div>
-                            <div><span className="font-medium text-gray-900">Rating:</span> {expert.rating}/5</div>
-                            <div><span className="font-medium text-gray-900">Hired:</span> {new Date(expert.hiredDate).toLocaleDateString()}</div>
-                          </div>
-
-                          <a
-                            // href={`mailto:${expert.email}`}
-                            className="w-full inline-flex justify-center items-center gap-2 text-white bg-primary hover:bg-secondary hover:text-black py-2 px-4 rounded-lg transition-colors duration-200"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Contact
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <ServiceListTabs/>
 
               )}
 
