@@ -1,5 +1,17 @@
 import api from '@/utils/api';
 
+/**
+ * Moderator API Service
+ * 
+ * This service handles all moderator-related API operations including:
+ * - Expert approval and management
+ * - User management and moderation
+ * - Content moderation
+ * - System administration tasks
+ * 
+ * Future moderator features can be added to this service.
+ */
+
 // Types for Expert Approval System
 export interface ExpertDocument {
   id?: number;
@@ -75,7 +87,7 @@ export interface ExpertApprovalStats {
   monthlyApprovals: number;
 }
 
-class ExpertApprovalApiService {
+class ModeratorApiService {
   /**
    * Get all expert approval requests with filtering and pagination
    */
@@ -256,4 +268,7 @@ class ExpertApprovalApiService {
   }
 }
 
-export const expertApprovalApiService = new ExpertApprovalApiService();
+export const expertApprovalApiService = new ModeratorApiService();
+
+// For backward compatibility, keep the old export name
+export const moderatorApiService = new ModeratorApiService();

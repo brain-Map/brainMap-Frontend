@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Check, X, Clock, Download, ArrowLeft, AlertTriangle, Users, FileText, Star, TrendingUp } from "lucide-react";
-import { expertApprovalApiService } from '@/services/expertApprovalApi';
+import { expertApprovalApiService } from '@/services/moderatorApi';
 import toast from 'react-hot-toast';
 
 // TypeScript interfaces and types
