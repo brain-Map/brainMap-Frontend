@@ -1,91 +1,93 @@
-import React, { useState,useEffect } from 'react';
-import { Mail, Phone, Edit2, X, Check } from 'lucide-react';
-import api from '@/utils/api';
+import React, { useState, useEffect } from "react";
+import { Mail, Phone, Edit2, X, Check } from "lucide-react";
+import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 
-
-export interface OneUser{
-    id: string;
-    firstName:string;
-    lastName:string;
-    username: string;
-    email: string;
-    mobileNumber?: string;
-    dateOfBirth?:string;
-    userRole:string;
-    createdAt:string;
-    status:string;
-    city?:string;
-    gender: string;
-    bio?:string;
-    avatar:string;
+export interface OneUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  mobileNumber?: string;
+  dateOfBirth?: string;
+  userRole: string;
+  createdAt: string;
+  status: string;
+  city?: string;
+  gender: string;
+  bio?: string;
+  avatar: string;
 }
 
 const settingsFunctions = {
-
-    getOneUserData: async (userId: string): Promise<OneUser> => {
+  getOneUserData: async (userId: string): Promise<OneUser> => {
     try {
       const response = await api.get(`/api/v1/users/${userId}`);
-      console.log('User Data:', response.data);
+      console.log("User Data:", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
       throw error;
     }
-  },  
+  },
 
   updateUserProfile: async (userId: string, userData: Partial<OneUser>) => {
     try {
       const response = await api.put(`/api/v1/users/${userId}`, userData);
-      console.log('Updated User Data:', response.data);
+      console.log("Updated User Data:", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error("Error updating user:", error);
       throw error;
     }
-  }
-
+  },
 };
 
 const ProfileEditor = () => {
-    const { user } = useAuth();
-      const userId = user?.id;
-    const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
-  
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
 
-  
-    useEffect(() => {
-      const fetchUserData = async () => {
-        if (userId) {
-          const oneUserData = await settingsFunctions.getOneUserData(userId);
-          setOneUserData(oneUserData);
-        }
-      };
-  
-      fetchUserData();
-    }, [userId]);
-  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userId) {
+        const oneUserData = await settingsFunctions.getOneUserData(userId);
+        setOneUserData(oneUserData);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
 
   const [modalState, setModalState] = useState({
     isOpen: false,
-    field: '',
-    value: '',
-    label: '',
-    type: 'text'
+    field: "",
+    value: "",
+    label: "",
+    type: "text",
   });
 
   const openModal = (
-    field: keyof OneUser | 'fullName' | 'mobileNumber' | 'dateOfBirth' | 'gender' | 'email' | 'username' | 'bio',
+    field:
+      | keyof OneUser
+      | "fullName"
+      | "mobileNumber"
+      | "dateOfBirth"
+      | "gender"
+      | "email"
+      | "username"
+      | "bio",
     label: string,
-    type: string = 'text'
+    type: string = "text"
   ) => {
-    let value = '';
+    let value = "";
 
-    if (field === 'fullName') {
+    if (field === "fullName") {
       value = `${oneUserData?.firstName} ${oneUserData?.lastName}`;
-    } else if (field === 'mobileNumber') {
-      value = oneUserData?.mobileNumber || '';
-    } else if (field === 'dateOfBirth') {
+    } else if (field === "mobileNumber") {
+      value = oneUserData?.mobileNumber || "";
+    } else if (field === "dateOfBirth") {
       // Handle date formatting
       const dateVal = oneUserData?.dateOfBirth;
       if (dateVal) {
@@ -94,7 +96,7 @@ const ProfileEditor = () => {
         else if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) value = dateVal;
       }
     } else {
-      value = oneUserData?.[field] || '';
+      value = oneUserData?.[field] || "";
     }
 
     setModalState({
@@ -102,34 +104,34 @@ const ProfileEditor = () => {
       field,
       value,
       label,
-      type
+      type,
     });
   };
 
   const closeModal = () => {
     setModalState({
       isOpen: false,
-      field: '',
-      value: '',
-      label: '',
-      type: 'text'
+      field: "",
+      value: "",
+      label: "",
+      type: "text",
     });
   };
 
   const handleSave = async () => {
     const { field, value } = modalState;
-    
+
     if (!userId || !oneUserData) return;
 
     let updateData: Partial<OneUser> = {};
 
-    if (field === 'fullName') {
-      const [firstName, ...lastNameParts] = value.split(' ');
+    if (field === "fullName") {
+      const [firstName, ...lastNameParts] = value.split(" ");
       updateData = {
-        firstName: firstName || '',
-        lastName: lastNameParts.join(' ') || ''
+        firstName: firstName || "",
+        lastName: lastNameParts.join(" ") || "",
       };
-    } else if (field === 'mobileNumber') {
+    } else if (field === "mobileNumber") {
       updateData = { mobileNumber: value };
     } else {
       updateData = { [field]: value };
@@ -138,42 +140,46 @@ const ProfileEditor = () => {
     try {
       // Call the API to update user data
       await settingsFunctions.updateUserProfile(userId, updateData);
-      
+
       // Update local state after successful API call
-      if (field === 'fullName') {
-        const [firstName, ...lastNameParts] = value.split(' ');
-        setOneUserData(prev => {
+      if (field === "fullName") {
+        const [firstName, ...lastNameParts] = value.split(" ");
+        setOneUserData((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            firstName: firstName || '',
-            lastName: lastNameParts.join(' ') || ''
+            firstName: firstName || "",
+            lastName: lastNameParts.join(" ") || "",
           };
         });
-      } else if (field === 'mobileNumber') {
-        setOneUserData(prev => {
+      } else if (field === "mobileNumber") {
+        setOneUserData((prev) => {
           if (!prev) return prev;
           return { ...prev, mobileNumber: value };
         });
       } else {
-        setOneUserData(prev => {
+        setOneUserData((prev) => {
           if (!prev) return prev;
           return { ...prev, [field]: value };
         });
       }
-      
-      console.log('User profile updated successfully');
+
+      console.log("User profile updated successfully");
     } catch (error) {
-      console.error('Failed to update user profile:', error);
+      console.error("Failed to update user profile:", error);
       // Optionally show an error notification to the user
-      alert('Failed to update profile. Please try again.');
+      alert("Failed to update profile. Please try again.");
     }
-    
+
     closeModal();
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setModalState(prev => ({ ...prev, value: e.target.value }));
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setModalState((prev) => ({ ...prev, value: e.target.value }));
   };
 
   // Editable field component
@@ -183,7 +189,12 @@ const ProfileEditor = () => {
     onClick: () => void;
     icon?: React.ReactNode;
   };
-  const EditableField: React.FC<EditableFieldProps> = ({ label, value, onClick, icon }) => (
+  const EditableField: React.FC<EditableFieldProps> = ({
+    label,
+    value,
+    onClick,
+    icon,
+  }) => (
     <div className="group">
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {label}
@@ -197,9 +208,16 @@ const ProfileEditor = () => {
             {icon}
           </div>
         )}
-        <div className={`${icon ? 'pl-6' : ''} text-gray-900 min-h-[20px] flex items-center justify-between`}>
-          <span>{value || 'Click to add...'}</span>
-          <Edit2 size={16} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div
+          className={`${
+            icon ? "pl-6" : ""
+          } text-gray-900 min-h-[20px] flex items-center justify-between`}
+        >
+          <span>{value || "Click to add..."}</span>
+          <Edit2
+            size={16}
+            className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+          />
         </div>
       </div>
     </div>
@@ -207,7 +225,7 @@ const ProfileEditor = () => {
 
   // Format date for display
   const formatDateForDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
+    if (!dateStr) return "";
     const date = new Date(dateStr);
     return date.toLocaleDateString();
   };
@@ -215,32 +233,33 @@ const ProfileEditor = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h2>
-      
+
       {/* Personal Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <EditableField
           label="Full Name"
-          value={`${oneUserData?.firstName ?? ''} ${oneUserData?.lastName ?? ''}`}
-          onClick={() => openModal('fullName', 'Full Name')}
+          value={`${oneUserData?.firstName ?? ""} ${
+            oneUserData?.lastName ?? ""
+          }`}
+          onClick={() => openModal("fullName", "Full Name")}
         />
 
-         <EditableField
+        <EditableField
           label="Username"
-          value={oneUserData?.username ?? ''}
-          onClick={() => openModal('username', 'Username')}
+          value={oneUserData?.username ?? ""}
+          onClick={() => openModal("username", "Username")}
         />
-
 
         <EditableField
           label="Date of Birth"
-          value={formatDateForDisplay(oneUserData?.dateOfBirth ?? '')}
-          onClick={() => openModal('dateOfBirth', 'Date of Birth', 'date')}
+          value={formatDateForDisplay(oneUserData?.dateOfBirth ?? "")}
+          onClick={() => openModal("dateOfBirth", "Date of Birth", "date")}
         />
-        
+
         <EditableField
           label="Gender"
-          value={oneUserData?.gender ?? ''}
-          onClick={() => openModal('gender', 'Gender', 'select')}
+          value={oneUserData?.gender ?? ""}
+          onClick={() => openModal("gender", "Gender", "select")}
         />
       </div>
 
@@ -248,15 +267,15 @@ const ProfileEditor = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <EditableField
           label="Email"
-          value={oneUserData?.email ?? ''}
-          onClick={() => openModal('email', 'Email', 'email')}
+          value={oneUserData?.email ?? ""}
+          onClick={() => openModal("email", "Email", "email")}
           icon={<Mail size={16} />}
         />
-        
+
         <EditableField
           label="Mobile Number"
-          value={oneUserData?.mobileNumber ?? ''}
-          onClick={() => openModal('mobileNumber', 'Mobile Number', 'tel')}
+          value={oneUserData?.mobileNumber ?? ""}
+          onClick={() => openModal("mobileNumber", "Mobile Number", "tel")}
           icon={<Phone size={16} />}
         />
       </div>
@@ -266,10 +285,9 @@ const ProfileEditor = () => {
       <div className="mb-8">
         <EditableField
           label="About Me"
-          value={oneUserData?.bio ?? ''}
-          onClick={() => openModal('bio', 'About Me', 'textarea')}
+          value={oneUserData?.bio ?? ""}
+          onClick={() => openModal("bio", "About Me", "textarea")}
         />
-        
       </div>
 
       {/* Modal */}
@@ -294,16 +312,21 @@ const ProfileEditor = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {modalState.label}
               </label>
-              
-              {modalState.type === 'textarea' ? (
+
+              {modalState.type === "textarea" ? (
                 <textarea
                   value={modalState.value}
                   onChange={handleInputChange}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={modalState.field === 'bio' ? "Tell us about yourself, your research interests, and academic goals..." : ''}
+                  placeholder={
+                    modalState.field === "bio"
+                      ? "Tell us about yourself, your research interests, and academic goals..."
+                      : ""
+                  }
                 />
-              ) : modalState.type === 'select' && modalState.field === 'gender' ? (
+              ) : modalState.type === "select" &&
+                modalState.field === "gender" ? (
                 <select
                   value={modalState.value}
                   onChange={handleInputChange}
