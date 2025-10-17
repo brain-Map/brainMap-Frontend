@@ -46,7 +46,7 @@ const mergeDedupMessages = (existing: ChatMessage[], incoming: ChatMessage[]) =>
 }
 
 export default function ProjectChat({ projectId, projectTitle }: Props) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
   const { user } = useAuth()
   const [token, setToken] = useState<string>("")
   const [owners, setOwners] = useState<any[]>([])

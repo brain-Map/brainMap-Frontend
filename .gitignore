@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 /public/image/avatar/*
+
+PAYHERE_INTEGRATION.md
+PAYMENT_FLOW_DIAGRAM.md

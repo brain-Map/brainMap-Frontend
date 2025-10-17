@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, MessageCircle, CreditCard } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from 'next/navigation';
 import api from '@/utils/api';
 
 type ServiceStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED' | 'CONFIRMED';
@@ -35,6 +36,7 @@ const hireingFunctions = {
 
 const ServiceListTabs: React.FC = () => {
   const user = useAuth().user;
+  const router = useRouter();
 //   console.log("pakaya", user);
   const [activeTab, setActiveTab] = useState<ServiceStatus>('ACCEPTED');
   const [services, setServices] = useState<Service[]>([]);
@@ -69,7 +71,8 @@ const ServiceListTabs: React.FC = () => {
 
   const handlePayment = (id: number) => {
     console.log('Payment for service:', id);
-    // Add your payment logic here
+    // Redirect to payment gateway checkout page
+    router.push('/payment-gateway/checkout');
   };
 
   const tabs: { key: ServiceStatus; label: string }[] = [

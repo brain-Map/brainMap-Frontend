@@ -20,6 +20,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<{ data: any, error: any }>;
+  updatePassword: (newPassword: string) => Promise<{ data: any, error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null }),
   signOut: async () => {},
   updateUserMetadata: async () => ({ data: null, error: null }),
+  updatePassword: async () => ({ data: null, error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -116,12 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error };
   };
 
+  const updatePassword = async (newPassword: string) => {
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  return { data, error };
+};
+
+
   const value: AuthContextType = {
     user,
     loading,
     signIn,
     signOut,
     updateUserMetadata,
+    updatePassword,
   };
 
   return (

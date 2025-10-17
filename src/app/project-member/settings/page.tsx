@@ -1,48 +1,36 @@
 "use client";
 
-import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
-import {
-  User,
-  Bell,
-  Shield,
-  Eye,
-  Save,
-  Upload,
-  Camera,
-  Mail,
-  Settings,
-  Moon,
-  Sun,
-  Monitor,
-  Volume2,
-  Plus,
-  Check,
-  X,
-  Edit2,
-} from "lucide-react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { User, Shield, Upload, Camera, Settings, Check, X } from "lucide-react";
 import { convertBlobUrlToFile } from "@/lib/converToFile";
 import { uploadImage } from "@/lib/storageClient";
 import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
-import ProfileEditor from "./ProfileEditor"
+import ProfileEditor from "./ProfileEditor";
 
 interface SettingsProps {}
 
-export interface OneUser{
-    id: string;
-    firstName:string;
-    lastName:string;
-    username: string;
-    email: string;
-    mobileNumber?: string;
-    dateOfBirth?:string;
-    userRole:string;
-    createdAt:string;
-    status:string;
-    city?:string;
-    gender: string;
-    bio?:string;
-    avatar:string;
+export interface OneUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  mobileNumber?: string;
+  dateOfBirth?: string;
+  userRole: string;
+  createdAt: string;
+  status: string;
+  city?: string;
+  gender: string;
+  bio?: string;
+  avatar: string;
 }
 
 const settingsFunctions = {
@@ -59,23 +47,17 @@ const settingsFunctions = {
     }
   },
 
-
-    getOneUserData: async (userId: string): Promise<OneUser> => {
+  getOneUserData: async (userId: string): Promise<OneUser> => {
     try {
       const response = await api.get(`/api/v1/users/${userId}`);
-      console.log('User Data:', response.data);
+      console.log("User Data:", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
       throw error;
     }
   },
-
 };
-
-
-
-
 
 const SettingsPage: React.FC<SettingsProps> = () => {
   const { user } = useAuth();
@@ -85,68 +67,56 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
   const [activeTab, setActiveTab] = useState("profile");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [notifications, setNotifications] = useState({
-    email: {
-      projectUpdates: true,
-      expertMessages: true,
-      deadlineReminders: true,
-      collaborationInvites: true,
-      systemUpdates: false,
-    },
-    push: {
-      instantMessages: true,
-      meetingReminders: true,
-      taskDeadlines: true,
-      expertAvailability: false,
-    },
-    inApp: {
-      newProjects: true,
-      comments: true,
-      mentions: true,
-      fileSharing: true,
-    },
-  });
 
-  const [profileData, setProfileData] = useState({
-    fullName: "Nadun Madusanka",
-    username: "nadu_nm",
-    email: "nadun.madusanka@university.edu",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    dateOfBirth: "",
-    gender: "",
-    bio: "PhD student specializing in machine learning and AI ethics. Passionate about developing ethical AI systems for healthcare applications.",
-    researchInterests: [
-      "Machine Learning",
-      "AI Ethics",
-      "Healthcare AI",
-      "Computer Vision",
-      "NLP",
-    ],
-    avatar: "/image/user.jpg",
-  });
+  const { updatePassword } = useAuth();
 
-  const [privacy, setPrivacy] = useState({
-    profileVisibility: "public",
-    showEmail: false,
-    showPhone: false,
-    showProjects: true,
-    showProgress: true,
-    allowContactFromExperts: true,
-    showOnlineStatus: true,
-  });
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<
+    "success" | "error" | null
+  >(null);
 
+  const handlePasswordUpdate = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("New passwords do not match");
+      setPasswordUpdateStatus("error");
+      setShowPasswordModal(true);
+      return;
+    }
 
-   const [modalState, setModalState] = useState({
-    isOpen: false,
-    field: '',
-    value: '',
-    label: '',
-    type: 'text'
-  });
+    if (newPassword.length < 6) {
+      setMessage("Password must be at least 6 characters long");
+      setPasswordUpdateStatus("error");
+      setShowPasswordModal(true);
+      return;
+    }
 
-  
+    // Optional: verify current password by re-signing in
+    // (Supabase requires you to be logged in already)
+    const { data, error } = await updatePassword(newPassword);
 
+    if (error) {
+      console.error(error);
+      setMessage(error.message || "Failed to update password");
+      setPasswordUpdateStatus("error");
+      setShowPasswordModal(true);
+    } else {
+      setMessage("Password updated successfully!");
+      setPasswordUpdateStatus("success");
+      setShowPasswordModal(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      // Auto close modal after 3 seconds on success
+      setTimeout(() => {
+        setShowPasswordModal(false);
+      }, 3000);
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -158,44 +128,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
     fetchUserData();
   }, [userId]);
-
-
-
-
-  const handleProfileUpdate = (field: string, value: any) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleNotificationChange = (
-    category: string,
-    setting: string,
-    value: boolean
-  ) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
-        [setting]: value,
-      },
-    }));
-  };
-
-  const handlePrivacyChange = (setting: string, value: any) => {
-    setPrivacy((prev) => ({
-      ...prev,
-      [setting]: value,
-    }));
-  };
-
-  const handleSaveSettings = () => {
-    // Simulate saving settings
-    console.log("Saving settings...", { profileData, notifications, privacy });
-    // Show success message
-  };
-
 
   //image upload begin
 
@@ -221,75 +153,73 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   };
 
   const handleClickUploadImagesButton = async () => {
-  if (imageUrls.length === 0) return;
+    if (imageUrls.length === 0) return;
 
-  try {
-    const urls: string[] = [];
+    try {
+      const urls: string[] = [];
 
-    for (const url of imageUrls) {
-      const imageFile = await convertBlobUrlToFile(url);
+      for (const url of imageUrls) {
+        const imageFile = await convertBlobUrlToFile(url);
 
-      const { imageUrl, error } = await uploadImage({
-        file: imageFile,
-        bucket: "uploads",
-        folder: "avatars",
-        userId: userId!, // overwrite per user
-      });
+        const { imageUrl, error } = await uploadImage({
+          file: imageFile,
+          bucket: "uploads",
+          folder: "avatars",
+          userId: userId!, // overwrite per user
+        });
 
-      if (error) {
-        console.error(error);
-        return;
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        urls.push(imageUrl);
       }
 
-      urls.push(imageUrl);
+      console.log("Uploaded avatar URLs:", urls);
+
+      // Update only with the first (profile pic)
+      settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
+
+      // Clear after upload
+      setImageUrls([]);
+    } catch (err) {
+      console.error("Upload failed:", err);
     }
-
-    console.log("Uploaded avatar URLs:", urls);
-
-    // Update only with the first (profile pic)
-    settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
-
-    // Clear after upload
-    setImageUrls([]);
-  } catch (err) {
-    console.error("Upload failed:", err);
-  }
-};
-
+  };
 
   //image upload end
 
   const settingsTabs = [
     { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "privacy", label: "Privacy", icon: Shield },
     { id: "account", label: "Account", icon: Settings },
-    { id: "appearance", label: "Appearance", icon: Eye },
   ];
 
   const SettingsTab = ({ id, label, icon: Icon, isActive, onClick }: any) => (
     <button
       onClick={() => onClick(id)}
-      className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-all duration-200 ${
+      className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-all duration-200 ${
         isActive
-          ? "bg-primary text-white shadow-lg"
+          ? "bg-primary text-white"
           : "text-gray-600 hover:bg-value3 hover:text-primary"
       }`}
     >
       <Icon size={20} />
-      <span className="font-medium">{label}</span>
+      <span className="font-small">{label}</span>
     </button>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="w-full">
-
         <div className="flex gap-8">
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0 h-[100vh] sticky top-0">
             <div className="bg-white border-r border-gray-200 p-4 h-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Settings
+              </h2>
               <nav className="space-y-2">
                 {settingsTabs.map((tab) => (
                   <SettingsTab
@@ -307,23 +237,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
           {/* Main Content */}
           <div className="flex-1 p-8 max-w-7xl mx-auto">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             {/* Profile Settings */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -363,8 +276,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                             className="w-full h-full object-cover"
                             alt="Profile Avatar"
                           />
-                        ) : (
-                        oneUserData?.avatar ? (
+                        ) : oneUserData?.avatar ? (
                           <img
                             src={oneUserData.avatar}
                             className="w-full h-full object-cover"
@@ -372,9 +284,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           />
                         ) : (
                           <User size={60} className="text-gray-400" />
-                        )
                         )}
-                        
                       </div>
 
                       {/* Edit Button Overlay */}
@@ -473,239 +383,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 </div>
 
                 <ProfileEditor />
-                
-              </div>
-            )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* Notifications Settings */}
-            {activeTab === "notifications" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Notification Preferences
-                </h2>
-
-                {/* Email Notifications */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <Mail size={20} className="mr-2 text-primary" />
-                    Email Notifications
-                  </h3>
-                  <div className="space-y-4">
-                    {Object.entries(notifications.email).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between py-2"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, " $1").trim()}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {key === "projectUpdates" &&
-                              "Get notified about updates to your projects"}
-                            {key === "expertMessages" &&
-                              "Receive messages from domain experts"}
-                            {key === "deadlineReminders" &&
-                              "Reminders about upcoming deadlines"}
-                            {key === "collaborationInvites" &&
-                              "Invitations to collaborate on projects"}
-                            {key === "systemUpdates" &&
-                              "System maintenance and feature updates"}
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) =>
-                              handleNotificationChange(
-                                "email",
-                                key,
-                                e.target.checked
-                              )
-                            }
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-11 h-6 rounded-full ${
-                              value ? "bg-primary" : "bg-gray-200"
-                            } relative transition-colors`}
-                          >
-                            <div
-                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                value ? "translate-x-5" : "translate-x-0"
-                              }`}
-                            ></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Push Notifications */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <Bell size={20} className="mr-2 text-primary" />
-                    Push Notifications
-                  </h3>
-                  <div className="space-y-4">
-                    {Object.entries(notifications.push).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between py-2"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, " $1").trim()}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {key === "instantMessages" &&
-                              "Real-time chat messages"}
-                            {key === "meetingReminders" &&
-                              "Upcoming meeting alerts"}
-                            {key === "taskDeadlines" &&
-                              "Task and deadline notifications"}
-                            {key === "expertAvailability" &&
-                              "When experts become available"}
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) =>
-                              handleNotificationChange(
-                                "push",
-                                key,
-                                e.target.checked
-                              )
-                            }
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-11 h-6 rounded-full ${
-                              value ? "bg-primary" : "bg-gray-200"
-                            } relative transition-colors`}
-                          >
-                            <div
-                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                value ? "translate-x-5" : "translate-x-0"
-                              }`}
-                            ></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* In-App Notifications */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <Volume2 size={20} className="mr-2 text-primary" />
-                    In-App Notifications
-                  </h3>
-                  <div className="space-y-4">
-                    {Object.entries(notifications.inApp).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between py-2"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, " $1").trim()}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {key === "newProjects" &&
-                              "Notifications about new project invitations"}
-                            {key === "comments" &&
-                              "Comments on your work or projects"}
-                            {key === "mentions" && "When someone mentions you"}
-                            {key === "fileSharing" &&
-                              "File sharing and collaboration updates"}
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) =>
-                              handleNotificationChange(
-                                "inApp",
-                                key,
-                                e.target.checked
-                              )
-                            }
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-11 h-6 rounded-full ${
-                              value ? "bg-primary" : "bg-gray-200"
-                            } relative transition-colors`}
-                          >
-                            <div
-                              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                value ? "translate-x-5" : "translate-x-0"
-                              }`}
-                            ></div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
-                </div>
               </div>
             )}
 
@@ -717,184 +394,12 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Profile Visibility */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Profile Visibility
-                    </h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="profileVisibility"
-                          value="public"
-                          checked={privacy.profileVisibility === "public"}
-                          onChange={(e) =>
-                            handlePrivacyChange(
-                              "profileVisibility",
-                              e.target.value
-                            )
-                          }
-                          className="mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">Public</p>
-                          <p className="text-sm text-gray-500">
-                            Your profile is visible to all users
-                          </p>
-                        </div>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="profileVisibility"
-                          value="experts"
-                          checked={privacy.profileVisibility === "experts"}
-                          onChange={(e) =>
-                            handlePrivacyChange(
-                              "profileVisibility",
-                              e.target.value
-                            )
-                          }
-                          className="mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Experts Only
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Only domain experts can view your profile
-                          </p>
-                        </div>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="profileVisibility"
-                          value="private"
-                          checked={privacy.profileVisibility === "private"}
-                          onChange={(e) =>
-                            handlePrivacyChange(
-                              "profileVisibility",
-                              e.target.value
-                            )
-                          }
-                          className="mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">Private</p>
-                          <p className="text-sm text-gray-500">
-                            Only you can view your profile
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Information Sharing */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Information Sharing
-                    </h3>
-                    <div className="space-y-4">
-                      {[
-                        {
-                          key: "showEmail",
-                          label: "Show Email Address",
-                          description: "Allow others to see your email address",
-                        },
-                        {
-                          key: "showPhone",
-                          label: "Show Phone Number",
-                          description: "Allow others to see your phone number",
-                        },
-                        {
-                          key: "showProjects",
-                          label: "Show Projects",
-                          description:
-                            "Display your current and completed projects",
-                        },
-                        {
-                          key: "showProgress",
-                          label: "Show Progress",
-                          description:
-                            "Show your academic progress and achievements",
-                        },
-                        {
-                          key: "allowContactFromExperts",
-                          label: "Allow Contact from Experts",
-                          description:
-                            "Let domain experts contact you directly",
-                        },
-                        {
-                          key: "showOnlineStatus",
-                          label: "Show Online Status",
-                          description:
-                            "Display when you are online and available",
-                        },
-                      ].map(({ key, label, description }) => (
-                        <div
-                          key={key}
-                          className="flex items-center justify-between py-2"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">{label}</p>
-                            <p className="text-sm text-gray-500">
-                              {description}
-                            </p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={
-                                privacy[key as keyof typeof privacy] as boolean
-                              }
-                              onChange={(e) =>
-                                handlePrivacyChange(key, e.target.checked)
-                              }
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-11 h-6 rounded-full ${
-                                privacy[key as keyof typeof privacy]
-                                  ? "bg-primary"
-                                  : "bg-gray-200"
-                              } relative transition-colors`}
-                            >
-                              <div
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                                  privacy[key as keyof typeof privacy]
-                                    ? "translate-x-5"
-                                    : "translate-x-0"
-                                }`}
-                              ></div>
-                            </div>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Data Export */}
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       Data Management
                     </h3>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Download Your Data
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Export all your data including projects, messages,
-                            and settings
-                          </p>
-                        </div>
-                        <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
-                          Export Data
-                        </button>
-                      </div>
                       <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
                         <div>
                           <p className="font-medium text-red-900">
@@ -911,17 +416,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end mt-8">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
                 </div>
               </div>
             )}
@@ -942,20 +436,14 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Current Password
-                        </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           New Password
                         </label>
                         <input
                           type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Enter new password"
                         />
                       </div>
                       <div>
@@ -964,240 +452,73 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                         </label>
                         <input
                           type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Confirm new password"
                         />
                       </div>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
+                      <button
+                        onClick={handlePasswordUpdate}
+                        disabled={!newPassword || !confirmPassword}
+                        className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+                      >
                         Update Password
                       </button>
                     </div>
                   </div>
-
-                  {/* Two-Factor Authentication */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Two-Factor Authentication
-                    </h3>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Enable 2FA</p>
-                        <p className="text-sm text-gray-500">
-                          Add an extra layer of security to your account
-                        </p>
-                      </div>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors">
-                        Enable 2FA
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Login Activity */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Recent Login Activity
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          device: "MacBook Pro",
-                          location: "San Francisco, CA",
-                          time: "2 hours ago",
-                          current: true,
-                        },
-                        {
-                          device: "iPhone 13",
-                          location: "San Francisco, CA",
-                          time: "1 day ago",
-                          current: false,
-                        },
-                        {
-                          device: "Chrome Browser",
-                          location: "San Francisco, CA",
-                          time: "3 days ago",
-                          current: false,
-                        },
-                      ].map((session, index) => (
+                </div>
+                {/* Password Update Modal */}
+                {showPasswordModal && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-slideUp">
+                      <div className="text-center">
+                        {/* Icon */}
                         <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                            passwordUpdateStatus === "success"
+                              ? "bg-green-100"
+                              : "bg-red-100"
+                          }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {session.device}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {session.location} • {session.time}
-                              </p>
-                            </div>
-                          </div>
-                          {session.current && (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                              Current
-                            </span>
+                          {passwordUpdateStatus === "success" ? (
+                            <Check size={32} className="text-green-600" />
+                          ) : (
+                            <X size={32} className="text-red-600" />
                           )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Connected Services */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Connected Services
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          service: "Google Drive",
-                          status: "Connected",
-                          color: "green",
-                        },
-                        {
-                          service: "Dropbox",
-                          status: "Not Connected",
-                          color: "gray",
-                        },
-                        {
-                          service: "OneDrive",
-                          status: "Connected",
-                          color: "green",
-                        },
-                        {
-                          service: "GitHub",
-                          status: "Not Connected",
-                          color: "gray",
-                        },
-                      ].map((service, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        {/* Title */}
+                        <h3
+                          className={`text-2xl font-bold mb-2 ${
+                            passwordUpdateStatus === "success"
+                              ? "text-green-900"
+                              : "text-red-900"
+                          }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`w-3 h-3 rounded-full ${
-                                service.color === "green"
-                                  ? "bg-green-500"
-                                  : "bg-gray-300"
-                              }`}
-                            ></div>
-                            <span className="font-medium text-gray-900">
-                              {service.service}
-                            </span>
-                          </div>
-                          <button
-                            className={`px-4 py-2 rounded-lg transition-colors ${
-                              service.status === "Connected"
-                                ? "bg-red-100 text-red-700 hover:bg-red-200"
-                                : "bg-primary text-white hover:bg-secondary hover:text-black"
-                            }`}
-                          >
-                            {service.status === "Connected"
-                              ? "Disconnect"
-                              : "Connect"}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                          {passwordUpdateStatus === "success"
+                            ? "Success!"
+                            : "Error"}
+                        </h3>
 
-            {/* Appearance Settings */}
-            {activeTab === "appearance" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Appearance Settings
-                </h2>
+                        {/* Message */}
+                        <p className="text-gray-600 mb-6">{message}</p>
 
-                <div className="space-y-8">
-                  {/* Theme */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Theme
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[
-                        {
-                          id: "light",
-                          label: "Light",
-                          icon: Sun,
-                          description: "Clean and bright interface",
-                        },
-                        {
-                          id: "dark",
-                          label: "Dark",
-                          icon: Moon,
-                          description: "Easy on the eyes",
-                        },
-                        {
-                          id: "system",
-                          label: "System",
-                          icon: Monitor,
-                          description: "Match your device settings",
-                        },
-                      ].map((theme) => (
-                        <label
-                          key={theme.id}
-                          className="relative cursor-pointer"
+                        {/* Close Button */}
+                        <button
+                          onClick={() => setShowPasswordModal(false)}
+                          className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                            passwordUpdateStatus === "success"
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-red-600 hover:bg-red-700 text-white"
+                          }`}
                         >
-                          <input
-                            type="radio"
-                            name="theme"
-                            value={theme.id}
-                            checked={theme.id === "light"}
-                            className="sr-only"
-                          />
-                          <div
-                            className={`p-4 border-2 rounded-lg transition-all ${
-                              theme.id === "light"
-                                ? "border-primary bg-primary/5"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3 mb-2">
-                              <theme.icon size={20} className="text-gray-600" />
-                              <span className="font-medium text-gray-900">
-                                {theme.label}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                              {theme.description}
-                            </p>
-                          </div>
-                        </label>
-                      ))}
+                          Close
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Timezone */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Timezone
-                    </h3>
-                    <select className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                      <option value="pst">Pacific Standard Time</option>
-                      <option value="mst">Mountain Standard Time</option>
-                      <option value="cst">Central Standard Time</option>
-                      <option value="est">Eastern Standard Time</option>
-                      <option value="utc">UTC</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end mt-8">
-                  <button
-                    onClick={handleSaveSettings}
-                    className="inline-flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-colors"
-                  >
-                    <Save size={16} className="mr-2" />
-                    Save Changes
-                  </button>
-                </div>
+                )}
               </div>
             )}
           </div>

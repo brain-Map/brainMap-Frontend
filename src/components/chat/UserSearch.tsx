@@ -27,7 +27,7 @@ export default function UserSearch({ token, onUserSelect, selectedUser }: UserSe
       setIsSearching(true);
       try {
         const response = await fetch(
-          `http://localhost:8080/api/v1/users/search?id=${encodeURIComponent(searchQuery)}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/search?id=${encodeURIComponent(searchQuery)}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
