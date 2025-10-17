@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import api from "@/utils/api";
+import Swal from "sweetalert2";
 import {
   Eye,
   MessageSquare,
   Filter,
   Search,
-  ArrowUpDown,
   X,
   Check,
   AlertTriangle,
@@ -14,27 +15,124 @@ import {
   MessageCircle,
   Star,
   Book,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Types
-interface Report {
+interface InquiryItem {
   id: string;
   reportedUser: string;
   reportedUserAvatar: string;
-  contentType: "project" | "comment" | "post" | "review";
+  contentType: "project" | "comment" | "post" | "review" | "support" | "issue" | "payment" | "account" | "other";
   contentTitle: string;
   reason: string;
   status: "pending" | "reviewed" | "resolved";
-  reportedBy: string;
+  reportedBy: string; // resolver username if available
   reportDate: string;
   description: string;
+  responseContent?: string | null;
+}
+
+// Helper to map backend DTO to UI InquiryItem
+const mapDtoToInquiryItem = (dto: BackendInquiry): InquiryItem => {
+  const displayUser = dto.user?.username || dto.userId;
+  const avatarInitials = ((displayUser || "U").replace(/[^a-zA-Z0-9]/g, "").slice(0, 2) || "U").toUpperCase();
+  const typeLower = dto.inquiryType.toLowerCase();
+  // Map backend type to our UI union keys
+  const typeMap: Record<string, InquiryItem["contentType"]> = {
+    project: "project",
+    comment: "comment",
+    post: "post",
+    review: "review",
+    support: "support",
+    issue: "issue",
+    payment: "payment",
+    account: "account",
+    other: "other",
+  };
+  const uiType = typeMap[typeLower] ?? "post";
+  const statusLower = dto.status.toLowerCase() as InquiryItem["status"];
+  return {
+    id: dto.inquiryId,
+    reportedUser: displayUser,
+    reportedUserAvatar: avatarInitials,
+    contentType: uiType,
+    contentTitle: dto.title,
+    reason: dto.inquiryContent,
+    status: statusLower,
+    reportedBy: dto.resolverUser?.username || "-",
+    reportDate: dto.createdAt,
+    description: dto.inquiryContent,
+    responseContent: dto.responseContent ?? null,
+  };
+};
+
+// Backend DTOs
+interface BackendUser {
+  id: string;
+  username: string | null;
+  email: string | null;
+  avatar: string | null;
+}
+
+interface BackendInquiry {
+  inquiryId: string;
+  userId: string;
+  resolver: string | null;
+  inquiryType: string; // e.g., REVIEW | SUPPORT | ISSUE | PAYMENT | PROJECT
+  title: string;
+  inquiryContent: string;
+  status: "PENDING" | "REVIEWED" | "RESOLVED";
+  createdAt: string;
+  resolvedAt: string | null;
+  user?: BackendUser | null;
+  resolverUser?: BackendUser | null;
+  responseContent: string | null;
+}
+
+interface InquiryListResponse {
+  content: BackendInquiry[];
+  totalPages: number;
+  totalElements: number;
+  numberOfElements: number;
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
 }
 
 interface ResponseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  report: Report | null;
+  inquiry: InquiryItem | null;
   onSubmit: (response: string, status: string) => void;
 }
 
@@ -42,13 +140,21 @@ interface ResponseModalProps {
 const ResponseModal: React.FC<ResponseModalProps> = ({
   isOpen,
   onClose,
-  report,
+  inquiry,
   onSubmit,
 }) => {
   const [response, setResponse] = useState("");
   const [status, setStatus] = useState("reviewed");
 
-  if (!isOpen || !report) return null;
+  // Prefill form when inquiry changes/opened
+  useEffect(() => {
+    if (inquiry) {
+      setResponse(inquiry.responseContent ?? "");
+      setStatus(inquiry.status);
+    }
+  }, [inquiry]);
+
+  if (!isOpen || !inquiry) return null;
 
   const handleSubmit = () => {
     onSubmit(response, status);
@@ -84,9 +190,9 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Respond to Report
+                  Respond to Inquiry
                 </h2>
-                <p className="text-sm text-gray-600">Report ID: {report.id}</p>
+                <p className="text-sm text-gray-600">Inquiry ID: {inquiry.id}</p>
               </div>
             </div>
             <button
@@ -100,55 +206,51 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 
         {/* Modal Content */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
-          {/* Report Details */}
+          {/* Inquiry Details */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Report Details
+              Inquiry Details
             </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Reported User:</span>
+                <span className="text-gray-600">User:</span>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-xs font-medium">
-                      {report.reportedUserAvatar}
+                      {inquiry.reportedUserAvatar}
                     </span>
                   </div>
                   <span className="font-medium text-gray-900">
-                    {report.reportedUser}
+                    {inquiry.reportedUser}
                   </span>
                 </div>
               </div>
               <div>
-                <span className="text-gray-600">Content Type:</span>
+                <span className="text-gray-600">Inquiry Type:</span>
                 <div className="flex items-center space-x-2 mt-1">
-                  {getContentTypeIcon(report.contentType)}
+                  {getContentTypeIcon(inquiry.contentType)}
                   <span className="font-medium text-gray-900 capitalize">
-                    {report.contentType}
+                    {inquiry.contentType}
                   </span>
                 </div>
               </div>
               <div>
                 <span className="text-gray-600">Content Title:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.contentTitle}
+                  {inquiry.contentTitle}
                 </p>
               </div>
               <div>
-                <span className="text-gray-600">Reported By:</span>
+                <span className="text-gray-600">Resolver:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.reportedBy}
+                  {inquiry.reportedBy || "-"}
                 </p>
               </div>
               <div className="col-span-2">
                 <span className="text-gray-600">Reason:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.reason}
+                  {inquiry.reason}
                 </p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-600">Description:</span>
-                <p className="text-gray-700 mt-1">{report.description}</p>
               </div>
             </div>
           </div>
@@ -208,104 +310,43 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 };
 
 // Main Component
-export default function ReportManagement() {
+export default function InquiryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [contentTypeFilter, setContentTypeFilter] = useState("all");
+  const [inquiryTypeFilter, setInquiryTypeFilter] = useState("all");
   const [sortField, setSortField] = useState("reportDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 1-based
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const params = useParams();
 
-  // Sample data
-  const [reports, setReports] = useState<Report[]>([
-    {
-      id: "RPT-001",
-      reportedUser: "John Smith",
-      reportedUserAvatar: "JS",
-      contentType: "post",
-      contentTitle: "Machine Learning Fundamentals Discussion",
-      reason: "Inappropriate Content",
-      status: "pending",
-      reportedBy: "Sarah Wilson",
-      reportDate: "2024-01-15 14:30",
-      description:
-        "User posted inappropriate comments that violate community guidelines regarding respectful discourse.",
-    },
-    {
-      id: "RPT-002",
-      reportedUser: "Emily Chen",
-      reportedUserAvatar: "EC",
-      contentType: "project",
-      contentTitle: "Advanced React Components Library",
-      reason: "Spam/Self-promotion",
-      status: "reviewed",
-      reportedBy: "Michael Davis",
-      reportDate: "2024-01-15 11:20",
-      description:
-        "Project appears to be spam with excessive self-promotion and irrelevant content.",
-    },
-    {
-      id: "RPT-003",
-      reportedUser: "David Johnson",
-      reportedUserAvatar: "DJ",
-      contentType: "comment",
-      contentTitle: 'Comment on "Data Science Best Practices"',
-      reason: "Harassment",
-      status: "resolved",
-      reportedBy: "Lisa Anderson",
-      reportDate: "2024-01-14 16:45",
-      description:
-        "User made harassing comments towards other community members in the discussion thread.",
-    },
-    {
-      id: "RPT-004",
-      reportedUser: "Maria Garcia",
-      reportedUserAvatar: "MG",
-      contentType: "review",
-      contentTitle: 'Review for "Python for Beginners" course',
-      reason: "False Information",
-      status: "pending",
-      reportedBy: "Tom Rodriguez",
-      reportDate: "2024-01-14 09:15",
-      description:
-        "Review contains misleading information about course content and instructor qualifications.",
-    },
-    {
-      id: "RPT-005",
-      reportedUser: "Alex Thompson",
-      reportedUserAvatar: "AT",
-      contentType: "post",
-      contentTitle: "Web Development Career Path",
-      reason: "Copyright Violation",
-      status: "pending",
-      reportedBy: "Jennifer Lee",
-      reportDate: "2024-01-13 13:22",
-      description:
-        "Post contains copyrighted material used without proper attribution or permission.",
-    },
-  ]);
+  // Overview stats from backend
+  type InquiryOverview = {
+    totalInquiries: number;
+    pending: number;
+    resolved: number;
+    reviewed: number;
+  };
+  const [overview, setOverview] = useState<InquiryOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState<boolean>(false);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
 
-  // Filter and sort reports
-  const filteredReports = reports
-    .filter((report) => {
-      const matchesSearch =
-        report.reportedUser.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.contentTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.reason.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || report.status === statusFilter;
-      const matchesContentType =
-        contentTypeFilter === "all" || report.contentType === contentTypeFilter;
-      return matchesSearch && matchesStatus && matchesContentType;
-    })
-    .sort((a, b) => {
-      const aValue = a[sortField as keyof Report];
-      const bValue = b[sortField as keyof Report];
-      const direction = sortDirection === "asc" ? 1 : -1;
-      return aValue < bValue ? -direction : aValue > bValue ? direction : 0;
-    });
+  // Backend-driven list
+  const [inquiryList, setInquiryList] = useState<InquiryListResponse | null>(null);
+
+  // Filter and sort inquiries
+  // Server provides filtered & paginated results; use backend content directly
+  const filteredInquiries = inquiryList?.content ?? [];
+
+  // Pagination derived values
+  const totalItems = inquiryList?.totalElements ?? 0;
+  const totalPages = Math.max(1, inquiryList?.totalPages ?? 1);
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = Math.max(0, (safeCurrentPage - 1) * itemsPerPage);
+  const endIndex = Math.min(startIndex + (inquiryList?.numberOfElements ?? 0), totalItems);
+  const paginatedInquiries = filteredInquiries; // backend already paginates
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -314,6 +355,7 @@ export default function ReportManagement() {
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1);
   };
 
   const getStatusBadge = (status: string) => {
@@ -326,7 +368,7 @@ export default function ReportManagement() {
   };
 
   const getContentTypeIcon = (type: string) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case "project":
         return <Book className="w-4 h-4 text-purple-600" />;
       case "comment":
@@ -335,39 +377,249 @@ export default function ReportManagement() {
         return <FileText className="w-4 h-4 text-green-600" />;
       case "review":
         return <Star className="w-4 h-4 text-yellow-600" />;
+      case "support":
+        return <MessageSquare className="w-4 h-4 text-indigo-600" />;
+      case "issue":
+        return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case "payment":
+        return <FileText className="w-4 h-4 text-emerald-600" />;
+      case "account":
+        return <FileText className="w-4 h-4 text-pink-600" />;
+      case "other":
+        return <FileText className="w-4 h-4 text-gray-600" />;
       default:
         return <FileText className="w-4 h-4 text-gray-600" />;
     }
   };
 
-  const handleViewReport = (report: Report) => {
-    setSelectedReport(report);
+  const handleViewInquiry = (inquiry: InquiryItem) => {
+    setSelectedInquiry(inquiry);
     setIsModalOpen(true);
   };
 
-  const handleResponseSubmit = (response: string, status: string) => {
-    if (selectedReport) {
-      setReports((prev) =>
-        prev.map((report) =>
-          report.id === selectedReport.id
-            ? { ...report, status: status as Report["status"] }
-            : report
-        )
-      );
+  const handleResponseSubmit = async (response: string, status: string) => {
+    if (!selectedInquiry) return;
+    try {
+      // Build payload expected by backend
+      const payload = {
+        responseContent: response,
+        status: status.toUpperCase(), // PENDING | REVIEWED | RESOLVED
+      } as any;
+
+      // Update inquiry via backend endpoint
+      const res = await api.post(`/api/v1/inquiries/resoponedToInquiry/${selectedInquiry.id}`, payload);
+      const updated: BackendInquiry = res?.data;
+
+      // Update current page list optimistically
+      setInquiryList((prev) => {
+        if (!prev) return prev;
+        const nextContent = prev.content.map((it) =>
+          it.inquiryId === updated.inquiryId ? updated : it
+        );
+        return { ...prev, content: nextContent };
+      });
+
+  // Optionally update selectedInquiry snapshot
+  setSelectedInquiry(mapDtoToInquiryItem(updated));
+
+      await Swal.fire({
+        title: "Updated!",
+        text: "Inquiry has been updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (err: any) {
+      console.error("Failed to update inquiry:", err);
+      await Swal.fire({
+        title: "Error!",
+        text: err?.response?.data?.message || "Failed to update inquiry.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  // Clear filters like user management page
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setInquiryTypeFilter("all");
+    setCurrentPage(1);
+  };
+
+  // Status update with confirmation
+  const handleMarkStatus = async (
+    inquiry: InquiryItem,
+    newStatus: InquiryItem["status"]
+  ) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Mark inquiry ${inquiry.id} as ${newStatus}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: `Yes, mark ${newStatus}`,
+    });
+    if (!result.isConfirmed) return;
+
+    // Optimistic UI update could be done; for now, no-op or refetch
+
+    await Swal.fire({
+      title: "Updated!",
+      text: `Inquiry ${inquiry.id} marked as ${newStatus}.`,
+      icon: "success",
+      confirmButtonColor: "#3085d6",
+    });
+  };
+
+  // Delete with confirmation
+  const handleDeleteInquiry = async (inquiry: InquiryItem) => {
+    const result = await Swal.fire({
+      title: "Delete inquiry?",
+      text: `Do you want to delete inquiry ${inquiry.id}? This cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.delete(`/api/v1/inquiries/${inquiry.id}`);
+
+      // Optimistically update list and pagination counts
+      setInquiryList((prev) => {
+        if (!prev) return prev;
+        const nextContent = prev.content.filter((it) => it.inquiryId !== inquiry.id);
+        const newTotalElements = Math.max(0, (prev.totalElements || 0) - 1);
+        const pageSize = prev.pageable?.pageSize || itemsPerPage;
+        const newTotalPages = Math.max(1, Math.ceil(newTotalElements / (pageSize || 1)));
+        const updated = {
+          ...prev,
+          content: nextContent,
+          numberOfElements: nextContent.length,
+          totalElements: newTotalElements,
+          totalPages: newTotalPages,
+        };
+        return updated;
+      });
+
+      // If page becomes empty and not first page, go back a page to refetch
+      setTimeout(() => {
+        if ((inquiryList?.content?.length ?? 0) <= 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
+      }, 0);
+
+      // Refresh overview stats silently
+      try {
+        const res = await api.get("/api/v1/inquiries/overview");
+        setOverview(res.data as any);
+      } catch {}
+
+      await Swal.fire({
+        title: "Deleted!",
+        text: `Inquiry ${inquiry.id} has been deleted.`,
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (err: any) {
+      console.error("Failed to delete inquiry:", err);
+      await Swal.fire({
+        title: "Error!",
+        text: err?.response?.data?.message || "Failed to delete inquiry.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
   // filter from params 
   const allParams = params?.params as string[] | undefined;
-  const reportType = allParams?.[0];
+  const inquiryType = allParams?.[0];
   const status = allParams?.[1]
 
   useEffect(() => {
-    // filter pending reports
+    // filter pending inquiries
     if(status == "pending"){
       setStatusFilter("pending")
     }
-  }, [reportType]);
+  }, [inquiryType]);
+
+  // Fetch inquiries list from backend with filters & pagination
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      try {
+        const apiPage = Math.max(0, safeCurrentPage - 1);
+        const direction = sortDirection.toUpperCase();
+        const sortBy = "createdAt";
+
+        const statusMap: Record<string, string> = {
+          pending: "PENDING",
+          reviewed: "REVIEWED",
+          resolved: "RESOLVED",
+        };
+        // Inquiry type filter maps directly by uppercasing the selected value
+
+        let url = `/api/v1/inquiries/filter?page=${apiPage}&size=${itemsPerPage}&sortBy=${sortBy}&direction=${direction}`;
+        if (statusFilter !== "all") {
+          const s = statusMap[statusFilter];
+          if (s) url += `&status=${s}`;
+        }
+        if (inquiryTypeFilter !== "all") {
+          url += `&type=${inquiryTypeFilter.toUpperCase()}`;
+        }
+        if (searchTerm) {
+          url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+
+        const res = await api.get(url);
+        const data = res?.data as InquiryListResponse;
+        if (data) {
+          setInquiryList(data);
+          const fetchedPage = typeof data.pageable?.pageNumber === "number" ? data.pageable.pageNumber : apiPage;
+          const uiPage = fetchedPage + 1;
+          if (uiPage !== safeCurrentPage) setCurrentPage(uiPage);
+        }
+      } catch (err) {
+        console.error("Failed to load inquiries:", err);
+        setInquiryList({
+          content: [],
+          totalPages: 1,
+          totalElements: 0,
+          numberOfElements: 0,
+          pageable: { pageNumber: 0, pageSize: itemsPerPage },
+        });
+      }
+    };
+    fetchInquiries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeCurrentPage, itemsPerPage, statusFilter, inquiryTypeFilter, searchTerm, sortDirection]);
+
+  // Fetch inquiries overview stats
+  useEffect(() => {
+    const loadOverview = async () => {
+      setOverviewLoading(true);
+      setOverviewError(null);
+      try {
+        const res = await api.get("/api/v1/inquiries/overview");
+        setOverview(res.data as InquiryOverview);
+      } catch (err: any) {
+        console.error("Failed to load inquiries overview:", err);
+        setOverviewError(err?.message || "Failed to load stats");
+      } finally {
+        setOverviewLoading(false);
+      }
+    };
+    loadOverview();
+  }, []);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, inquiryTypeFilter]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
@@ -380,10 +632,10 @@ export default function ReportManagement() {
             </div>
             <div className="flex-1 grid gap-1">
               <h1 className="text-3xl font-bold text-gray-900">
-                Report Managements
+                Inquiry Management
               </h1>
               <p className="text-gray-600">
-                Review and manage user-submitted reports across the platform
+                Review and manage user-submitted inquiries across the platform
               </p>
             </div>
           </div>
@@ -395,10 +647,10 @@ export default function ReportManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Reports
+                  Total Inquiries
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {reports.length}
+                  {overview?.totalInquiries ?? inquiryList?.totalElements ?? 0}
                 </p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
@@ -411,9 +663,7 @@ export default function ReportManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {reports.filter((r) => r.status === "pending").length}
-                </p>
+                <p className="text-2xl font-bold text-yellow-600">{overview?.pending ?? 0}</p>
               </div>
               <div className="p-3 bg-yellow-500 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-white" />
@@ -425,9 +675,7 @@ export default function ReportManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Reviewed</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {reports.filter((r) => r.status === "reviewed").length}
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{overview?.reviewed ?? 0}</p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
                 <Eye className="w-6 h-6 text-white" />
@@ -439,9 +687,7 @@ export default function ReportManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Resolved</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {reports.filter((r) => r.status === "resolved").length}
-                </p>
+                <p className="text-2xl font-bold text-green-600">{overview?.resolved ?? 0}</p>
               </div>
               <div className="p-3 bg-green-500 rounded-lg">
                 <Check className="w-6 h-6 text-white" />
@@ -449,176 +695,290 @@ export default function ReportManagement() {
             </div>
           </div>
         </div>
-
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search reports..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
-                />
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Inquiries
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by user, title or reason..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                  />
+                </div>
               </div>
-
-              {/* Status Filter */}
-              <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4 text-gray-400" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="reviewed">Reviewed</option>
-                  <option value="resolved">Resolved</option>
-                </select>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:w-auto">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="reviewed">Reviewed</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Inquiry Type
+                  </label>
+                  <Select value={inquiryTypeFilter} onValueChange={setInquiryTypeFilter}>
+                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="issue">ISSUE</SelectItem>
+                      <SelectItem value="post">POST</SelectItem>
+                      <SelectItem value="comment">COMMENT</SelectItem>
+                      <SelectItem value="review">REVIEW</SelectItem>
+                      <SelectItem value="project">PROJECT</SelectItem>
+                      <SelectItem value="account">ACCOUNT</SelectItem>
+                      <SelectItem value="payment">PAYMENT</SelectItem>
+                      <SelectItem value="support">SUPPORT</SelectItem>
+                      <SelectItem value="other">OTHER</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-
-              {/* Content Type Filter */}
-              <select
-                value={contentTypeFilter}
-                onChange={(e) => setContentTypeFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 lg:mb-0"
               >
-                <option value="all">All Types</option>
-                <option value="project">Projects</option>
-                <option value="post">Posts</option>
-                <option value="comment">Comments</option>
-                <option value="review">Reviews</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              Showing {filteredReports.length} of {reports.length} reports
+                <Filter className="mr-2 h-4 w-4" />
+                Clear Filters
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Reports Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-medium text-gray-700">
-              <div
-                className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
-                onClick={() => handleSort("id")}
-              >
-                Report ID
-                <ArrowUpDown className="ml-2 w-4 h-4" />
+        {/* Inquiries Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Inquiries ({inquiryList?.numberOfElements ?? 0} of {totalItems})
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {totalItems <= itemsPerPage ? "Showing all inquiries" : `Filtered results: ${totalItems} inquiries found`}
+                </p>
               </div>
-              <div
-                className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
-                onClick={() => handleSort("reportedUser")}
-              >
-                Reported User
-                <ArrowUpDown className="ml-2 w-4 h-4" />
-              </div>
-              <div className="col-span-2">Content Type</div>
-              <div
-                className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
-                onClick={() => handleSort("reason")}
-              >
-                Reason
-                <ArrowUpDown className="ml-2 w-4 h-4" />
-              </div>
-              <div
-                className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
-                onClick={() => handleSort("status")}
-              >
-                Status
-                <ArrowUpDown className="ml-2 w-4 h-4" />
-              </div>
-              <div className="col-span-2">Actions</div>
+              {totalItems > 0 && totalPages > 1 && (
+                <div className="text-sm text-gray-500">
+                  Page {safeCurrentPage} of {totalPages}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Table Body */}
-          <div className="divide-y divide-gray-100">
-            {filteredReports.map((report) => (
-              <div
-                key={report.id}
-                className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="col-span-2">
-                  <span className="font-medium text-gray-900">{report.id}</span>
-                </div>
-
-                <div className="col-span-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        {report.reportedUserAvatar}
-                      </span>
-                    </div>
-                    <span className="font-medium text-gray-900">
-                      {report.reportedUser}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    {getContentTypeIcon(report.contentType)}
-                    <span className="capitalize text-gray-700">
-                      {report.contentType}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="col-span-2">
-                  <span className="text-gray-700">{report.reason}</span>
-                </div>
-
-                <div className="col-span-2">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(
-                      report.status
-                    )}`}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-gray-50 border-b border-gray-200">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-gray-900 py-4">Inquiry</TableHead>
+                  <TableHead className="font-semibold text-gray-900 py-4">Content Type</TableHead>
+                  <TableHead className="font-semibold text-gray-900 py-4">Reason</TableHead>
+                  <TableHead className="font-semibold text-gray-900 py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-gray-900 py-4">Report Date</TableHead>
+                  <TableHead className="text-right font-semibold text-gray-900 py-4">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedInquiries.map((dto: BackendInquiry, index) => {
+                  // map DTO -> display fields
+                  const displayId = dto.inquiryId;
+                  const displayUser = dto.user?.username || dto.userId;
+                  const userAvatar = dto.user?.avatar || "";
+                  const avatarInitials = ((displayUser || "U").replace(/[^a-zA-Z0-9]/g, "").slice(0, 2) || "U").toUpperCase();
+                  const displayTitle = dto.title;
+                  const displayType = dto.inquiryType.toLowerCase();
+                  const displayReason = dto.inquiryContent;
+                  const displayStatus = dto.status.toLowerCase(); // pending | reviewed | resolved
+                  const formatDate = (dateString: string | null) => {
+                    if (!dateString) return "N/A";
+                    const d = new Date(dateString);
+                    if (isNaN(d.getTime())) return dateString;
+                    return d.toLocaleDateString("en-US", { year: "numeric", month: "short" }) +
+                      " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+                  };
+                  return (
+                  <TableRow
+                    key={displayId}
+                    className={`border-gray-200 hover:bg-gray-50 transition-colors ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                    }`}
                   >
-                    {report.status.charAt(0).toUpperCase() +
-                      report.status.slice(1)}
-                  </span>
-                </div>
-
-                <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleViewReport(report)}
-                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </button>
-                    <button
-                      onClick={() => handleViewReport(report)}
-                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      Respond
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    <TableCell className="font-medium py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-gray-200">
+                          <AvatarImage src={userAvatar || ""} />
+                          <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
+                            {avatarInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium text-gray-900">{displayTitle}</div>
+                          <div className="text-xs text-gray-500">by {displayUser}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
+                        {getContentTypeIcon(displayType)}
+                        <span className="capitalize text-gray-700">{displayType}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <span className="text-gray-700 line-clamp-1" title={displayReason}>{displayReason}</span>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <Badge
+                        className={
+                          displayStatus === "pending"
+                            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200"
+                            : displayStatus === "reviewed"
+                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200"
+                            : "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
+                        }
+                      >
+                        {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-gray-500 py-4">{formatDate(dto.createdAt)}</TableCell>
+                    <TableCell className="text-right py-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-white">
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => handleViewInquiry(mapDtoToInquiryItem(dto))}
+                          >
+                            <Eye className="mr-2 h-4 w-4 text-gray-500" />
+                            <span className="text-gray-700">View Details</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => handleViewInquiry(mapDtoToInquiryItem(dto))}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4 text-gray-500" />
+                            <span className="text-gray-700">Respond</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-red-50 text-red-600"
+                            onClick={() => handleDeleteInquiry(mapDtoToInquiryItem(dto))}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Delete Inquiry
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );})}
+              </TableBody>
+            </Table>
           </div>
 
-          {/* Empty State */}
-          {filteredReports.length === 0 && (
-            <div className="px-6 py-12 text-center">
-              <AlertTriangle className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+          {(inquiryList?.content?.length ?? 0) === 0 && (
+            <div className="text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Search className="h-6 w-6 text-gray-400" />
+              </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No reports found
+                No inquiries found
               </h3>
-              <p className="text-gray-600">
-                Try adjusting your search or filter criteria.
+              <p className="text-gray-500 mb-4">
+                No inquiries match your current search criteria.
               </p>
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {(inquiryList?.content?.length ?? 0) > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {endIndex} of {totalItems} results
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 1))}
+                  disabled={safeCurrentPage === 1}
+                  className="border-gray-300 text-gray-700 hover:bg-white disabled:opacity-50"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i: number) => {
+                    let page: number;
+                    if (totalPages <= 5) {
+                      page = i + 1;
+                    } else if (safeCurrentPage <= 3) {
+                      page = i + 1;
+                    } else if (safeCurrentPage >= totalPages - 2) {
+                      page = totalPages - 4 + i;
+                    } else {
+                      page = safeCurrentPage - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={page}
+                        variant={safeCurrentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={
+                          safeCurrentPage === page
+                            ? "bg-[#3D52A0] text-white hover:bg-[#2A3B7D] border-[#3D52A0]"
+                            : "border-gray-300 text-gray-700 hover:bg-white"
+                        }
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages || 1, safeCurrentPage + 1))}
+                  disabled={safeCurrentPage === totalPages || totalPages === 1}
+                  className="border-gray-300 text-gray-700 hover:bg-white disabled:opacity-50"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -627,7 +987,7 @@ export default function ReportManagement() {
         <ResponseModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          report={selectedReport}
+          inquiry={selectedInquiry}
           onSubmit={handleResponseSubmit}
         />
       </div>
