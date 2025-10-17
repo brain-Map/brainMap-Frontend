@@ -49,7 +49,7 @@ export default function ServicePage() {
           subject: (serviceData as any).subject || serviceData.category || 'General',
           duration: (serviceData as any).duration ?? null,
           mentorName: `${serviceData.mentorFirstName} ${serviceData.mentorLastName}`,
-          mentorAvatar: `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
+          mentorAvatar: `${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
           thumbnailUrl: serviceData.thumbnailUrl || '/image/default_card.jpg',
           mentorLevel: 2,
           rating: 4.8,
