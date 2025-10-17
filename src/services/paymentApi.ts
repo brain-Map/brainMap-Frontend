@@ -5,13 +5,14 @@ export interface PaymentSessionRequest {
   amount: number;
   currency: string;
   orderId: string;
-  itemDescription: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  customerAddress?: string;
+  itemDescription?: string;  // Made optional if backend doesn't require it
+  firstName: string;        // Changed from customerName
+  lastName: string;         // New field
+  email: string;            // Changed from customerEmail
+  phone?: string;           // Changed from customerPhone
+  address?: string;         // Changed from customerAddress
   city?: string;
-  country?: string;
+  country?: string;         // May not be in backend, but keeping for compatibility
 }
 
 export interface PaymentSessionResponse {
@@ -57,6 +58,10 @@ class PaymentApiService {
 
       console.log('📤 Sending to backend:', requestPayload);
       console.log('🔗 Backend URL:', api.defaults.baseURL + '/api/payments/create-session');
+      
+      // Log authentication status
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+      console.log('🔐 Authentication token:', token ? 'Present (will be auto-attached)' : '❌ MISSING');
       
       const response = await api.post('/api/payments/create-session', requestPayload);
       
