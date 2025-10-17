@@ -2,54 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Check, X, Clock, Download, ArrowLeft, AlertTriangle, Users, FileText, Star, TrendingUp } from "lucide-react";
-import { expertApprovalApiService } from '@/services/moderatorApi';
+import { expertApprovalApiService, ExpertRequest, ExpertDocument } from '@/services/moderatorApi';
 import toast from 'react-hot-toast';
 
-// TypeScript interfaces and types
-interface Document {
-  name: string;
-  type: string;
-  verified: boolean;
-}
-
-interface Project {
-  title: string;
-  duration: string;
-  role: string;
-  description: string;
-  technologies: string[];
-  outcome: string;
-}
-
-interface ExpertRequest {
-  id: number;
-  userId: number;
-  name: string;
-  email: string;
-  phone?: string;
-  location?: string;
-  profileImage?: string;
-  domain: string;
-  specialization: string;
-  education: string;
-  experience: string;
-  currentPosition: string;
-  institution: string;
-  submittedDate: string;
-  status: "pending" | "under_review" | "approved" | "rejected";
-  publications?: number;
-  citations?: number;
-  documents: Document[];
-  bio?: string;
-  researchAreas: string[];
-  achievements: string[];
-  projects: Project[];
-  reviewedBy?: number;
-  reviewedDate?: string;
-  reviewNotes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Using imported types from moderatorApi service
 
 export default function ExpertApprovalPage() {
   const [selectedTab, setSelectedTab] = useState("all");
@@ -69,7 +25,19 @@ export default function ExpertApprovalPage() {
       setLoading(true);
       setError(null);
       const response = await expertApprovalApiService.getExpertRequests();
-      setRequests(response.requests);
+      
+      // Deduplicate requests by ID to prevent React key warnings
+      const uniqueRequests = response.requests.reduce((acc, current) => {
+        const isDuplicate = acc.find(item => item.id === current.id);
+        if (!isDuplicate) {
+          acc.push(current);
+        } else {
+          console.warn(`Duplicate expert request found with ID: ${current.id}`);
+        }
+        return acc;
+      }, [] as typeof response.requests);
+      
+      setRequests(uniqueRequests);
     } catch (err: any) {
       console.error('Failed to load expert requests:', err);
       setError('Failed to load expert requests. Please try again.');
@@ -79,19 +47,16 @@ export default function ExpertApprovalPage() {
     }
   };
 
-  // Reset filter to "all" if it's set to "approved" or "rejected" since we don't show those requests
+  // Keep selectedTab state clean
   useEffect(() => {
-    if (selectedTab === "approved" || selectedTab === "rejected") {
-      setSelectedTab("all");
-    }
+    // No need to reset tabs since we now show all statuses
   }, [selectedTab]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending", icon: Clock },
-      under_review: { bg: "bg-blue-100", text: "text-blue-800", label: "Under Review", icon: Eye },
-      approved: { bg: "bg-green-100", text: "text-green-800", label: "Approved", icon: Check },
-      rejected: { bg: "bg-red-100", text: "text-red-800", label: "Rejected", icon: X }
+      PENDING: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending", icon: Clock },
+      APPROVED: { bg: "bg-green-100", text: "text-green-800", label: "Approved", icon: Check },
+      REJECTED: { bg: "bg-red-100", text: "text-red-800", label: "Rejected", icon: X }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig];
@@ -105,77 +70,65 @@ export default function ExpertApprovalPage() {
     );
   };
 
-  const handleApproveRequest = async (id: number) => {
+  const handleApproveRequest = async (id: string) => {
     try {
       await expertApprovalApiService.updateExpertStatus({
         expertRequestId: id,
-        status: 'approved'
+        status: 'APPROVED'
       });
       setRequests(prev => prev.map(req => 
-        req.id === id ? { ...req, status: 'approved' as const } : req
+        req.id === id ? { ...req, status: 'APPROVED' as const } : req
       ));
       if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest({ ...selectedRequest, status: 'approved' });
+        setSelectedRequest({ ...selectedRequest, status: 'APPROVED' });
       }
       toast.success('Expert approved successfully');
     } catch (err: any) {
       console.error('Failed to approve expert:', err);
-      toast.error('Failed to approve expert');
+      const errorMessage = err.response?.data?.message 
+        || err.message 
+        || 'Failed to approve expert. Please ensure the backend endpoint is implemented.';
+      toast.error(errorMessage);
     }
   };
 
-  const handleRejectRequest = async (id: number) => {
+  const handleRejectRequest = async (id: string) => {
     try {
       await expertApprovalApiService.updateExpertStatus({
         expertRequestId: id,
-        status: 'rejected'
+        status: 'REJECTED'
       });
       setRequests(prev => prev.map(req => 
-        req.id === id ? { ...req, status: 'rejected' as const } : req
+        req.id === id ? { ...req, status: 'REJECTED' as const } : req
       ));
       if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest({ ...selectedRequest, status: 'rejected' });
+        setSelectedRequest({ ...selectedRequest, status: 'REJECTED' });
       }
       toast.success('Expert rejected successfully');
     } catch (err: any) {
       console.error('Failed to reject expert:', err);
-      toast.error('Failed to reject expert');
+      const errorMessage = err.response?.data?.message 
+        || err.message 
+        || 'Failed to reject expert. Please ensure the backend endpoint is implemented.';
+      toast.error(errorMessage);
     }
   };
 
-  const handleReviewRequest = async (id: number) => {
-    try {
-      await expertApprovalApiService.updateExpertStatus({
-        expertRequestId: id,
-        status: 'under_review'
-      });
-      setRequests(prev => prev.map(req => 
-        req.id === id ? { ...req, status: 'under_review' as const } : req
-      ));
-      if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest({ ...selectedRequest, status: 'under_review' });
-      }
-      toast.success('Expert moved to review');
-    } catch (err: any) {
-      console.error('Failed to update expert status:', err);
-      toast.error('Failed to update expert status');
-    }
-  };
+
 
   const filteredRequests = requests.filter((request) => {
     const searchTermLower = searchTerm.toLowerCase();
+    const fullName = `${request.firstName} ${request.lastName}`;
     const matchesSearch = !searchTerm || (
-      (request.name?.toLowerCase().includes(searchTermLower)) ||
+      (fullName?.toLowerCase().includes(searchTermLower)) ||
       (request.email?.toLowerCase().includes(searchTermLower)) ||
-      (request.domain?.toLowerCase().includes(searchTermLower)) ||
-      (request.specialization?.toLowerCase().includes(searchTermLower))
+      (request.domain?.toLowerCase().includes(searchTermLower))
     );
     
     const matchesTab = selectedTab === "all" || 
-                      (selectedTab === "pending" && request.status === "pending") ||
-                      (selectedTab === "under_review" && request.status === "under_review") ||
-                      (selectedTab === "approved" && request.status === "approved") ||
-                      (selectedTab === "rejected" && request.status === "rejected");
+                      (selectedTab === "pending" && request.status === "PENDING") ||
+                      (selectedTab === "approved" && request.status === "APPROVED") ||
+                      (selectedTab === "rejected" && request.status === "REJECTED");
     
     return matchesSearch && matchesTab;
   });
@@ -183,10 +136,9 @@ export default function ExpertApprovalPage() {
   const getTabCounts = () => {
     return {
       all: requests.length,
-      pending: requests.filter(r => r.status === "pending").length,
-      under_review: requests.filter(r => r.status === "under_review").length,
-      approved: requests.filter(r => r.status === "approved").length,
-      rejected: requests.filter(r => r.status === "rejected").length,
+      pending: requests.filter(r => r.status === "PENDING").length,
+      approved: requests.filter(r => r.status === "APPROVED").length,
+      rejected: requests.filter(r => r.status === "REJECTED").length,
     };
   };
 
@@ -254,10 +206,10 @@ export default function ExpertApprovalPage() {
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm border">
                 <div className="flex items-center">
-                  <Eye className="h-8 w-8 text-blue-600" />
+                  <Check className="h-8 w-8 text-green-600" />
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-600">Under Review</p>
-                    <p className="text-2xl font-semibold text-gray-900">{tabCounts.under_review}</p>
+                    <p className="text-sm font-medium text-gray-600">Approved</p>
+                    <p className="text-2xl font-semibold text-gray-900">{tabCounts.approved}</p>
                   </div>
                 </div>
               </div>
@@ -288,7 +240,6 @@ export default function ExpertApprovalPage() {
                   {[
                     { id: "all", label: "All", count: tabCounts.all },
                     { id: "pending", label: "Pending", count: tabCounts.pending },
-                    { id: "under_review", label: "Review", count: tabCounts.under_review },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -328,13 +279,13 @@ export default function ExpertApprovalPage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{request.name || 'Unknown'}</h3>
+                          <h3 className="font-medium text-gray-900">{`${request.firstName} ${request.lastName}` || 'Unknown'}</h3>
                           <p className="text-sm text-gray-600 mt-1">{request.domain || 'No domain specified'}</p>
-                          <p className="text-sm text-gray-500">{request.specialization || 'No specialization specified'}</p>
+                          <p className="text-sm text-gray-500">{request.experience || 'No experience specified'}</p>
                           <div className="mt-2 flex items-center justify-between">
                             {getStatusBadge(request.status)}
                             <span className="text-xs text-gray-500">
-                              {request.submittedDate ? new Date(request.submittedDate).toLocaleDateString() : 'Unknown date'}
+                              {request.submittedAt ? new Date(request.submittedAt).toLocaleDateString() : 'Unknown date'}
                             </span>
                           </div>
                         </div>
@@ -354,18 +305,15 @@ export default function ExpertApprovalPage() {
                 <div className="p-6 border-b">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-4">
-                      <img
-                        src={selectedRequest.profileImage || "/public/image/user_placeholder.jpg"}
-                        alt={selectedRequest.name}
-                        className="w-16 h-16 rounded-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/public/image/user_placeholder.jpg";
-                        }}
-                      />
+                      <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {selectedRequest.firstName.charAt(0)}{selectedRequest.lastName.charAt(0)}
+                        </span>
+                      </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">{selectedRequest.name}</h2>
-                        <p className="text-gray-600">{selectedRequest.currentPosition}</p>
-                        <p className="text-gray-500">{selectedRequest.institution}</p>
+                        <h2 className="text-2xl font-bold text-gray-900">{`${selectedRequest.firstName} ${selectedRequest.lastName}`}</h2>
+                        <p className="text-gray-600">{selectedRequest.email}</p>
+                        <p className="text-gray-500">{selectedRequest.domain || 'Domain not specified'}</p>
                         <div className="mt-2">
                           {getStatusBadge(selectedRequest.status)}
                         </div>
@@ -374,17 +322,7 @@ export default function ExpertApprovalPage() {
                     
                     {/* Action Buttons */}
                     <div className="flex space-x-2">
-                      {selectedRequest.status === "pending" && (
-                        <button
-                          onClick={() => handleReviewRequest(selectedRequest.id)}
-                          className="px-4 py-2 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
-                        >
-                          <Eye className="w-4 h-4 inline mr-2" />
-                          Review
-                        </button>
-                      )}
-                      
-                      {(selectedRequest.status === "pending" || selectedRequest.status === "under_review") && (
+                      {selectedRequest.status === "PENDING" && (
                         <>
                           <button
                             onClick={() => handleApproveRequest(selectedRequest.id)}
@@ -406,7 +344,7 @@ export default function ExpertApprovalPage() {
                   </div>
                 </div>
 
-                {/* Content Tabs */}
+                {/* Content */}
                 <div className="p-6">
                   <div className="space-y-6">
                     {/* Basic Information */}
@@ -418,100 +356,35 @@ export default function ExpertApprovalPage() {
                           <p className="text-gray-900">{selectedRequest.email}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Phone</label>
-                          <p className="text-gray-900">{selectedRequest.phone || 'Not provided'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Location</label>
-                          <p className="text-gray-900">{selectedRequest.location || 'Not provided'}</p>
+                          <label className="text-sm font-medium text-gray-700">Domain</label>
+                          <p className="text-gray-900">{selectedRequest.domain || 'Not specified'}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Experience</label>
-                          <p className="text-gray-900">{selectedRequest.experience}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Academic Background */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Academic Background</h3>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Education</label>
-                          <p className="text-gray-900">{selectedRequest.education}</p>
+                          <p className="text-gray-900">{selectedRequest.experience || 'Not specified'}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Domain & Specialization</label>
-                          <p className="text-gray-900">{selectedRequest.domain} - {selectedRequest.specialization}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Biography</label>
-                          <p className="text-gray-900">{selectedRequest.bio || 'No biography provided'}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Research Profile */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Research Profile</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="bg-blue-50 p-4 rounded-lg text-center">
-                          <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                          <p className="text-2xl font-bold text-blue-600">{selectedRequest.publications || 0}</p>
-                          <p className="text-sm text-blue-600">Publications</p>
-                        </div>
-                        <div className="bg-green-50 p-4 rounded-lg text-center">
-                          <Star className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                          <p className="text-2xl font-bold text-green-600">{selectedRequest.citations || 0}</p>
-                          <p className="text-sm text-green-600">Citations</p>
-                        </div>
-                        <div className="bg-purple-50 p-4 rounded-lg text-center">
-                          <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                          <p className="text-2xl font-bold text-purple-600">{selectedRequest.projects?.length || 0}</p>
-                          <p className="text-sm text-purple-600">Projects</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Research Areas</label>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {selectedRequest.researchAreas?.map((area, index) => (
-                              <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                                {area}
-                              </span>
-                            )) || <span className="text-gray-500">No research areas specified</span>}
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Achievements</label>
-                          {selectedRequest.achievements?.length > 0 ? (
-                            <ul className="list-disc list-inside mt-2 space-y-1">
-                              {selectedRequest.achievements.map((achievement, index) => (
-                                <li key={index} className="text-gray-900">{achievement}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-500 mt-2">No achievements specified</p>
-                          )}
+                          <label className="text-sm font-medium text-gray-700">Submitted At</label>
+                          <p className="text-gray-900">{new Date(selectedRequest.submittedAt).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Documents */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Uploaded Documents</h3>
                       <div className="space-y-2">
                         {selectedRequest.documents?.length > 0 ? (
-                          selectedRequest.documents.map((doc, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                          selectedRequest.documents.map((doc) => (
+                            <div key={doc.documentId} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                               <div className="flex items-center">
                                 <FileText className="w-5 h-5 text-gray-500 mr-3" />
-                                <span className="text-gray-900">{doc.name}</span>
-                                {doc.verified && (
-                                  <Check className="w-4 h-4 text-green-600 ml-2" />
-                                )}
+                                <div>
+                                  <span className="text-gray-900 font-medium">{doc.fileName}</span>
+                                  <p className="text-sm text-gray-500">
+                                    {doc.contentType} • {(doc.size / 1024).toFixed(1)} KB • {getStatusBadge(doc.status)}
+                                  </p>
+                                </div>
                               </div>
                               <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
                                 <Download className="w-4 h-4" />
@@ -523,40 +396,35 @@ export default function ExpertApprovalPage() {
                         )}
                       </div>
                     </div>
-
-                    {/* Projects */}
-                    {selectedRequest.projects && selectedRequest.projects.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Projects</h3>
-                        <div className="space-y-4">
-                          {selectedRequest.projects.map((project, index) => (
-                            <div key={index} className="border border-gray-200 rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-medium text-gray-900">{project.title}</h4>
-                                <span className="text-sm text-gray-500">{project.duration}</span>
-                              </div>
-                              <p className="text-sm text-gray-600 mb-2">{project.role}</p>
-                              <p className="text-gray-700 mb-3">{project.description}</p>
-                              
-                              <div className="flex flex-wrap gap-2 mb-2">
-                                {project.technologies?.map((tech, techIndex) => (
-                                  <span key={techIndex} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                    {tech}
-                                  </span>
-                                )) || <span className="text-gray-500 text-xs">No technologies specified</span>}
-                              </div>
-                              
-                              <div className="text-sm">
-                                <span className="font-medium text-gray-700">Outcome: </span>
-                                <span className="text-gray-900">{project.outcome}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+
+                {/* Bottom Action Bar */}
+                {selectedRequest.status === "PENDING" && (
+                  <div className="border-t bg-gray-50 px-6 py-4">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-600">
+                        <strong>Status:</strong> Pending Review - This expert application requires your approval
+                      </div>
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => handleRejectRequest(selectedRequest.id)}
+                          className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center font-medium"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Reject Application
+                        </button>
+                        <button
+                          onClick={() => handleApproveRequest(selectedRequest.id)}
+                          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center font-medium"
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Approve Application
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border h-96 flex items-center justify-center">
