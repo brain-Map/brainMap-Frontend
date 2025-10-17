@@ -12,6 +12,19 @@ interface Expert {
   specialty: string;
   sessionDate: string;
   hasReview: boolean;
+  mentorId: string;      // mentorId for backend
+  serviceId: number;     // bookedId for backend
+}
+
+interface Feedback {
+  reviewId: string;
+  rate: number;
+  review: string;
+  createdAt: string;
+  updatedAt: string;
+  memberId: string;
+  mentorId: string;
+  bookedId: string;
 }
 
 interface Review {
@@ -27,6 +40,7 @@ interface Service {
   serviceId: string;
   serviceSubject: string;
   serviceTitl: string;
+  mentorId: string;
   expertFirstName: string;
   expertLastName: string;
   expertEmail: string;
@@ -37,10 +51,43 @@ const hireingFunctions = {
   getHiredExpertsData: async (userId: string): Promise<Service[]> => {
     try {
       const response = await api.get(`/project-member/projects/hired-expert/${userId}`);
-      console.log('User Data:', response.data);
+      console.log('Raw API Response:', response.data);
+      console.log('First service (if exists):', response.data[0]); // Check what fields exist
       return response.data;
     } catch (error) {
       console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+  createReview: async (review: Feedback): Promise<Feedback> => {
+    try {
+      const response = await api.post(`/api/reviews`, review);
+      console.log('Review created successfully');
+      return response.data as Feedback;
+    } catch (error) {
+      console.error('Error creating review:', error);
+      throw error;
+    }
+  },
+  
+  getReview: async (): Promise<Feedback[]> => {
+    try {
+      const response = await api.get(`/api/reviews`);
+      return response.data as Feedback[];
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      throw error;
+    }
+  },
+
+
+  getUserDetails: async (userId: string) => {
+    try {
+      const response = await api.get(`api/v1/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
       throw error;
     }
   },
@@ -51,21 +98,75 @@ export default function ExpertReviewInterface() {
   const [activeTab, setActiveTab] = useState<'experts' | 'reviews'>('experts');
   const [services, setServices] = useState<Service[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      expertId: '2',
-      expertName: 'Dr. Michael Chen',
-      rating: 5,
-      comment: 'Excellent consultation! Very thorough and professional.',
-      date: '2024-10-14',
-    },
-  ]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewedBookingIds, setReviewedBookingIds] = useState<Set<string>>(new Set());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+
+  // Fetch reviews from backend
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!user) return;
+
+      setIsLoadingReviews(true);
+      try {
+        const fetchedReviews = await hireingFunctions.getReview();
+        console.log('Fetched reviews:', fetchedReviews);
+
+        // Extract reviewed booking IDs
+        const reviewedIds = new Set(
+          fetchedReviews
+            .filter((feedback) => feedback.memberId === user.id)
+            .map((feedback) => feedback.bookedId)
+        );
+        setReviewedBookingIds(reviewedIds);
+        console.log('Reviewed booking IDs:', Array.from(reviewedIds));
+
+        // Filter reviews for current user and enrich with mentor details
+        const userReviews = await Promise.all(
+          fetchedReviews
+            .filter((feedback) => feedback.memberId === user.id)
+            .map(async (feedback) => {
+              try {
+                // Fetch mentor details using getUserDetails
+                const mentorDetails = await hireingFunctions.getUserDetails(feedback.mentorId);
+                console.log('Mentor details:', mentorDetails);
+
+                return {
+                  expertId: feedback.mentorId,
+                  expertName: `${mentorDetails.firstName || ''} ${mentorDetails.lastName || ''}`.trim() || 'Unknown Expert',
+                  rating: feedback.rate,
+                  comment: feedback.review,
+                  date: feedback.createdAt,
+                };
+              } catch (error) {
+                console.error('Error fetching mentor details for:', feedback.mentorId, error);
+                return {
+                  expertId: feedback.mentorId,
+                  expertName: 'Unknown Expert',
+                  rating: feedback.rate,
+                  comment: feedback.review,
+                  date: feedback.createdAt,
+                };
+              }
+            })
+        );
+
+        setReviews(userReviews);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [user]);
 
   useEffect(() => {
     const fetchHiredExperts = async () => {
@@ -78,13 +179,39 @@ export default function ExpertReviewInterface() {
         // Filter only ACCEPTED experts
         const acceptedExperts = fetchedServices
           .filter((service) => service.status === 'ACCEPTED')
-          .map((service) => ({
-            id: service.serviceId,
-            name: `${service.expertFirstName} ${service.expertLastName}`,
-            specialty: service.serviceTitl || 'Not specified',
-            sessionDate: new Date().toISOString(), // Placeholder if API doesn’t have sessionDate
-            hasReview: false,
-          }));
+          .map((service) => {
+            // Log each service to see what fields are available
+            console.log('Full service object:', service);
+            console.log('Available fields:', Object.keys(service));
+            
+            // Try to find mentorId with different possible field names
+            const mentorId = service.mentorId || 
+                            (service as any).expertId || 
+                            (service as any).mentor_id || 
+                            (service as any).expert_id || 
+                            '';
+            
+            console.log('Extracted mentorId:', mentorId);
+            
+            if (!mentorId) {
+              console.warn('⚠️ WARNING: mentorId is missing for service:', service.serviceId);
+            }
+            
+            // Check if this booking already has a review
+            const bookingIdStr = service.id.toString();
+            const hasReview = reviewedBookingIds.has(bookingIdStr);
+            console.log(`Booking ${bookingIdStr} has review:`, hasReview);
+            
+            return {
+              id: service.serviceId,
+              name: `${service.expertFirstName} ${service.expertLastName}`,
+              specialty: service.serviceTitl || 'Not specified',
+              mentorId: mentorId, 
+              serviceId: service.id,
+              sessionDate: new Date().toISOString(), // Placeholder if API doesn't have sessionDate
+              hasReview: hasReview, // Mark as reviewed if booking ID exists in reviews
+            };
+          });
 
         setExperts(acceptedExperts);
       } catch (error) {
@@ -93,7 +220,7 @@ export default function ExpertReviewInterface() {
     };
 
     fetchHiredExperts();
-  }, [user]);
+  }, [user, reviewedBookingIds]); // Re-run when reviewedBookingIds changes
 
   const openReviewModal = (expert: Expert) => {
     setSelectedExpert(expert);
@@ -111,27 +238,76 @@ export default function ExpertReviewInterface() {
     setComment('');
   };
 
-  const submitReview = () => {
+  const submitReview = async () => {
     if (!selectedExpert || rating === 0) return;
 
-    const newReview: Review = {
-      expertId: selectedExpert.id,
-      expertName: selectedExpert.name,
-      rating,
-      comment,
-      date: new Date().toISOString().split('T')[0],
+    // Validate required fields
+    if (!selectedExpert.mentorId) {
+      console.error('mentorId is missing from selectedExpert:', selectedExpert);
+      alert('Error: Expert ID is missing. Please try again.');
+      return;
+    }
+
+    const reviewData: Feedback = {
+      reviewId: '', // Backend will generate
+      rate: rating,
+      review: comment,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      memberId: user?.id || '',
+      mentorId: selectedExpert.mentorId,
+      bookedId: selectedExpert.serviceId.toString(),
+        
     };
+    console.log('Submitting review data:', reviewData);
 
-    setReviews([...reviews, newReview]);
-    setExperts(
-      experts.map((expert) =>
-        expert.id === selectedExpert.id
-          ? { ...expert, hasReview: true }
-          : expert
-      )
-    );
+    try{
+      await hireingFunctions.createReview(reviewData);
+      
+      // Add this booking ID to the reviewed set
+      const updatedReviewedIds = new Set(reviewedBookingIds);
+      updatedReviewedIds.add(selectedExpert.serviceId.toString());
+      setReviewedBookingIds(updatedReviewedIds);
+      
+      // Fetch updated mentor details for the new review
+      try {
+        const mentorDetails = await hireingFunctions.getUserDetails(selectedExpert.mentorId);
+        const newReview: Review = {
+          expertId: selectedExpert.mentorId,
+          expertName: `${mentorDetails.firstName || ''} ${mentorDetails.lastName || ''}`.trim() || selectedExpert.name,
+          rating,
+          comment,
+          date: new Date().toISOString(),
+        };
+        setReviews([...reviews, newReview]);
+      } catch (error) {
+        console.error('Error fetching mentor details:', error);
+        // Fallback to expert name from list
+        const newReview: Review = {
+          expertId: selectedExpert.mentorId,
+          expertName: selectedExpert.name,
+          rating,
+          comment,
+          date: new Date().toISOString(),
+        };
+        setReviews([...reviews, newReview]);
+      }
 
-    closeModal();
+      // Mark this expert as reviewed
+      setExperts(
+        experts.map((expert) =>
+          expert.serviceId === selectedExpert.serviceId
+            ? { ...expert, hasReview: true }
+            : expert
+        )
+      );
+
+      closeModal();
+    } catch (error) {
+      console.error('Error creating review:', error);
+      alert('Failed to submit review. Please try again.');
+    }
+    
   };
 
   return (
@@ -222,7 +398,12 @@ export default function ExpertReviewInterface() {
             {/* Reviews Tab */}
             {activeTab === 'reviews' && (
               <div className="space-y-4">
-                {reviews.length === 0 ? (
+                {isLoadingReviews ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <p className="mt-4 text-gray-600">Loading reviews...</p>
+                  </div>
+                ) : reviews.length === 0 ? (
                   <div className="text-center py-12">
                     <svg
                       className="mx-auto h-12 w-12 text-gray-400"
