@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '@/utils/api';
+import { useAuth } from "@/contexts/AuthContext";
+
+type ServiceStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED' | 'CONFIRMED';
 
 interface Expert {
   id: string;
@@ -18,40 +22,35 @@ interface Review {
   date: string;
 }
 
-export default function ExpertReviewInterface() {
-  const [activeTab, setActiveTab] = useState<'experts' | 'reviews'>('experts');
-  
-  const [experts, setExperts] = useState<Expert[]>([
-    {
-      id: '1',
-      name: 'Dr. Sarah Johnson',
-      specialty: 'Cardiology',
-      sessionDate: '2024-10-15',
-      hasReview: false,
-    },
-    {
-      id: '2',
-      name: 'Dr. Michael Chen',
-      specialty: 'Neurology',
-      sessionDate: '2024-10-14',
-      hasReview: true,
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Rodriguez',
-      specialty: 'Orthopedics',
-      sessionDate: '2024-10-13',
-      hasReview: false,
-    },
-    {
-      id: '4',
-      name: 'Dr. James Williams',
-      specialty: 'Dermatology',
-      sessionDate: '2024-10-12',
-      hasReview: false,
-    },
-  ]);
+interface Service {
+  id: number;
+  serviceId: string;
+  serviceSubject: string;
+  serviceTitl: string;
+  expertFirstName: string;
+  expertLastName: string;
+  expertEmail: string;
+  status: ServiceStatus;
+}
 
+const hireingFunctions = {
+  getHiredExpertsData: async (userId: string): Promise<Service[]> => {
+    try {
+      const response = await api.get(`/project-member/projects/hired-expert/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+};
+
+export default function ExpertReviewInterface() {
+  const user = useAuth().user;
+  const [activeTab, setActiveTab] = useState<'experts' | 'reviews'>('experts');
+  const [services, setServices] = useState<Service[]>([]);
+  const [experts, setExperts] = useState<Expert[]>([]);
   const [reviews, setReviews] = useState<Review[]>([
     {
       expertId: '2',
@@ -67,6 +66,34 @@ export default function ExpertReviewInterface() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
+
+  useEffect(() => {
+    const fetchHiredExperts = async () => {
+      if (!user) return;
+
+      try {
+        const fetchedServices = await hireingFunctions.getHiredExpertsData(user.id);
+        setServices(fetchedServices);
+
+        // Filter only ACCEPTED experts
+        const acceptedExperts = fetchedServices
+          .filter((service) => service.status === 'ACCEPTED')
+          .map((service) => ({
+            id: service.serviceId,
+            name: `${service.expertFirstName} ${service.expertLastName}`,
+            specialty: service.serviceTitl || 'Not specified',
+            sessionDate: new Date().toISOString(), // Placeholder if API doesn’t have sessionDate
+            hasReview: false,
+          }));
+
+        setExperts(acceptedExperts);
+      } catch (error) {
+        console.error('Error fetching hired experts:', error);
+      }
+    };
+
+    fetchHiredExperts();
+  }, [user]);
 
   const openReviewModal = (expert: Expert) => {
     setSelectedExpert(expert);
@@ -142,51 +169,57 @@ export default function ExpertReviewInterface() {
           </div>
 
           <div className="p-6">
-            {/* Experts Tab Content */}
+            {/* Experts Tab */}
             {activeTab === 'experts' && (
               <div className="space-y-4">
-                {experts.map((expert) => (
-                  <div
-                    key={expert.id}
-                    className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-300 transition-colors flex items-center justify-between"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {expert.name}
-                        </h3>
-                        {expert.hasReview && (
-                          <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                            Reviewed
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {expert.specialty}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Session:{' '}
-                        {new Date(expert.sessionDate).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => openReviewModal(expert)}
-                      disabled={expert.hasReview}
-                      className={`py-2 px-6 rounded-md font-medium transition-colors whitespace-nowrap ${
-                        expert.hasReview
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                {experts.length === 0 ? (
+                  <p className="text-gray-600 text-center py-8">
+                    No accepted experts found.
+                  </p>
+                ) : (
+                  experts.map((expert) => (
+                    <div
+                      key={expert.id}
+                      className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-300 transition-colors flex items-center justify-between"
                     >
-                      {expert.hasReview ? 'Review Submitted' : 'Write Review'}
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900">
+                            {expert.name}
+                          </h3>
+                          {expert.hasReview && (
+                            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                              Reviewed
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1">
+                          {expert.specialty}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Session:{' '}
+                          {new Date(expert.sessionDate).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => openReviewModal(expert)}
+                        disabled={expert.hasReview}
+                        className={`py-2 px-6 rounded-md font-medium transition-colors whitespace-nowrap ${
+                          expert.hasReview
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {expert.hasReview ? 'Review Submitted' : 'Write Review'}
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
-            {/* Reviews Tab Content */}
+            {/* Reviews Tab */}
             {activeTab === 'reviews' && (
               <div className="space-y-4">
                 {reviews.length === 0 ? (
@@ -266,9 +299,7 @@ export default function ExpertReviewInterface() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Write Review
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900">Write Review</h2>
               <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600"
