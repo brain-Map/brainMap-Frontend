@@ -382,7 +382,7 @@ export default function ExpertApprovalPage() {
                                 <div>
                                   <span className="text-gray-900 font-medium">{doc.fileName}</span>
                                   <p className="text-sm text-gray-500">
-                                    {doc.contentType} • {(doc.size / 1024).toFixed(1)} KB • {getStatusBadge(doc.status)}
+                                    {doc.contentType} • {(doc.size / 1024).toFixed(1)} KB
                                   </p>
                                 </div>
                               </div>
