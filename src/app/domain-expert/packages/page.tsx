@@ -8,12 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { format } from 'date-fns';
-import { Eye, Trash, Edit } from 'lucide-react';
+import { Eye, Trash, Edit, Plus } from 'lucide-react';
 
 interface Package {
   serviceId: string
   title: string
-  subject: string
+  category: string
   description: string
   createdAt: string
   updatedAt?: string
@@ -73,9 +73,17 @@ export default function PackagesPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">My Service Packages</h1>
-          <p className="text-muted-foreground">Manage and view the service packages you offer</p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">My Service Packages</h1>
+            <p className="text-muted-foreground">Manage and view the service packages you offer</p>
+          </div>
+          <div>
+            <Button onClick={() => router.push('/services/create-service')}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Service
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -90,7 +98,7 @@ export default function PackagesPage() {
               <TableHeader>
                 <TableRow>
                     <TableHead>Title</TableHead>
-                    <TableHead>Subject</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Quick Action</TableHead>
                   </TableRow>
@@ -105,10 +113,10 @@ export default function PackagesPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{pkg.subject ?? '-'}</TableCell>
+                    <TableCell>{pkg.category ?? '-'}</TableCell>
                     <TableCell>{pkg.createdAt ? format(new Date(pkg.createdAt), 'MMM dd, yyyy') : '-'}</TableCell>
                     <TableCell>
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-start gap-2">
                         <Button variant="ghost" size="icon" onClick={() => window.location.href = `/services/${pkg.serviceId}`} title="View">
                           <Eye className="w-4 h-4" />
                         </Button>

@@ -80,11 +80,21 @@ export interface CreateBookingRequest {
   serviceId: string
   duration: number
   projectDetails: string
-  requestedDate: string
-  requestedStartTime: string
-  requestedEndTime: string
-  domainExpertId: string
-  totalPrice?: number
+  bookingMode: string; // "HOURLY" | "MONTHLY" | "PROJECT_BASED"
+  // HOURLY
+  requestedDate?: string; // YYYY-MM-DD
+  requestedStartTime?: string; // HH:mm:ss
+  requestedEndTime?: string; // HH:mm:ss
+  // MONTHLY
+  requestedMonths?: string[]; // ["YYYY-MM"]
+  // PROJECT_BASED
+  projectDeadline?: string; // YYYY-MM-DD
+
+  domainExpertId: string;
+  totalPrice?: number;
+  selectedPricingId?: string;
+  selectedPricingType?: string;
+  sessionType?: "INDIVIDUAL" | "GROUP";
 }
 
 export interface BookingResponse {
@@ -131,12 +141,21 @@ export interface ServiceBooking {
   userAvatar?: string;
   duration: number;
   projectDetails: string;
-  requestedDate: string;
-  requestedStartTime: string;
-  requestedEndTime: string;
+  bookingMode: string;
+  // HOURLY
+  requestedDate?: string;
+  requestedStartTime?: string;
+  requestedEndTime?: string;
+  // MONTHLY
+  requestedMonths?: string[];
+  // PROJECT_BASED
+  projectDeadline?: string;
   totalPrice: number;
+  selectedPricingId?: string;
+  selectedPricingType?: string;
+  selectedPricingPrice?: number;
+  sessionType?: SessionType;
   status: ServiceBookingStatus;
-  sessionType: SessionType;
   acceptedDate?: string;
   acceptedTime?: string;
   acceptedPrice?: number;
