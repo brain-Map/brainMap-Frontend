@@ -94,7 +94,7 @@ const Index = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`http://localhost:8080/api/v1/domain-experts/${expertId}/bookings`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/domain-experts/${expertId}/bookings`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -182,7 +182,7 @@ const Index = () => {
       console.log(body);
         // Send update to server
         await axios.put(
-          `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
           body,
           {
             headers: {
@@ -220,7 +220,7 @@ const Index = () => {
     
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${bookingId}/accept`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${bookingId}/accept`,
         {},
         {
           headers: {
@@ -245,7 +245,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/reject`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/reject`,
         { reason: rejectReason },
         {
           headers: {
@@ -266,7 +266,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/complete`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/complete`,
         {},
         {
           headers: {
@@ -286,7 +286,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/cancel`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/cancel`,
         {},
         {
           headers: {

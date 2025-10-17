@@ -11,7 +11,7 @@ import { Client } from "@stomp/stompjs"
 import SockJS from "sockjs-client"
 import React from "react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
 const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/ws"
 
 export default function ChatInterface() {
