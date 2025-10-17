@@ -284,7 +284,16 @@ const ServiceListTabs: React.FC = () => {
           ) : bookingDetails && bookingDetails.length > 0 ? (
             <div className="space-y-4">
               {bookingDetails.map((b, idx) => (
-                <div key={idx} className="rounded-lg border p-4">
+                <div
+                  key={idx}
+                  // normalize status check to avoid casing issues from backend
+                  className={`rounded-lg p-4 ${String(b.status || '').toUpperCase() === 'UPDATED' ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
+                >
+                  {String(b.status || '').toUpperCase() === 'UPDATED' && (
+                    <div className="mb-2">
+                      <span className="inline-block text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded">Updated details</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
                       <div className="text-gray-500">Service Title</div>
@@ -296,7 +305,7 @@ const ServiceListTabs: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-gray-500">Status</div>
-                      <div className="font-medium">{b.status}</div>
+                      <div className={String(b.status || '').toUpperCase() === 'UPDATED' ? 'text-red-700 font-semibold' : 'font-medium'}>{b.status}</div>
                     </div>
                     <div>
                       <div className="text-gray-500">Total Price</div>
@@ -329,6 +338,26 @@ const ServiceListTabs: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  {/* Show updated schedule/price when present */}
+                  {(b.updatedDate || b.updatedStartTime || b.updatedEndTime || b.updatedPrice != null) && (
+                    <div className="mt-4 p-3 rounded border border-red-200 bg-red-50">
+                      <div className="text-sm font-medium text-red-700 mb-2">Updated / Proposed Changes</div>
+                      <div className="text-sm text-gray-700">
+                        {b.updatedDate && (
+                          <div><span className="text-gray-500">Date:</span> <span className="font-medium">{b.updatedDate}</span></div>
+                        )}
+                        {(b.updatedStartTime || b.updatedEndTime) && (
+                          <div>
+                            <span className="text-gray-500">Time:</span>{' '}
+                            <span className="font-medium">{b.updatedStartTime || ''}{b.updatedEndTime ? ` - ${b.updatedEndTime}` : ''}</span>
+                          </div>
+                        )}
+                        {b.updatedPrice != null && (
+                          <div><span className="text-gray-500">Updated Price:</span> <span className="font-medium">{b.updatedPrice}</span></div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {b.projectDetails && (
                     <div className="mt-4">
                       <div className="text-gray-500 text-sm mb-1">Project Details</div>
