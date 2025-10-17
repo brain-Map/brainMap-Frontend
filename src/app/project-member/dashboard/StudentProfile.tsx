@@ -20,8 +20,8 @@ import ServiceListTabs from './expert';
 
 export interface User {
   id: string;
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
   username?: string;
   email: string;
   role: string;
@@ -35,6 +35,16 @@ export interface User {
   profileViews?: number;
   isVerified?: boolean;
   avatar?: string;
+}
+
+interface Service {
+  id: number;
+  serviceId: string;
+  serviceSubject: string;
+  serviceTitl: string;
+  expertFirstName: string;
+  expertLastName: string;
+  expertEmail: string;
 }
 
 export interface OneUser{
@@ -101,7 +111,18 @@ const userService = {
       console.error('Error fetching projects:', error);
       throw error;
     }
-  }
+  },
+
+  getHiredExpertsData: async (userId: string): Promise<Service[]> => {
+    try {
+      const response = await api.get(`/project-member/projects/hired-expert/${userId}`);
+      console.log('User Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
 };
 
 const ProjectDashboard = () => {
@@ -115,6 +136,7 @@ const ProjectDashboard = () => {
   const [userAbout, setUserAbout] = useState<UserAbout | null>(null);
   const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [hiredExpertsData, setHiredExpertsData] = useState<Service[]>([]);
 
   console.log('User in ProjectDashboard:', user1);
 
@@ -142,10 +164,12 @@ const ProjectDashboard = () => {
         const userData = await userService.getUser(userId);
         const oneUserData = await userService.getOneUserData(userId);
         const projectData = await userService.getProjectData(userId);
+        const hiredExperts = await userService.getHiredExpertsData(userId);
         setUser(userData);
         setAboutText(userData.about || '');
         setOneUserData(oneUserData);
         setProjects(projectData);
+        setHiredExpertsData(hiredExperts);
       } catch (error) {
         console.error('Failed to fetch user:', error);
       }
@@ -280,7 +304,6 @@ const ProjectDashboard = () => {
     { key: 'overview', label: 'Overview' },
     { key: 'projects', label: 'Projects' },
     { key: 'experts', label: 'Hired Experts' },
-    { key: 'activity', label: 'Activity' }
   ];
 
   return (
@@ -313,7 +336,7 @@ const ProjectDashboard = () => {
               
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <h1 className="text-xl font-bold text-gray-900">{user1?.name}</h1>
+                  <h1 className="text-xl font-bold text-gray-900">{user?.firstName + ' ' + user?.lastName}</h1>
                   {user?.isVerified && <CheckCircle className="w-5 h-5 text-green-500" />}
                 </div>
                 <p className="text-gray-600 text-sm">@{user?.username}</p>
@@ -343,7 +366,7 @@ const ProjectDashboard = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Experts Hired</span>
-                  <span className="font-semibold text-gray-900">{hiredExperts.length}</span>
+                  <span className="font-semibold text-gray-900">{hiredExpertsData.length}</span>
                 </div>
               </div>
             </div>
@@ -489,13 +512,6 @@ const ProjectDashboard = () => {
               {activeTab === 'experts' && (
                 <ServiceListTabs/>
 
-              )}
-
-              {activeTab === 'activity' && (
-                
-                <h1>
-                  hello world
-                </h1>
               )}
             </div>
           </div>
