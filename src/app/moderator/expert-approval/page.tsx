@@ -114,6 +114,30 @@ export default function ExpertApprovalPage() {
     }
   };
 
+  const handleDownloadDocument = async (doc: ExpertDocument) => {
+    try {
+      // If fileUrl is a full URL, open it directly
+      if (doc.fileUrl.startsWith('http://') || doc.fileUrl.startsWith('https://')) {
+        window.open(doc.fileUrl, '_blank');
+        return;
+      }
+      
+      // Otherwise, construct the full URL with backend base URL
+      const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '8080';
+      const backendUrl = `http://localhost:${backendPort}`;
+      const fullUrl = doc.fileUrl.startsWith('/') 
+        ? `${backendUrl}${doc.fileUrl}` 
+        : `${backendUrl}/${doc.fileUrl}`;
+      
+      // Open in new tab
+      window.open(fullUrl, '_blank');
+      toast.success('Opening document...');
+    } catch (err: any) {
+      console.error('Failed to download document:', err);
+      toast.error('Failed to download document');
+    }
+  };
+
 
 
   const filteredRequests = requests.filter((request) => {
@@ -386,7 +410,11 @@ export default function ExpertApprovalPage() {
                                   </p>
                                 </div>
                               </div>
-                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                              <button 
+                                onClick={() => handleDownloadDocument(doc)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title="Download document"
+                              >
                                 <Download className="w-4 h-4" />
                               </button>
                             </div>
