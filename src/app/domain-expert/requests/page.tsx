@@ -1,11 +1,12 @@
 "use client"
-import { Calendar, Package, CheckCircle, XCircle, ChevronRight, Clock, DollarSign } from "lucide-react"
+import { Calendar, Package, CheckCircle, XCircle, ChevronRight, Clock, DollarSign, MessageSquare } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from "@/contexts/AuthContext"
 
 type Booking = {
   id: string
+  userId?: string
   serviceTitle: string
   userFirstName: string
   userLastName?: string
@@ -97,6 +98,25 @@ export default function RequestsPage() {
     setUpdatedPrice((r.updatedPrice ?? r.totalPrice) ? String(r.updatedPrice ?? r.totalPrice) : '')
   }
   const closeDetail = () => { setSelected(null); setShowUpdate(false); setShowReject(false) }
+
+  const router = useRouter()
+
+  const handleMessage = (r: Booking | null) => {
+    if (!r) return
+    // attempt to use explicit userId if available, fall back to username (may be email)
+    const targetId = (r as any).userId || (r.username || '')
+    if (!targetId) {
+      alert('Cannot open chat: user id not available for this request.')
+      return
+    }
+    // set a flag so the chat page can auto-open the conversation
+    try {
+      localStorage.setItem('openChatWith', JSON.stringify({ id: targetId, name: r.userFirstName || r.username || 'User' }))
+    } catch (e) {
+      // ignore
+    }
+    router.push('/chat')
+  }
 
   const handleQuickAccept = (r: Booking) => {
     // call accept endpoint
@@ -346,6 +366,9 @@ export default function RequestsPage() {
                         <span className={`px-2 py-1 text-xs rounded ${r.status === 'PENDING' ? 'bg-amber-100 text-amber-800' : r.status === 'UPDATED' ? 'bg-blue-100 text-blue-800' : r.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {r.status}
                         </span>
+                        <button onClick={() => handleMessage(r)} className="p-2 rounded hover:bg-gray-100" aria-label={`Message ${r.userFirstName}`}>
+                          <MessageSquare className="w-4 h-4 text-gray-500" />
+                        </button>
                         <button onClick={() => openDetail(r)} className="p-2 rounded hover:bg-gray-100" aria-label={`Open details for ${r.userFirstName}`}>
                           <ChevronRight className="w-4 h-4 text-gray-500" />
                         </button>
@@ -506,6 +529,9 @@ export default function RequestsPage() {
               <div className="flex items-center gap-3">
                 <button onClick={() => { handleQuickAccept(selected); closeDetail() }} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md">
                   <CheckCircle className="w-4 h-4" /> Accept
+                </button>
+                <button onClick={() => handleMessage(selected)} className="px-4 py-2 border rounded-md flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" /> Message
                 </button>
                 <button onClick={() => setShowUpdate(true)} className="px-4 py-2 border rounded-md">Update</button>
                 <button onClick={() => setShowReject(true)} className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-md"> <XCircle className="w-4 h-4"/> Reject</button>

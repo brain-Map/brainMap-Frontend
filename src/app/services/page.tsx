@@ -32,7 +32,6 @@ console.log(sessionStorage.getItem("accessToken"));
           pageSize,
           'serviceId'
         )
-        // Add mock data for mentor info for demonstration
         const servicesWithMentorInfo = response.content.map(service => ({
           ...service,
           mentorLevel: Math.floor(Math.random() * 3) + 1,

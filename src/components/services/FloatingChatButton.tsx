@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MessageCircle, X, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
+import { useAuth } from "@/contexts/AuthContext"
+import { useStomp } from "@/hooks/useStomp"
 
 interface FloatingChatButtonProps {
   mentorId: string
@@ -20,13 +22,65 @@ export function FloatingChatButton({
 }: FloatingChatButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const { user } = useAuth()
+  const userId = user?.id || ""
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") || "" : ""
+
+  const { publish, connect } = useStomp({ token, userId, onError: (e) => setError(typeof e === 'string' ? e : JSON.stringify(e)) })
+
+  // ensure stomp connects when component mounts if credentials present
+  useEffect(() => {
+    if (token && userId) connect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, userId])
 
   const handleSendMessage = () => {
-    if (message.trim()) {
-      // TODO: Implement chat functionality
-      console.log("Sending message to mentor:", mentorId, message)
+    if (!message.trim()) return
+
+    // If not authenticated, save intent and redirect to login so user can continue
+    if (!userId) {
+      try {
+        localStorage.setItem('openChatWith', JSON.stringify({ id: mentorId, name: mentorName }))
+        localStorage.setItem('pendingMessage', message.trim())
+      } catch (e) {
+        // ignore storage failures
+      }
+      // redirect to login and return
+      window.location.href = `/login?redirectTo=/chat`
+      return
+    }
+
+    setIsSending(true)
+    setError(null)
+
+    const payload = {
+      senderId: userId,
+      receiverId: mentorId,
+      message: message.trim(),
+      status: "MESSAGE",
+    }
+
+    const sent = publish?.("/app/private-message", payload, { Authorization: `Bearer ${token}` })
+
+    // set openChatWith so the full chat page opens the correct conversation
+    try {
+      localStorage.setItem('openChatWith', JSON.stringify({ id: mentorId, name: mentorName }))
+      localStorage.removeItem('pendingMessage')
+    } catch (e) {}
+
+    if (sent) {
+      // clear input and open full chat
       setMessage("")
-      // You can navigate to chat page or send message via API
+      setIsSending(false)
+      window.location.href = `/chat?mentorId=${mentorId}`
+    } else {
+      // fallback: navigate to chat and allow user to send from there
+      setIsSending(false)
+      setError('Unable to send message right now. Opening full chat...')
+      window.location.href = `/chat?mentorId=${mentorId}`
     }
   }
 
@@ -35,7 +89,7 @@ export function FloatingChatButton({
       {/* Chat Window */}
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] animate-in slide-in-from-bottom-5 duration-300">
-          <Card className="shadow-2xl border-2 border-gray-200">
+          <Card className="shadow-2xl border-2 border-gray-200 bg-white">
             <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -49,7 +103,7 @@ export function FloatingChatButton({
                     <CardTitle className="text-lg font-semibold">
                       {mentorName}
                     </CardTitle>
-                    <p className="text-xs text-blue-100">Usually responds in minutes</p>
+                    <p className="text-xs text-white">Usually responds in minutes</p>
                   </div>
                 </div>
                 <Button
@@ -65,7 +119,7 @@ export function FloatingChatButton({
 
             <CardContent className="p-4">
               <div className="mb-4">
-                <div className="bg-gray-100 rounded-lg p-3 mb-3">
+                <div className="bg-white rounded-lg p-3 mb-3">
                   <p className="text-sm text-gray-700">
                     👋 Hi! I'm {mentorName}. Feel free to ask me anything about this
                     service or send me a message.
@@ -131,11 +185,6 @@ export function FloatingChatButton({
           <MessageCircle className="w-6 h-6" />
         )}
       </Button>
-
-      {/* Pulse animation ring */}
-      {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-blue-600 animate-ping opacity-20" />
-      )}
     </>
   )
 }

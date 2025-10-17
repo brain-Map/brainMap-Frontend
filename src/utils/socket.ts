@@ -16,10 +16,6 @@ let backoffTimer: ReturnType<typeof setTimeout> | null = null;
  * Connect to server websocket (SockJS + STOMP) and subscribe to the
  * /user/{userId}/queue/notifications destination.
  *
- * Notes:
- * - Include Authorization header on connect so the server can authenticate/authorize.
- * - The server should validate subscriptions server-side to ensure users cannot
- *   subscribe to other users' queues. See comment in code below.
  */
 export function connect(
   token: string,
@@ -35,20 +31,14 @@ export function connect(
   disconnect();
 
   reconnectAttempts = 0;
-  // Determine endpoint: prefer NEXT_PUBLIC_WEBSOCKET_URL when provided.
-  // If it starts with ws:// or wss:// we use a raw WebSocket (brokerURL).
-  // Otherwise we pass the URL to SockJS.
   const envUrl = (process.env.NEXT_PUBLIC_WEBSOCKET_URL as string) || 'http://localhost:8080/ws';
   const useRawWebSocket = envUrl && (envUrl.startsWith('ws://') || envUrl.startsWith('wss://'));
 
-  // Build client options depending on chosen transport
   const clientOptions: any = {
     connectHeaders: {
       Authorization: `Bearer ${token}`,
     },
     debug: (msg: string) => {
-      // Keep debug lightweight
-      // console.debug('STOMP:', msg);
     },
     onConnect: (frame: Frame) => {
       reconnectAttempts = 0;
@@ -81,13 +71,10 @@ export function connect(
     },
   };
 
-  // envUrl will always have a value (default above)
   if (useRawWebSocket) {
-    // Use brokerURL for native WebSocket (no SockJS)
     clientOptions.brokerURL = envUrl;
     console.info(`Notification socket: using raw WebSocket brokerURL ${envUrl}`);
   } else {
-    // Use SockJS to envUrl (could be absolute URL or relative path)
     clientOptions.webSocketFactory = () => new SockJS(envUrl);
     console.info(`Notification socket: using SockJS endpoint ${envUrl}`);
   }
@@ -148,10 +135,3 @@ export function disconnect() {
     client = null;
   }
 }
-
-/**
- * Server-side note: ensure the server validates the authenticated principal
- * before accepting subscriptions to `/user/{userId}/queue/notifications`. Do
- * not rely on client-side checks. The server should extract the token from
- * the CONNECT headers and ensure the userId matches the authenticated subject.
- */
