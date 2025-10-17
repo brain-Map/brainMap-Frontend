@@ -58,6 +58,7 @@ interface InquiryItem {
   reportedBy: string; // resolver username if available
   reportDate: string;
   description: string;
+  responseContent?: string | null;
 }
 
 // Helper to map backend DTO to UI InquiryItem
@@ -88,6 +89,7 @@ const mapDtoToInquiryItem = (dto: BackendInquiry): InquiryItem => {
     reportedBy: dto.resolverUser?.username || "-",
     reportDate: dto.createdAt,
     description: dto.inquiryContent,
+    responseContent: dto.responseContent ?? null,
   };
 };
 
@@ -141,6 +143,14 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 }) => {
   const [response, setResponse] = useState("");
   const [status, setStatus] = useState("reviewed");
+
+  // Prefill form when inquiry changes/opened
+  useEffect(() => {
+    if (inquiry) {
+      setResponse(inquiry.responseContent ?? "");
+      setStatus(inquiry.status);
+    }
+  }, [inquiry]);
 
   if (!isOpen || !inquiry) return null;
 
@@ -385,8 +395,46 @@ export default function InquiryManagement() {
     setIsModalOpen(true);
   };
 
-  const handleResponseSubmit = (response: string, status: string) => {
-    // For now, just close modal. Backend integration for response can be added.
+  const handleResponseSubmit = async (response: string, status: string) => {
+    if (!selectedInquiry) return;
+    try {
+      // Build payload expected by backend
+      const payload = {
+        responseContent: response,
+        status: status.toUpperCase(), // PENDING | REVIEWED | RESOLVED
+      } as any;
+
+      // Update inquiry via backend endpoint
+      const res = await api.post(`/api/v1/inquiries/resoponedToInquiry/${selectedInquiry.id}`, payload);
+      const updated: BackendInquiry = res?.data;
+
+      // Update current page list optimistically
+      setInquiryList((prev) => {
+        if (!prev) return prev;
+        const nextContent = prev.content.map((it) =>
+          it.inquiryId === updated.inquiryId ? updated : it
+        );
+        return { ...prev, content: nextContent };
+      });
+
+  // Optionally update selectedInquiry snapshot
+  setSelectedInquiry(mapDtoToInquiryItem(updated));
+
+      await Swal.fire({
+        title: "Updated!",
+        text: "Inquiry has been updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (err: any) {
+      console.error("Failed to update inquiry:", err);
+      await Swal.fire({
+        title: "Error!",
+        text: err?.response?.data?.message || "Failed to update inquiry.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
   };
 
   // Clear filters like user management page
@@ -436,14 +484,54 @@ export default function InquiryManagement() {
     });
     if (!result.isConfirmed) return;
 
-  // Optimistic UI update could be done; for now, no-op or refetch
+    try {
+      await api.delete(`/api/v1/inquiries/${inquiry.id}`);
 
-    await Swal.fire({
-      title: "Deleted!",
-      text: `Inquiry ${inquiry.id} has been deleted.`,
-      icon: "success",
-      confirmButtonColor: "#3085d6",
-    });
+      // Optimistically update list and pagination counts
+      setInquiryList((prev) => {
+        if (!prev) return prev;
+        const nextContent = prev.content.filter((it) => it.inquiryId !== inquiry.id);
+        const newTotalElements = Math.max(0, (prev.totalElements || 0) - 1);
+        const pageSize = prev.pageable?.pageSize || itemsPerPage;
+        const newTotalPages = Math.max(1, Math.ceil(newTotalElements / (pageSize || 1)));
+        const updated = {
+          ...prev,
+          content: nextContent,
+          numberOfElements: nextContent.length,
+          totalElements: newTotalElements,
+          totalPages: newTotalPages,
+        };
+        return updated;
+      });
+
+      // If page becomes empty and not first page, go back a page to refetch
+      setTimeout(() => {
+        if ((inquiryList?.content?.length ?? 0) <= 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
+      }, 0);
+
+      // Refresh overview stats silently
+      try {
+        const res = await api.get("/api/v1/inquiries/overview");
+        setOverview(res.data as any);
+      } catch {}
+
+      await Swal.fire({
+        title: "Deleted!",
+        text: `Inquiry ${inquiry.id} has been deleted.`,
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (err: any) {
+      console.error("Failed to delete inquiry:", err);
+      await Swal.fire({
+        title: "Error!",
+        text: err?.response?.data?.message || "Failed to delete inquiry.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
   };
 
   // filter from params 
@@ -795,20 +883,6 @@ export default function InquiryManagement() {
                           >
                             <MessageSquare className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">Respond</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleMarkStatus(mapDtoToInquiryItem(dto), "reviewed")}
-                          >
-                            <Eye className="mr-2 h-4 w-4 text-gray-500" />
-                            <span className="text-gray-700">Mark Reviewed</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleMarkStatus(mapDtoToInquiryItem(dto), "resolved")}
-                          >
-                            <Check className="mr-2 h-4 w-4 text-gray-500" />
-                            <span className="text-gray-700">Mark Resolved</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-red-50 text-red-600"
