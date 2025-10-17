@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Swal from 'sweetalert2';
 import {
   Table,
   TableBody,
@@ -554,15 +555,18 @@ useEffect(() => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-white">
-                            <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
-                              <Edit className="mr-2 h-4 w-4 text-gray-500" />
-                              <span className="text-gray-700">Edit User</span>
-                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-50"> */}
+                              {/* <Edit className="mr-2 h-4 w-4 text-gray-500" /> */}
+                              {/* <span className="text-gray-700">Edit User</span> */}
+                            {/* </DropdownMenuItem> */}
                             <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
                               <UserCheck className="mr-2 h-4 w-4 text-gray-500" />
-                              <span className="text-gray-700">Change Role</span>
+                              <span className="text-gray-700">Show Profile</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600">
+                            <DropdownMenuItem 
+                            className="cursor-pointer hover:bg-red-50 text-red-600"
+                            onClick= { () => deleteUser(user)}
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete User
                             </DropdownMenuItem>
@@ -665,4 +669,46 @@ useEffect(() => {
       </div>
     </div>
   );
+
+  // Define deleteUser function inside the component to access the fetchFilteredUsers from useCallback
+  async function deleteUser(user: User){
+    // Use SweetAlert2 for confirmation
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete "${user.username}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete user',
+      cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    try {
+      await api.delete(`/api/v1/admin/deleteUser/${user.id}`);
+      // Call the fetchFilteredUsers that's defined inside the component
+      await fetchFilteredUsers();
+      
+      // Show success message
+      await Swal.fire({
+        title: 'Deleted!',
+        text: `User "${user.username}" has been deleted.`,
+        icon: 'success',
+        confirmButtonColor: '#3085d6'
+      });
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      
+      // Show error message
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Failed to delete user. Check console for details.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+    }
+  }
 }
+

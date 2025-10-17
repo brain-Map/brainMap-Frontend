@@ -137,6 +137,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       count: "12",
       color: "bg-green-500",
     },
+    {
+    title: "Add Administrators",
+    icon: UserPlus,
+    url: "/admin/userManagement/addAdministrator",
+    count: "12",
+    color: "bg-green-500",
+  },
   ];
 
   // Moderation Items
