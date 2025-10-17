@@ -56,30 +56,6 @@ const getAvailabilityForDate = (date: Date, availabilities: ServiceAvailability[
   return availabilities.filter(avail => avail.dayOfWeek === dayOfWeek)
 }
 
-// Helper function to generate time slots from availability ranges
-const generateTimeSlotsFromAvailability = (availabilities: ServiceAvailability[]): string[] => {
-  const slots = new Set<string>()
-  
-  availabilities.forEach(avail => {
-    const [startHour, startMin] = avail.startTime.split(':').map(Number)
-    const [endHour, endMin] = avail.endTime.split(':').map(Number)
-    
-    const startMinutes = startHour * 60 + startMin
-    const endMinutes = endHour * 60 + endMin
-    
-    // Generate 30-minute slots
-    for (let minutes = startMinutes; minutes < endMinutes; minutes += 30) {
-      const hour = Math.floor(minutes / 60)
-      const min = minutes % 60
-      slots.add(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
-    }
-    // Add the end time as well
-    slots.add(`${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`)
-  })
-  
-  return Array.from(slots).sort()
-}
-
 // Generate daily 30-minute slots for a full day (00:00 - 23:30)
 const generateDailyTimeSlots = (): string[] => {
   const slots: string[] = []
@@ -340,7 +316,7 @@ export function BookingForm({ service }: BookingFormProps) {
       console.log("Booking details:", bookingData)
 
       // Call the API
-      // await bookingApi.createBooking(bookingData)
+      await bookingApi.createBooking(bookingData)
 
       // Show success message and redirect
       alert(`Booking request submitted successfully!\nTotal: Rs.${totalPrice.toLocaleString()}`)

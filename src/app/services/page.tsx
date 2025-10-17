@@ -15,7 +15,6 @@ export default function ServicesPage() {
   const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null)
   const [services, setServices] = useState<ServiceListing[]>([])
   const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,7 +41,6 @@ console.log(sessionStorage.getItem("accessToken"));
         }))
         setServices(servicesWithMentorInfo)
         setTotalPages(response.totalPages)
-        setTotalElements(response.totalElements)
         console.log(response.content);
         
       } catch (err) {

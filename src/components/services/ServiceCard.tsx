@@ -5,34 +5,11 @@ import { useState } from "react"
 import Link from "next/link"
 import type { ServiceListing as ServiceListingType, ServiceAvailability } from '@/types/service'
 
-interface Availability {
-  dayOfWeek: number
-  startTime: string
-  endTime: string
-}
-
-interface Pricing {
-  pricingId: string
-  pricingType: string
-  price: number
-}
-
-interface WhatYouGetItem {
-  title: string
-  description?: string
-}
-
 
 const availabilityModeLabels: Record<string, string> = {
   HOURLY: "Hourly",
   MONTHLY: "Monthly",
   PROJECT_BASED: "Project Based",
-}
-
-const levelBadgeColors = {
-  1: "bg-gray-100 text-gray-700",
-  2: "bg-blue-100 text-blue-700",
-  3: "bg-purple-100 text-purple-700",
 }
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -67,23 +44,7 @@ const getImageUrl = (thumbnailUrl: string | null | undefined): string => {
   return "/image/default_card.jpg"
 }
 
-const formatTimeRange = (startTime?: string, endTime?: string) => {
-  if (!startTime && !endTime) return ""
-  return `${startTime ?? ""}${startTime && endTime ? " - " : ""}${endTime ?? ""}`
-}
-
-const formatDate = (iso?: string) => {
-  if (!iso) return ""
-  try {
-    return new Date(iso).toLocaleString()
-  } catch (e) {
-    return iso
-  }
-}
-
 export function ServiceCard({ service }: { service: ServiceListingType }) {
-  const [isFavorite, setIsFavorite] = useState(false)
-  // derive display values from backend shape
   const rating = 4.8
   const reviewCount = Math.floor(Math.random() * 1000) + 100
   const thumbnailUrl = getImageUrl(service.thumbnailUrl)
@@ -150,13 +111,13 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
               ))}
 
               {/* Availability Modes */}
-              {service.availabilityModes && service.availabilityModes.length > 0 && (
+              {/* {service.availabilityModes && service.availabilityModes.length > 0 && (
                 service.availabilityModes.map((m) => (
                   <Badge key={m} className="text-xs font-medium bg-green-50 text-green-700">
                     {availabilityModeLabels[m] || m}
                   </Badge>
                 ))
-              )}
+              )} */}
             </div>
           )}
 
@@ -171,7 +132,7 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
           </p>
 
           {/* What you get */}
-          {service.whatYouGet && service.whatYouGet.length > 0 && (
+          {/* {service.whatYouGet && service.whatYouGet.length > 0 && (
             <ul className="text-xs text-gray-600 mb-2 list-disc pl-4">
               {service.whatYouGet.map((w, idx) => (
                 <li key={idx} className="truncate">
@@ -180,7 +141,7 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
                 </li>
               ))}
             </ul>
-          )}
+          )} */}
 
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
@@ -193,21 +154,6 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
           <div className="flex flex-row justify-between">
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              <div>
-                <div>{availabilitySummary}</div>
-                {service.availabilities && service.availabilities.length > 0 && (
-                  <div className="text-[11px] text-gray-500">
-                    {service.availabilities.slice(0, 3).map((a, i) => (
-                      <div key={i}>{`${dayNames[a.dayOfWeek]} ${formatTimeRange(a.startTime, a.endTime)}`}</div>
-                    ))}
-                    {service.availabilities.length > 3 ? <div>...</div> : null}
-                  </div>
-                )}
-              </div>
-            </div>
-          
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <MapPin className="w-3.5 h-3.5 text-gray-400" />
               <span>{modeLabel}</span>
             </div>
           </div>
@@ -221,31 +167,6 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
               <div className="flex flex-col">
                 <span className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Starting from</span>
                 <span className="text-xl font-bold text-blue-900">Rs. {minPrice || "0"}</span>
-              </div>
-
-              {/* Pricings summary */}
-              <div className="flex items-center gap-2">
-                {service.pricings && service.pricings.slice(0, 3).map((p) => (
-                  <Badge key={p.pricingId ?? `${p.pricingType}-${p.price}`} className="text-xs bg-gray-100 text-gray-800">
-                    {`${p.pricingType.replace(/-/g, ' ')} • Rs. ${p.price}`}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="text-[11px] text-gray-500 flex items-center justify-between">
-              <div>
-                <div>Created: {formatDate(service.createdAt)}</div>
-                <div>Updated: {formatDate(service.updatedAt)}</div>
-              </div>
-
-              {/* Mentor bio small */}
-              <div className="max-w-xs text-right text-[12px] text-gray-600">
-                {service.mentorBio ? (
-                  <div className="line-clamp-3">{service.mentorBio}</div>
-                ) : (
-                  <div className="text-gray-400">No mentor bio</div>
-                )}
               </div>
             </div>
           </div>

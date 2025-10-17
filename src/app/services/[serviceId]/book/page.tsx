@@ -7,7 +7,6 @@ import { ServiceListing } from "@/types/service"
 import { Loader2 } from "lucide-react"
 import { BookingForm } from "@/components/services/BookingForm"
 
-// Extended interface for service detail with mentor info
 interface ServiceDetailData extends ServiceListing {
   mentorName?: string
   hourlyRate?: number
@@ -43,10 +42,6 @@ export default function BookSessionPage() {
           ...serviceData,
           mentorName: `${serviceData.mentorFirstName || ''} ${serviceData.mentorLastName || ''}`.trim(),
           mentorAvatar,
-          // Use fee as fallback hourlyRate if pricing not provided
-          hourlyRate: (serviceData as any).fee || undefined,
-          // pass through availabilityModes and pricings as returned by backend
-          // (BookingForm expects properties like `availabilityModes`, `pricings`, `availabilities`)
           availabilityModes: serviceData.availabilityModes || [],
           pricings: serviceData.pricings || [],
           availabilities: serviceData.availabilities || [],
