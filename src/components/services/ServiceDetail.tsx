@@ -85,6 +85,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const mentorLevel = service.mentorLevel || 2
   const thumbnailUrl = "/image/default_card.jpg"
   
+console.log("AVARAT",service.mentorAvatar);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -98,6 +99,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
       alert("Link copied to clipboard!")
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 mt-15">
@@ -234,15 +236,16 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                 </h2>
 
                 <div className="flex items-start gap-6 mb-6">
-                  <Avatar className="w-24 h-24 border-4 border-blue-200">
+                  <Avatar className="w-24 h-24 border-4 border-blue-200 cursor-pointer" onClick={() => { window.location.href = `/mentor/${service.mentorId}` }}>
                     <AvatarImage src={service.mentorAvatar} alt={service.mentorName} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-2xl">
                       {service.mentorName?.charAt(0) || "M"}
                     </AvatarFallback>
                   </Avatar>
+                  
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 cursor-pointer" onClick={() => { window.location.href = `/mentor/${service.mentorId}` }}>
                       <h3 className="text-2xl font-bold text-gray-900">
                         {service.mentorName || "Expert Mentor"}
                       </h3>
@@ -344,7 +347,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                 </div>
 
                 <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3 cursor-pointer"
                   onClick={() => router.push(`/services/${service.serviceId}/book`)}
                 >
                   Book Session Now
