@@ -14,6 +14,12 @@ export default function ExpertApprovalPage() {
   const [requests, setRequests] = useState<ExpertRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Rejection modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
+  const [isSubmittingRejection, setIsSubmittingRejection] = useState(false);
 
   // Load expert requests on component mount
   useEffect(() => {
@@ -93,25 +99,55 @@ export default function ExpertApprovalPage() {
   };
 
   const handleRejectRequest = async (id: string) => {
+    // Open rejection modal instead of immediately rejecting
+    setRejectingRequestId(id);
+    setShowRejectModal(true);
+    setRejectionReason("");
+  };
+
+  const submitRejection = async () => {
+    if (!rejectingRequestId) return;
+    
+    if (!rejectionReason.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+
+    setIsSubmittingRejection(true);
     try {
       await expertApprovalApiService.updateExpertStatus({
-        expertRequestId: id,
-        status: 'REJECTED'
+        expertRequestId: rejectingRequestId,
+        status: 'REJECTED',
+        reviewNotes: rejectionReason.trim()
       });
+      
       setRequests(prev => prev.map(req => 
-        req.id === id ? { ...req, status: 'REJECTED' as const } : req
+        req.id === rejectingRequestId ? { ...req, status: 'REJECTED' as const } : req
       ));
-      if (selectedRequest && selectedRequest.id === id) {
+      
+      if (selectedRequest && selectedRequest.id === rejectingRequestId) {
         setSelectedRequest({ ...selectedRequest, status: 'REJECTED' });
       }
+      
       toast.success('Expert rejected successfully');
+      setShowRejectModal(false);
+      setRejectionReason("");
+      setRejectingRequestId(null);
     } catch (err: any) {
       console.error('Failed to reject expert:', err);
       const errorMessage = err.response?.data?.message 
         || err.message 
         || 'Failed to reject expert. Please ensure the backend endpoint is implemented.';
       toast.error(errorMessage);
+    } finally {
+      setIsSubmittingRejection(false);
     }
+  };
+
+  const cancelRejection = () => {
+    setShowRejectModal(false);
+    setRejectionReason("");
+    setRejectingRequestId(null);
   };
 
   const handleDownloadDocument = async (doc: ExpertDocument) => {
@@ -466,6 +502,87 @@ export default function ExpertApprovalPage() {
           </div>
         </div>
       </div>
+      
+      {/* Rejection Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <X className="w-5 h-5 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Reject Expert Request</h3>
+                </div>
+                <button
+                  onClick={cancelRejection}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isSubmittingRejection}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4">
+              <p className="text-gray-600 mb-4">
+                Please provide a reason for rejecting this expert request. This will help the applicant understand why their application was not approved.
+              </p>
+              
+              <div className="space-y-2">
+                <label htmlFor="rejectionReason" className="block text-sm font-medium text-gray-700">
+                  Rejection Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="rejectionReason"
+                  rows={5}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  placeholder="e.g., Insufficient documentation provided, qualifications do not meet requirements, etc."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  disabled={isSubmittingRejection}
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Be specific and professional</span>
+                  <span>{rejectionReason.length}/500</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-end space-x-3">
+              <button
+                onClick={cancelRejection}
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                disabled={isSubmittingRejection}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitRejection}
+                disabled={!rejectionReason.trim() || isSubmittingRejection}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isSubmittingRejection ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Rejecting...
+                  </>
+                ) : (
+                  <>
+                    <X className="w-4 h-4 mr-2" />
+                    Reject Request
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
