@@ -149,9 +149,9 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   // Moderation Items
   const moderationItems: ModerationItem[] = [
     {
-      title: "Reports",
+      title: "Inquiries",
       icon: Flag,
-      url: "/admin/moderation/reports",
+      url: "/admin/moderation",
       count: "",
       color: "bg-orange-500",
     },

@@ -696,7 +696,7 @@ export default function InquiryManagement() {
           </div>
         </div>
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
               <div className="flex-1">
