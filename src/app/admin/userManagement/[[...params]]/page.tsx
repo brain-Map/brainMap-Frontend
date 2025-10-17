@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,6 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  UserPlus,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -41,308 +40,193 @@ import {
   UserRound,
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import api from "@/utils/api";
+import { set } from "date-fns";
 
-// Extended user data for demonstration
-const allUsers = [
-  {
-    id: 1,
-    name: "Sachith Dhanshka",
-    email: "john.smith@university.edu",
-    role: "Member",
-    status: "Active",
-    activities: 5,
-    lastActive: "2 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Computer Science",
-    university: "MIT",
-    year: "3rd Year",
-  },
-  {
-    id: 2,
-    name: "Dr. Isuru Naveen",
-    email: "sarah.wilson@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 12,
-    lastActive: "1 day ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jan 2024",
-    subject: "Mathematics",
-    university: "Harvard University",
-    experience: "15+ years",
-  },
-  {
-    id: 3,
-    name: "Dinuka Sahan",
-    email: "mike.j@Member.edu",
-    role: "Member",
-    status: "Inactive",
-    activities: 3,
-    lastActive: "1 week ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Aug 2024",
-    subject: "Physics",
-    university: "Stanford",
-    year: "2nd Year",
-  },
-  {
-    id: 4,
-    name: "Prof. Nadun Madusanka",
-    email: "emily.davis@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 8,
-    lastActive: "30 minutes ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Mar 2024",
-    subject: "Chemistry",
-    university: "CalTech",
-    experience: "20+ years",
-  },
-  {
-    id: 5,
-    name: "Kavinda Dimuthu",
-    email: "alex.chen@university.edu",
-    role: "Member",
-    status: "Active",
-    activities: 6,
-    lastActive: "4 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Oct 2024",
-    subject: "Engineering",
-    university: "UC Berkeley",
-    year: "4th Year",
-  },
-  {
-    id: 6,
-    name: "Eraji Thenuwara",
-    email: "lisa.r@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 4,
-    lastActive: "1 hour ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Biology",
-    university: "Yale University",
-    year: "1st Year",
-  },
-  {
-    id: 7,
-    name: "Dr. Kasun Dananjaya",
-    email: "james.wilson@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 15,
-    lastActive: "3 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Feb 2024",
-    subject: "Computer Science",
-    university: "Princeton",
-    experience: "12+ years",
-  },
-  {
-    id: 8,
-    name: "Virat Kholi",
-    email: "maria.g@Member.edu",
-    role: "Member",
-    status: "Inactive",
-    activities: 2,
-    lastActive: "2 weeks ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jul 2024",
-    subject: "Literature",
-    university: "Columbia",
-    year: "2nd Year",
-  },
-  {
-    id: 9,
-    name: "Admin User",
-    email: "admin@brainmap.com",
-    role: "Moderator",
-    status: "Active",
-    activities: 0,
-    lastActive: "5 minutes ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jan 2024",
-    subject: "Administration",
-    university: "BrainMap Platform",
-    role_type: "System Admin",
-  },
-  {
-    id: 10,
-    name: "David Beckham",
-    email: "david.b@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 7,
-    lastActive: "6 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Aug 2024",
-    subject: "Mathematics",
-    university: "Oxford",
-    year: "3rd Year",
-  },
-  {
-    id: 11,
-    name: "Dr. Lionel Messi",
-    email: "rachel.green@expert.com",
-    role: "Domain Expert",
-    status: "Active",
-    activities: 11,
-    lastActive: "2 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Apr 2024",
-    subject: "Psychology",
-    university: "Cambridge",
-    experience: "18+ years",
-  },
-  {
-    id: 12,
-    name: "Tom Anderson",
-    email: "tom.a@Member.edu",
-    role: "Member",
-    status: "Active",
-    activities: 9,
-    lastActive: "1 hour ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Sep 2024",
-    subject: "Engineering",
-    university: "MIT",
-    year: "4th Year",
-  },
-  {
-    id: 13,
-    name: "Jessica Smith",
-    email: "jessica.s@banned.edu",
-    role: "Member",
-    status: "Banned",
-    activities: 0,
-    lastActive: "1 month ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "Jun 2024",
-    subject: "Computer Science",
-    university: "Local College",
-    year: "2nd Year",
-  },
-  {
-    id: 14,
-    name: "Robert Johnson",
-    email: "robert.j@banned.com",
-    role: "Domain Expert",
-    status: "Banned",
-    activities: 0,
-    lastActive: "3 weeks ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    joinDate: "May 2024",
-    subject: "Physics",
-    university: "Banned Institution",
-    experience: "5+ years",
-  },
-];
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  mobileNumber: string;
+  userRole: 'PROJECT_MEMBER' | 'MENTOR' | 'MODERATOR' | 'ADMIN'; // Enum of possible user roles
+  status: 'ACTIVE' | 'INACTIVE' | 'BANNED'; // Enum of possible statuses
+  createdAt: string;
+  updatedAt: string | null;
+  avatar: string | null;
+}
+
+// Define interface for user status response
+interface UserStatus {
+  totalUsers: number;
+  members: number;
+  domainExperts: number;
+  activeUsers: number;
+  currentMonthUserGrowthRate: number;
+  currentMonthMemberGrowthRate: number;
+  currentMonthExpertGrowthRate: number;
+  currentMonthActiveUserGrowthRate: number;
+}
+
+// Define interface for API response with pagination
+interface UserListResponse {
+  content: User[];
+  totalPages: number;
+  totalElements: number;
+  numberOfElements: number;
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
+}
 
 export default function AllUsersPage() {
+  const [usersStatus, setUsersStatus] = useState<UserStatus | null>(null);
+  const [userList, setUserList] = useState<UserListResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);// currentPage is 1-based for the UI
+  const [itemsPerPage] = useState(5); // Use 1-based currentPage for the UI; backend expects 0-based page index
   const params = useParams();
 
-  // Get unique departments for filter
-  const subjects = useMemo(() => {
-    const subjs = [...new Set(allUsers.map((user) => user.subject))];
-    return subjs.sort();
-  }, []);
-
-  // Filter users based on search and filters
-  const filteredUsers = useMemo(() => {
-    return allUsers.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.subject.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
-      const matchesStatus =
-        statusFilter === "all" || user.status === statusFilter;
-      const matchesSubject =
-        subjectFilter === "all" || user.subject === subjectFilter;
-
-      return matchesSearch && matchesRole && matchesStatus && matchesSubject;
-    });
-  }, [searchTerm, roleFilter, statusFilter, subjectFilter]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
-  //TO FILTER USER FROM PARAMS
+  // Extract param from URL if present
   const allParams = params?.params as string[] | undefined;
   const param = allParams?.[0];
 
-  // useEffect to filter users based on URL params
-  useEffect(() => {
-    if (param) {
-      // Map URL params to actual role names
-      const roleMapping: Record<string, string> = {
-        members: "Member",
-        member: "Member",
-        "domain-experts": "Domain Expert",
-        "domain-expert": "Domain Expert",
-        moderators: "Moderator",
-        moderator: "Moderator",
+  // Fetch users from backend with filters and pagination
+  // useCallback to memoize the function and avoid unnecessary re-fetches
+  const fetchFilteredUsers = useCallback(async () => {
+    try {
+      // map frontend filters to backend params
+      const roleMapToBackend: Record<string, string> = {
+        'Member': 'PROJECT_MEMBER',
+        'Domain Expert': 'MENTOR',
+        'Moderator': 'MODERATOR',
+        'Admin': 'ADMIN'
       };
 
-      // Map URL params to actual status names
-      const statusMapping: Record<string, string> = {
-        "active-users": "Active",
-        "inactive-users": "Inactive",
-        "banned-users": "Banned",
-        "all-users": "all"
+      const statusMapToBackend: Record<string, string> = {
+        'Active': 'ACTIVE',
+        'Inactive': 'INACTIVE',
+        'Banned': 'BANNED'
       };
 
-      // Check if the param is for status filtering
-      if (statusMapping[param.toLowerCase()]) {
-        const mappedStatus = statusMapping[param.toLowerCase()];
-        setStatusFilter(mappedStatus);
-        setRoleFilter("all"); // Reset role filter when filtering by status
-        setCurrentPage(1);
+      const apiPage = Math.max(0, currentPage - 1);
+      let url = `/api/v1/admin/dashboard/userList?page=${apiPage}&size=${itemsPerPage}`;
+
+      if (roleFilter && roleFilter !== 'all') {
+        const backendRole = roleMapToBackend[roleFilter];
+        if (backendRole) url += `&userRole=${backendRole}`;
       }
-      // Check if the param is for role filtering
-      else if (roleMapping[param.toLowerCase()]) {
-        const mappedRole = roleMapping[param.toLowerCase()];
-        setRoleFilter(mappedRole);
-        setStatusFilter("all"); // Reset status filter when filtering by role
-        setCurrentPage(1);
+
+      if (statusFilter && statusFilter !== 'all') {
+        const backendStatus = statusMapToBackend[statusFilter];
+        if (backendStatus) url += `&userStatus=${backendStatus}`;
       }
-      // If param doesn't match any mapping, reset filters
-      else {
-        setRoleFilter("all");
-        setStatusFilter("all");
-        setCurrentPage(1);
+
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
       }
-    } else {
-      // If no param, show all users
-      setRoleFilter("all");
-      setStatusFilter("all");
-      setCurrentPage(1);
+
+      const userListRes = await api.get(url);
+      const data = userListRes?.data;
+      if (data) {
+        setUserList(data);
+
+        // synchronize UI page with backend returned page number (backend likely 0-based)
+        const fetchedPage = typeof data.pageable?.pageNumber === 'number' ? data.pageable.pageNumber : apiPage;
+        const uiPage = fetchedPage + 1;
+        if (uiPage !== currentPage) {
+          // update without causing infinite loop; this will trigger a refetch only when necessary
+          setCurrentPage(uiPage);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
     }
-  }, [param]);
+  }, [currentPage, itemsPerPage, statusFilter, roleFilter, searchTerm]);
+
+  // useEffect to filter users based on URL params
+  
+  // Initial fetch of users overview and user list
+  useEffect(() => {
+    async function fetchUsersOverview() {
+      try {
+        const usersStatusRes = await api.get('/api/v1/admin/dashboard/usersStatus');
+        setUsersStatus(usersStatusRes.data);
+      }
+      catch (error) {
+        console.error("Failed to load users overview:", error);
+        setUsersStatus(null);
+      }
+    } 
+    fetchUsersOverview();
+  },[]);
+
+  // Filter users based on search and filters
+  // Since server provides paginated & filtered results, use backend content directly
+  const filteredUsers = useMemo(() => {
+    return userList?.content || [];
+  }, [userList]);
+
+  // Pagination
+  const totalPages = Math.max(1, userList?.totalPages || 1);
+  const totalUsers = userList?.totalElements ?? 0;
+  const startIndex = Math.max(0, (currentPage - 1) * itemsPerPage);
+  // backend already paginates; items to render are the content
+  const paginatedUsers = filteredUsers;
 
   const clearFilters = () => {
     setSearchTerm("");
     setRoleFilter("all");
     setStatusFilter("all");
-    setSubjectFilter("all");
     setCurrentPage(1);
   };
+
+  useEffect(() => {
+  if (!param) return;
+
+  const roleMapping: Record<string, string> = {
+    "members": "Member",
+    "domain-experts": "Domain Expert",
+    "moderators": "Moderator",
+    "admins": "Admin"
+  };
+
+  const statusMapping: Record<string, string> = {
+    "active-users": "Active",
+    "inactive-users": "Inactive",
+    "banned-users": "Banned",
+  };
+
+  const lower = param.toLowerCase();
+
+  if (roleMapping[lower]) {
+    setRoleFilter(roleMapping[lower]);
+    setStatusFilter("all");
+    setCurrentPage(1); // ← reset page to first for filtered results
+    console.log("rolemaped! ", lower)
+    console.log("Role Filter:", roleFilter, "Status Filter:", statusFilter);
+  } else if (statusMapping[lower]) {
+    setStatusFilter(statusMapping[lower]);
+    setRoleFilter("all");
+    setCurrentPage(1); // ← reset page to first for filtered results
+  } else {
+    setRoleFilter("all");
+    setStatusFilter("all");
+    setCurrentPage(1);
+  }
+}, [param]);
+
+useEffect(() => {
+  console.log("Role Filter changed:", roleFilter, "Status Filter:", statusFilter);
+}, [roleFilter, statusFilter]);
+
+
+  useEffect(() => {
+    // Reset to first page whenever filters change
+    fetchFilteredUsers();
+  }, [fetchFilteredUsers, roleFilter, statusFilter, searchTerm]);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -382,7 +266,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.length}
+                  {usersStatus?.totalUsers || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-blue-500 text-white">
@@ -390,7 +274,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+12%</span>
+              <span className={`text-sm font-medium ${(usersStatus?.currentMonthUserGrowthRate || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {(usersStatus?.currentMonthUserGrowthRate || 0) >= 0 ? "+": ""}{usersStatus?.currentMonthUserGrowthRate || 0}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -400,7 +285,7 @@ export default function AllUsersPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Members</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.role === "Member").length}
+                   {usersStatus?.members || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-green-500 text-white">
@@ -408,7 +293,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+8%</span>
+              <span className={`text-sm font-medium ${(usersStatus?.currentMonthMemberGrowthRate || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {(usersStatus?.currentMonthMemberGrowthRate || 0) >= 0 ? "+": ""}{usersStatus?.currentMonthMemberGrowthRate || 0}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -420,7 +306,7 @@ export default function AllUsersPage() {
                   Domain Experts
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.role === "Domain Expert").length}
+                   {usersStatus?.domainExperts || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-purple-500 text-white">
@@ -428,7 +314,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+15%</span>
+              <span className={`text-sm font-medium ${(usersStatus?.currentMonthExpertGrowthRate || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {(usersStatus?.currentMonthExpertGrowthRate || 0) >= 0 ? "+": ""}{usersStatus?.currentMonthExpertGrowthRate || 0}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -440,7 +327,7 @@ export default function AllUsersPage() {
                   Active Users
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {allUsers.filter((u) => u.status === "Active").length}
+                  {usersStatus?.activeUsers || "N/A"}
                 </p>
               </div>
               <div className="p-3 rounded-full bg-emerald-500 text-white">
@@ -448,7 +335,8 @@ export default function AllUsersPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-sm font-medium text-green-600">+5%</span>
+              <span className={`text-sm font-medium ${(usersStatus?.currentMonthActiveUserGrowthRate || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {(usersStatus?.currentMonthActiveUserGrowthRate || 0) >= 0 ? "+": ""}{usersStatus?.currentMonthActiveUserGrowthRate || 0}%</span>
               <span className="text-sm text-gray-600"> from last month</span>
             </div>
           </div>
@@ -465,7 +353,7 @@ export default function AllUsersPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search by name, email, or subject..."
+                    placeholder="Search by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
@@ -505,27 +393,6 @@ export default function AllUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject
-                  </label>
-                  <Select
-                    value={subjectFilter}
-                    onValueChange={setSubjectFilter}
-                  >
-                    <SelectTrigger className="bg-white border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
-                      <SelectValue placeholder="All Subjects" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="all">All Subjects</SelectItem>
-                      {subjects.map((subj) => (
-                        <SelectItem key={subj} value={subj}>
-                          {subj}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <Button
                 variant="outline"
@@ -545,10 +412,10 @@ export default function AllUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-gray-900">
-                  Users ({filteredUsers.length} of {allUsers.length})
+                  Users ({userList?.numberOfElements || "N/A"} of {totalUsers || "N/A"})
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {filteredUsers.length === allUsers.length
+                  {(filteredUsers.length <= itemsPerPage)
                     ? "Showing all users"
                     : `Filtered results: ${filteredUsers.length} users found`}
                 </p>
@@ -572,16 +439,10 @@ export default function AllUsersPage() {
                     Role
                   </TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4">
-                    Subject
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-900 py-4">
                     Status
                   </TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4">
-                    Activities
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-900 py-4">
-                    Last Active
+                    Updated Time
                   </TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4">
                     Join Date
@@ -592,106 +453,125 @@ export default function AllUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedUsers.map((user, index) => (
-                  <TableRow
-                    key={user.id}
-                    className={`border-gray-200 hover:bg-gray-50 transition-colors ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
-                    }`}
-                  >
-                    <TableCell className="font-medium py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-gray-200">
-                          <AvatarImage
-                            src={user.avatar || "/placeholder.svg"}
-                          />
-                          <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
-                            {user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {user.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {user.email}
+                {paginatedUsers.map((user: User, index: number) => {
+                  // Map backend roles to display roles
+                  const roleMap: Record<string, string> = {
+                    'PROJECT_MEMBER': 'Member',
+                    'MENTOR': 'Domain Expert',
+                    'MODERATOR': 'Moderator',
+                    'ADMIN': 'Admin'
+                  };
+                  
+                  // Map backend status to display status
+                  const statusMap: Record<string, string> = {
+                    'ACTIVE': 'Active',
+                    'INACTIVE': 'Inactive',
+                    'BANNED': 'Banned'
+                  };
+                  
+                  const displayRole = roleMap[user.userRole] || user.userRole;
+                  const displayStatus = statusMap[user.status] || user.status;
+                  
+                  // Format date
+                  const formatDate = (dateString: string | null) => {
+                    if (!dateString) return 'N/A';
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                      year: 'numeric', 
+                      month: 'short'
+                    });
+                  };
+                  
+                  return (
+                    <TableRow
+                      key={user.id}
+                      className={`border-gray-200 hover:bg-gray-50 transition-colors ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                      }`}
+                    >
+                      <TableCell className="font-medium py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 border-2 border-gray-200">
+                            <AvatarImage
+                              src={user.avatar || "/image/user_placeholder.jpg"}
+                            />
+                            <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
+                              {user.username
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {user.username}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {user.email}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge
-                        className={
-                          user.role === "Domain Expert"
-                            ? "bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200"
-                            : user.role === "Moderator"
-                            ? "bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-200"
-                            : "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200"
-                        }
-                      >
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-sm text-gray-600 font-medium">
-                        {user.subject}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge
-                        className={
-                          user.status === "Active"
-                            ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
-                            : user.status === "Banned"
-                            ? "bg-red-100 text-red-800 hover:bg-red-200 border-red-200"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200"
-                        }
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="font-medium text-gray-900">
-                        {user.activities}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-gray-500 py-4">
-                      {user.lastActive}
-                    </TableCell>
-                    <TableCell className="text-gray-500 py-4">
-                      {user.joinDate}
-                    </TableCell>
-                    <TableCell className="text-right py-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 bg-white">
-                          <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
-                            <Edit className="mr-2 h-4 w-4 text-gray-500" />
-                            <span className="text-gray-700">Edit User</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
-                            <UserCheck className="mr-2 h-4 w-4 text-gray-500" />
-                            <span className="text-gray-700">Change Role</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <Badge
+                          className={
+                            displayRole === "Domain Expert"
+                              ? "bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200"
+                              : displayRole === "Moderator"
+                              ? "bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-200"
+                              : "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200"
+                          }
+                        >
+                          {displayRole}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <Badge
+                          className={
+                            displayStatus === "Active"
+                              ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
+                              : displayStatus === "Banned"
+                              ? "bg-red-100 text-red-800 hover:bg-red-200 border-red-200"
+                              : "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200"
+                          }
+                        >
+                          {displayStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-500 py-4">
+                        {formatDate(user.updatedAt)}
+                      </TableCell>
+                      <TableCell className="text-gray-500 py-4">
+                        {formatDate(user.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-right py-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 bg-white">
+                            <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+                              <Edit className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Edit User</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+                              <UserCheck className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Change Role</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer hover:bg-red-50 text-red-600">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete User
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -737,8 +617,8 @@ export default function AllUsersPage() {
                   Previous
                 </Button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let page;
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i: number) => {
+                    let page: number;
                     if (totalPages <= 5) {
                       page = i + 1;
                     } else if (currentPage <= 3) {
@@ -770,9 +650,9 @@ export default function AllUsersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    setCurrentPage(Math.min(totalPages || 1, currentPage + 1))
                   }
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || totalPages === 1}
                   className="border-gray-300 text-gray-700 hover:bg-white disabled:opacity-50"
                 >
                   Next

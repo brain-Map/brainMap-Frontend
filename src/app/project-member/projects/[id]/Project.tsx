@@ -7,7 +7,6 @@ import ProjectSettingsPage from './Settings';
 import ProjectChat from './ProjectChat';
 import { projectApi, ProjectResponse } from '@/services/projectApi';
 import api from '@/utils/api';
-import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 
@@ -112,8 +111,6 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         }, []);
   
   
-          // Combine backend projects with static projects for display
-    // You can choose to use only backend projects by removing the static projects
     const allProjects = showOnlyBackendProjects ? 
       backendProjects.map(project => ({
         id: project.id,
@@ -143,53 +140,12 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
   
       ];
       
-
   const project = allProjects.find((p) => p.id === params.id);
-  
-  const supervisors: Supervisor[] = [
-    {
-      id: '1',
-      name: 'Dr. James Wilson',
-      title: 'Project Manager',
-      email: 'james.wilson@company.com',
-      avatar: '/api/placeholder/40/40',
-      lastReview: '2 days ago',
-      nextMeeting: 'Tomorrow, 2 PM'
-    },
-    {
-      id: '2',
-      name: 'Sarah Mitchell',
-      title: 'Lead Designer',
-      email: 'sarah.mitchell@company.com',
-      avatar: '/api/placeholder/40/40',
-      lastReview: '1 week ago',
-      nextMeeting: 'Friday, 10 AM'
-    }
-  ];
 
-  // const teamMembers: TeamMember[] = [
-  //   {
-  //     id: '1',
-  //     name: 'Sarah Johnson',
-  //     role: 'UI/UX Designer',
-  //     avatar: '/api/placeholder/40/40',
-  //     status: 'Lead'
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Mike Chen',
-  //     role: 'Frontend Developer',
-  //     avatar: '/api/placeholder/40/40',
-  //     status: 'Active'
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Alex Rodriguez',
-  //     role: 'Backend Developer',
-  //     avatar: '/api/placeholder/40/40',
-  //     status: 'Active'
-  //   }
-  // ];
+  // Split collaborators into mentors and non-mentors
+  const mentorCollaborators = collaborators.filter((c) => c.role === 'MENTOR');
+  const memberCollaborators = collaborators.filter((c) => c.role !== 'MENTOR');
+
 
   const activities: Activity[] = [
     {
@@ -299,7 +255,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
             
           </div>
           <div className="space-y-3  flex flex-col justify-center">
-            {collaborators.length === 0 ? (
+            {memberCollaborators.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 px-6 ">
                 <div className="w-14 h-14 mb-3 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center ">
                   {/* User icon SVG */}
@@ -333,7 +289,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
               </div>
 
             ) : (
-              collaborators.map((member) => (
+              memberCollaborators.map((member) => (
                 <div
                   key={member.id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -377,45 +333,51 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         {/* Supervisors */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4 border-b border-gray-200 pb-4">
-            Supervisor{supervisors.length > 1 ? "s" : ""}
+            Supervisor{mentorCollaborators.length > 1 ? "s" : ""}
           </h3>
           <div className="space-y-4">
-            {supervisors.map((supervisor) => (
-              <div
-                key={supervisor.id}
-                className="flex items-start space-x-3 hover:bg-gray-50 transition-colors p-3 rounded-lg cursor-pointer"
-              >
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-medium text-gray-700">
-                    {supervisor.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900">{supervisor.name}</p>
-                  <p className="text-sm text-gray-500">{supervisor.title}</p>
-                  <p className="text-sm text-blue-600 truncate">
-                    {supervisor.email}
-                  </p>
-                  <div className="mt-2 space-y-1 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Last Review:</span>
-                      <span className="text-gray-900">
-                        {supervisor.lastReview}
-                      </span>
+            {mentorCollaborators.length === 0 ? (
+              <div className="text-sm text-gray-500">No supervisors assigned</div>
+            ) : (
+              mentorCollaborators.map((mentor) => (
+                <div
+                  key={mentor.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                      {mentor.avatar ? (
+                            <img
+                              src={mentor.avatar}
+                              alt="avatar"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-700">
+                              {mentor.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')}
+                            </span>
+                          )}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Next Meeting:</span>
-                      <span className="text-gray-900">
-                        {supervisor.nextMeeting}
-                      </span>
+                    <div>
+                      <p className="font-medium text-gray-900">{mentor.name}</p>
+                      <p className="text-sm text-gray-500">Mentor</p>
                     </div>
                   </div>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      mentor.status === 'ACCEPTED'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {mentor.status === 'ACCEPTED' ? 'Accepted' : 'Pending'}
+                  </span>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
