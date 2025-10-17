@@ -101,23 +101,27 @@ const CommentComponent = ({
   comment, 
   onLike, 
   onReply, 
+  onDelete,
   replyingTo, 
   replyForms, 
   updateReplyForm, 
   handleSubmitReply, 
   router, 
   postId, 
+  currentUserId,
   depth = 0 
 }: {
   comment: Comment
   onLike: (id: string) => void
   onReply: (id: string) => void
+  onDelete: (id: string) => void
   replyingTo: string | null
   replyForms: {[key: string]: string}
   updateReplyForm: (id: string, content: string) => void
   handleSubmitReply: (id: string) => void
   router: any
   postId: string
+  currentUserId?: string
   depth?: number
 }) => {
   const maxDepth = 3 // Limit nesting depth
@@ -212,6 +216,17 @@ const CommentComponent = ({
                   Reply
                 </button>
               )}
+              
+              {/* Delete button - only show for comment author */}
+              {currentUserId && comment.authorId && currentUserId === comment.authorId && (
+                <button
+                  onClick={() => onDelete(comment.id)}
+                  className="flex items-center gap-1 text-xs h-7 px-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Delete
+                </button>
+              )}
             </div>
 
             {/* Reply Form */}
@@ -283,12 +298,14 @@ const CommentComponent = ({
                     comment={reply}
                     onLike={onLike}
                     onReply={onReply}
+                    onDelete={onDelete}
                     replyingTo={replyingTo}
                     replyForms={replyForms}
                     updateReplyForm={updateReplyForm}
                     handleSubmitReply={handleSubmitReply}
                     router={router}
                     postId={postId}
+                    currentUserId={currentUserId}
                     depth={depth + 1}
                   />
                 ))}
@@ -770,6 +787,41 @@ export default function PostPage() {
     }
   }
 
+  // Handle comment deletion
+  const handleDeleteComment = async (commentId: string) => {
+    if (!post) return
+
+    try {
+      console.log("🗑️ Deleting comment:", commentId)
+      
+      await communityApi.deleteComment(post.id, commentId)
+      
+      console.log("🗑️ Comment deleted successfully")
+      
+      // Remove comment from state - recursively handle nested comments
+      const removeComment = (comments: Comment[]): Comment[] => {
+        return comments
+          .filter(comment => comment.id !== commentId)
+          .map(comment => ({
+            ...comment,
+            replies: comment.replies ? removeComment(comment.replies) : null
+          }))
+      }
+
+      setComments(removeComment(comments))
+      
+      // Update post comment count
+      setPost({ ...post, comments: Math.max(0, post.comments - 1) })
+      
+      // Refresh top commenters since a comment was deleted
+      fetchTopCommenters()
+      
+    } catch (err) {
+      console.error("🗑️ Error deleting comment:", err)
+      // Optionally show error toast notification
+    }
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -1145,12 +1197,14 @@ export default function PostPage() {
                       comment={comment}
                       onLike={(id) => handleCommentLike(id)}
                       onReply={toggleReplyForm}
+                      onDelete={handleDeleteComment}
                       replyingTo={replyingTo}
                       replyForms={replyForms}
                       updateReplyForm={updateReplyForm}
                       handleSubmitReply={handleSubmitReply}
                       router={router}
                       postId={postId as string}
+                      currentUserId={user?.id}
                     />
                   ))}
                 </div>
