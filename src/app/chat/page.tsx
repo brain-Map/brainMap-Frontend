@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, MoreVertical, Phone, Video, Paperclip, Send, X } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { Client } from "@stomp/stompjs"
-import SockJS from "sockjs-client"
+import useStomp from "@/hooks/useStomp"
 import React from "react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
@@ -34,7 +33,7 @@ export default function ChatInterface() {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState("")
   const [groupMembersToAdd, setGroupMembersToAdd] = useState<any[]>([])
-  const stompClient = useRef<Client | null>(null)
+  const stompClientRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
   const [lastMessageId, setLastMessageId] = useState<number | null>(null)
@@ -44,6 +43,28 @@ export default function ChatInterface() {
     const accessToken = localStorage.getItem("accessToken") || ""
     setToken(accessToken)
   }, [])
+
+  // If another page requested opening a chat via localStorage, handle it
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('openChatWith')
+      if (!raw) return
+      const payload = JSON.parse(raw)
+      // payload should be { id, name }
+      if (!payload || !payload.id) return
+      const existingChat = chats.find(c => c.id === payload.id)
+      if (existingChat) {
+        setSelectedChat(existingChat)
+      } else {
+        const newChat = { id: payload.id, userId: payload.id, name: payload.name || payload.username || payload.id, avatar: '/image/avatar/default.jpg', lastMessage: '', time: '' }
+        setChats((prev) => [newChat, ...prev])
+        setSelectedChat(newChat)
+      }
+      localStorage.removeItem('openChatWith')
+    } catch (e) {
+      // ignore
+    }
+  }, [chats])
 
   // Smooth scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -123,9 +144,9 @@ export default function ChatInterface() {
   // Handle incoming WebSocket messages
   const onPrivateMessageReceive = useCallback(
     (message: any) => {
-      console.log("Received WebSocket message:", message.body);
+      console.log("Received WebSocket message:", message?.body || message);
       try {
-        const payloadData = JSON.parse(message.body)
+        const payloadData = typeof message?.body === 'string' ? JSON.parse(message.body) : (message || {})
         if (payloadData.status === "ERROR") {
           setError(payloadData.message || "An error occurred while processing the message.")
           return
@@ -163,54 +184,36 @@ export default function ChatInterface() {
   )
 
   // WebSocket connect/disconnect
+  // Use reusable STMOP hook
+  const { connect, disconnect, subscribe, unsubscribe, publish, client } = useStomp({
+    token,
+    userId,
+    onError: (e) => setError(typeof e === 'string' ? e : JSON.stringify(e)),
+  })
+
+  // keep reference for imperative checks elsewhere in this component
+  useEffect(() => {
+    stompClientRef.current = client
+  }, [client])
+
+  // subscribe to private messages when connected
   useEffect(() => {
     if (!userId || !token) return
+    // subscribe under /user/{userId}/private to match backend
+    const destination = `/user/${userId}/private`
+    const sub = subscribe(destination, (msg: any) => onPrivateMessageReceive(msg), { Authorization: `Bearer ${token}` })
 
-    stompClient.current = new Client({
-      webSocketFactory: () => new SockJS(WEBSOCKET_URL),
-      connectHeaders: { Authorization: `Bearer ${token}` },
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000,
-      debug: (str) => console.log("STOMP Debug:", str),
-      reconnectDelay: 5000,
-      onConnect: () => {
-        console.log(`WebSocket connected for user: ${userId}`);
-        stompClient.current?.subscribe(
-          `/user/${userId}/private`,
-          onPrivateMessageReceive,
-          { Authorization: `Bearer ${token}` }
-        )
-        stompClient.current?.publish({
-          destination: "/app/private-message",
-          body: JSON.stringify({
-            senderId: userId,
-            receiverId: "",
-            message: "",
-            status: "JOIN",
-          }),
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      },
-      onStompError: (frame) => {
-        console.error("STOMP error:", frame.headers?.message || "Unknown");
-        setError("WebSocket error: " + (frame.headers?.message || "Unknown"))
-      },
-      onWebSocketError: (error) => {
-        console.error("WebSocket connection failed:", error);
-        setError("WebSocket connection failed.")
-      },
-      onDisconnect: () => {
-        console.warn("WebSocket disconnected. Attempting to reconnect...");
-        setError("WebSocket disconnected.")
-      },
-    })
+    // send JOIN presence
+    publish?.("/app/private-message", { senderId: userId, receiverId: "", message: "", status: "JOIN" }, { Authorization: `Bearer ${token}` })
 
-    stompClient.current.activate()
     return () => {
-      console.log("Deactivating WebSocket connection");
-      stompClient.current?.deactivate()
+      if (sub && typeof sub.unsubscribe === 'function') {
+        try { sub.unsubscribe() } catch (e) {}
+      } else {
+        unsubscribe(destination)
+      }
     }
-  }, [userId, token, onPrivateMessageReceive])
+  }, [userId, token, subscribe, unsubscribe, publish, onPrivateMessageReceive])
 
   // Fetch messages for selected chat
   useEffect(() => {
@@ -342,33 +345,30 @@ export default function ChatInterface() {
   }
 
   const subscribeToGroup = (groupId: string) => {
-    if (!stompClient.current?.connected || !groupId) return
+    if (!client.current?.connected || !groupId) return
     try {
-      // Unsubscribe previous
       groupSubscriptionRef.current?.unsubscribe?.()
-      groupSubscriptionRef.current = stompClient.current?.subscribe(
-        `/group/${groupId}/messages`,
-        (msg: any) => {
-          try {
-            const payload = JSON.parse(msg.body)
-            const newMessage = {
-              id: payload.id || Date.now(),
-              senderId: payload.senderId,
-              receiverId: payload.receiverId,
-              message: payload.message,
-              avatar: payload.avatar || "/image/avatar/default.jpg",
-              time: payload.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-              isOwn: payload.senderId === userId,
-            }
-            setMessages((prev) => [...prev, newMessage])
-            setLastMessageId(newMessage.id)
-            setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, lastMessage: payload.message, time: newMessage.time } : g))
-          } catch (e) {
-            console.error('Failed parsing group message', e)
+      const dest = `/group/${groupId}/messages`
+      const sub = subscribe(dest, (msg: any) => {
+        try {
+          const payload = typeof msg.body === 'string' ? JSON.parse(msg.body) : (msg || {})
+          const newMessage = {
+            id: payload.id || Date.now(),
+            senderId: payload.senderId,
+            receiverId: payload.receiverId,
+            message: payload.message,
+            avatar: payload.avatar || "/image/avatar/default.jpg",
+            time: payload.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            isOwn: payload.senderId === userId,
           }
-        },
-        { Authorization: `Bearer ${token}` }
-      )
+          setMessages((prev) => [...prev, newMessage])
+          setLastMessageId(newMessage.id)
+          setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, lastMessage: payload.message, time: newMessage.time } : g))
+        } catch (e) {
+          console.error('Failed parsing group message', e)
+        }
+      }, { Authorization: `Bearer ${token}` })
+      groupSubscriptionRef.current = sub
     } catch (e) {
       console.error('Failed to subscribe to group', e)
     }
@@ -427,7 +427,7 @@ export default function ChatInterface() {
 
   // Send message via WebSocket (private or group)
   const handleSend = () => {
-    if (!message.trim() || !stompClient.current?.connected) return
+    if (!message.trim() || !client.current?.connected) return
 
     // Sending to a group
     if (selectedGroup) {
@@ -437,11 +437,7 @@ export default function ChatInterface() {
         message: message.trim(),
         status: "GROUP_MESSAGE",
       }
-      stompClient.current.publish({
-        destination: "/app/group-message",
-        body: JSON.stringify(groupMessage),
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      publish?.("/app/group-message", groupMessage, { Authorization: `Bearer ${token}` })
       const newMsg = {
         id: Date.now(),
         senderId: userId,
@@ -467,11 +463,7 @@ export default function ChatInterface() {
       message: message.trim(),
       status: "MESSAGE",
     }
-    stompClient.current.publish({
-      destination: "/app/private-message",
-      body: JSON.stringify(chatMessage),
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    publish?.("/app/private-message", chatMessage, { Authorization: `Bearer ${token}` })
     const newMsg = {
       id: Date.now(),
       senderId: userId,
