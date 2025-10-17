@@ -51,7 +51,7 @@ interface InquiryItem {
   id: string;
   reportedUser: string;
   reportedUserAvatar: string;
-  contentType: "project" | "comment" | "post" | "review" | "support" | "issue" | "payment";
+  contentType: "project" | "comment" | "post" | "review" | "support" | "issue" | "payment" | "account" | "other";
   contentTitle: string;
   reason: string;
   status: "pending" | "reviewed" | "resolved";
@@ -75,6 +75,8 @@ const mapDtoToInquiryItem = (dto: BackendInquiry): InquiryItem => {
     support: "support",
     issue: "issue",
     payment: "payment",
+    account: "account",
+    other: "other",
   };
   const uiType = typeMap[typeLower] ?? "post";
   const statusLower = dto.status.toLowerCase() as InquiryItem["status"];
@@ -250,10 +252,6 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
                   {inquiry.reason}
                 </p>
               </div>
-              <div className="col-span-2">
-                <span className="text-gray-600">Description:</span>
-                <p className="text-gray-700 mt-1">{inquiry.description}</p>
-              </div>
             </div>
           </div>
 
@@ -315,7 +313,7 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 export default function InquiryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [contentTypeFilter, setContentTypeFilter] = useState("all");
+  const [inquiryTypeFilter, setInquiryTypeFilter] = useState("all");
   const [sortField, setSortField] = useState("reportDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryItem | null>(null);
@@ -385,6 +383,10 @@ export default function InquiryManagement() {
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
       case "payment":
         return <FileText className="w-4 h-4 text-emerald-600" />;
+      case "account":
+        return <FileText className="w-4 h-4 text-pink-600" />;
+      case "other":
+        return <FileText className="w-4 h-4 text-gray-600" />;
       default:
         return <FileText className="w-4 h-4 text-gray-600" />;
     }
@@ -441,7 +443,7 @@ export default function InquiryManagement() {
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
-    setContentTypeFilter("all");
+    setInquiryTypeFilter("all");
     setCurrentPage(1);
   };
 
@@ -559,22 +561,15 @@ export default function InquiryManagement() {
           reviewed: "REVIEWED",
           resolved: "RESOLVED",
         };
-        const typeMap: Record<string, string> = {
-          Project: "PROJECT",
-          Review: "REVIEW",
-          Support: "SUPPORT",
-          Issue: "ISSUE",
-          Payment: "PAYMENT",
-        };
+        // Inquiry type filter maps directly by uppercasing the selected value
 
         let url = `/api/v1/inquiries/filter?page=${apiPage}&size=${itemsPerPage}&sortBy=${sortBy}&direction=${direction}`;
         if (statusFilter !== "all") {
           const s = statusMap[statusFilter];
           if (s) url += `&status=${s}`;
         }
-        if (contentTypeFilter !== "all") {
-          const t = typeMap[contentTypeFilter as keyof typeof typeMap];
-          if (t) url += `&type=${t}`;
+        if (inquiryTypeFilter !== "all") {
+          url += `&type=${inquiryTypeFilter.toUpperCase()}`;
         }
         if (searchTerm) {
           url += `&search=${encodeURIComponent(searchTerm)}`;
@@ -601,7 +596,7 @@ export default function InquiryManagement() {
     };
     fetchInquiries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeCurrentPage, itemsPerPage, statusFilter, contentTypeFilter, searchTerm, sortDirection]);
+  }, [safeCurrentPage, itemsPerPage, statusFilter, inquiryTypeFilter, searchTerm, sortDirection]);
 
   // Fetch inquiries overview stats
   useEffect(() => {
@@ -624,7 +619,7 @@ export default function InquiryManagement() {
   // Reset to first page when filters/search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, contentTypeFilter]);
+  }, [searchTerm, statusFilter, inquiryTypeFilter]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
@@ -737,18 +732,23 @@ export default function InquiryManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content Type
+                    Inquiry Type
                   </label>
-                  <Select value={contentTypeFilter} onValueChange={setContentTypeFilter}>
+                  <Select value={inquiryTypeFilter} onValueChange={setInquiryTypeFilter}>
                     <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="project">Projects</SelectItem>
-                      <SelectItem value="post">Posts</SelectItem>
-                      <SelectItem value="comment">Comments</SelectItem>
-                      <SelectItem value="review">Reviews</SelectItem>
+                      <SelectItem value="issue">ISSUE</SelectItem>
+                      <SelectItem value="post">POST</SelectItem>
+                      <SelectItem value="comment">COMMENT</SelectItem>
+                      <SelectItem value="review">REVIEW</SelectItem>
+                      <SelectItem value="project">PROJECT</SelectItem>
+                      <SelectItem value="account">ACCOUNT</SelectItem>
+                      <SelectItem value="payment">PAYMENT</SelectItem>
+                      <SelectItem value="support">SUPPORT</SelectItem>
+                      <SelectItem value="other">OTHER</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
