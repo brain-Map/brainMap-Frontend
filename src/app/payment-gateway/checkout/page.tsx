@@ -34,6 +34,7 @@ export default function CheckoutPage({
 }: CheckoutProps) {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [paymentData, setPaymentData] = useState({
     customerName,
     customerEmail,
@@ -48,6 +49,18 @@ export default function CheckoutPage({
   const payHereConfigData = payHereConfig.getConfig();
   const testCards = payHereConfig.getTestCards();
 
+  // Check authentication status on mount
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    setIsAuthenticated(!!token);
+    
+    if (!token) {
+      console.warn('⚠️ No authentication token found - payment may require login');
+    } else {
+      console.log('✅ User is authenticated - ready for payment');
+    }
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
     setPaymentData(prev => ({
       ...prev,
@@ -56,6 +69,18 @@ export default function CheckoutPage({
   };
 
   const handlePayWithPayHere = async () => {
+    // Check authentication first
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    if (!token) {
+      toast.error('Please log in to continue with payment');
+      console.error('🚫 Authentication required: No JWT token found');
+      // Optionally redirect to login
+      // router.push('/login?redirect=/payment-gateway/checkout');
+      return;
+    }
+
+    console.log('🔐 Authentication token present:', token.substring(0, 20) + '...');
+
     // Validate required fields
     if (!paymentData.customerName.trim()) {
       toast.error('Customer name is required');
@@ -75,15 +100,21 @@ export default function CheckoutPage({
     setIsProcessing(true);
 
     try {
+      // Split customerName into firstName and lastName
+      const nameParts = paymentData.customerName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last name if only one name provided
+      
       const paymentRequest: PaymentSessionRequest = {
         amount,
         currency,
         orderId,
         itemDescription,
-        customerName: paymentData.customerName.trim(),
-        customerEmail: paymentData.customerEmail.trim(),
-        customerPhone: paymentData.customerPhone.trim() || undefined,
-        customerAddress: paymentData.customerAddress.trim() || undefined,
+        firstName: firstName,
+        lastName: lastName,
+        email: paymentData.customerEmail.trim(),
+        phone: paymentData.customerPhone.trim() || undefined,
+        address: paymentData.customerAddress.trim() || undefined,
         city: paymentData.city.trim(),
         country: paymentData.country.trim()
       };
@@ -123,7 +154,24 @@ export default function CheckoutPage({
       
     } catch (error: any) {
       console.error('Payment session creation failed:', error);
-      toast.error(error.message || 'Failed to initialize payment. Please try again.');
+      
+      // Handle specific error cases
+      if (error.message.includes('Authentication required') || error.message.includes('log in')) {
+        toast.error('Authentication required. Please log in to continue.');
+        console.error('🚫 Authentication error detected');
+        // Optionally redirect to login after a delay
+        // setTimeout(() => router.push('/login?redirect=/payment-gateway/checkout'), 2000);
+      } else if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        console.error('🚫 401 Unauthorized: Token may be invalid or expired');
+        // Clear invalid tokens
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
+        // Optionally redirect to login
+        // setTimeout(() => router.push('/login?redirect=/payment-gateway/checkout'), 2000);
+      } else {
+        toast.error(error.message || 'Failed to initialize payment. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -149,6 +197,30 @@ export default function CheckoutPage({
                 <p className="text-sm mt-1">Using PayHere test environment</p>
               </div>
             )}
+
+            {/* Authentication Status Indicator */}
+            <div className={`mt-4 px-4 py-2 rounded-md ${isAuthenticated ? 'bg-green-100 border border-green-400 text-green-800' : 'bg-red-100 border border-red-400 text-red-800'}`}>
+              <div className="flex items-center justify-center">
+                {isAuthenticated ? (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold">Authenticated</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold">Not Authenticated</span>
+                  </>
+                )}
+              </div>
+              <p className="text-sm mt-1">
+                {isAuthenticated ? 'Ready to proceed with payment' : 'Please log in to continue'}
+              </p>
+            </div>
           </div>
 
           {/* Payment Summary */}
