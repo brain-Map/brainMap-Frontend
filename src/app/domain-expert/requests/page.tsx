@@ -186,7 +186,7 @@ export default function RequestsPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/service-listings/mentor/${mentorId}/bookings`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/mentor/${mentorId}/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
@@ -236,7 +236,7 @@ export default function RequestsPage() {
         body.acceptedPrice = booking?.totalPrice ?? 0
       }
 
-      const res = await fetch(`http://localhost:8080/api/v1/service-listings/service-booking/${bookingId}/accept`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${bookingId}/accept`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         credentials: 'include',
@@ -254,7 +254,7 @@ export default function RequestsPage() {
   const rejectBooking = async (bookingId: string, reason: string) => {
     setIsSubmitting(true)
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/service-listings/service-booking/${bookingId}/reject`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${bookingId}/reject`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         credentials: 'include',
@@ -274,7 +274,7 @@ export default function RequestsPage() {
   const updateBooking = async (bookingId: string, payload: any) => {
     setIsSubmitting(true)
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/service-listings/service-booking/${bookingId}/update`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${bookingId}/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         credentials: 'include',

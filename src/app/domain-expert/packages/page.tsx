@@ -36,7 +36,7 @@ export default function PackagesPage() {
     if (!mentorId) return;
     setLoading(true);
     const token = localStorage.getItem("accessToken");
-    axios.get(`http://localhost:8080/api/v1/service-listings/mentor/${mentorId}`, {
+    axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/mentor/${mentorId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -58,7 +58,7 @@ export default function PackagesPage() {
     if (!deleteId) return;
     const token = localStorage.getItem("accessToken");
     try {
-      await axios.delete(`http://localhost:8080/api/v1/service-listings/${deleteId}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
