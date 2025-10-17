@@ -375,6 +375,7 @@ useEffect(() => {
                       <SelectItem value="Member">Member</SelectItem>
                       <SelectItem value="Domain Expert">Domain Expert</SelectItem>
                       <SelectItem value="Moderator">Moderator</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
