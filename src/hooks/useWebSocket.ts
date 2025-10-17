@@ -38,7 +38,7 @@ export const useWebSocket = ({ token, currentUserId, username }: UseWebSocketPro
     if (!username || !currentUserId) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}`),
       connectHeaders: token ? {
         Authorization: `Bearer ${token}`
       } : {},

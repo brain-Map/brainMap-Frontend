@@ -35,7 +35,7 @@ export class WebSocketService {
     onConnected: (userId: string) => void): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+        webSocketFactory: () => new SockJS(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}`),
         connectHeaders: {
           Authorization: `Bearer ${this.token}`
         },
