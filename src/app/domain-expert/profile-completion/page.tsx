@@ -18,17 +18,12 @@ interface ExpertiseArea {
 interface MentorFormData {
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
   dateOfBirth: string;
   location: string;
   gender: string;
   profilePhoto: File | null;
   expertiseAreas: ExpertiseArea[];
-  mentorshipType: string;
-  availability: string;
-  hourlyRate: string;
-  maxMentees: string;
   bio: string;
   education: Education[];
   workExperience: string;
@@ -47,17 +42,12 @@ export default function MentorRegistrationForm() {
   const [formData, setFormData] = useState<MentorFormData>({
     firstName: '',
     lastName: '',
-    email: '',
     phone: '',
     dateOfBirth: '',
     location: '',
     gender: '',
     profilePhoto: null,
     expertiseAreas: [{ expertise: '', experience: '' }],
-    mentorshipType: '',
-    availability: '',
-    hourlyRate: '',
-    maxMentees: '',
     bio: '',
     education: [{ degree: '', school: '', year: '' }],
     workExperience: '',
@@ -403,20 +393,6 @@ export default function MentorRegistrationForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => updateFormData('email', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-              placeholder="your.email@example.com"
-            />
-          </div>
-        </div>
-        
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -425,7 +401,7 @@ export default function MentorRegistrationForm() {
               value={formData.phone}
               onChange={(e) => updateFormData('phone', e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-              placeholder="+1 (555) 123-4567"
+              placeholder="+123456789"
             />
           </div>
         </div>
@@ -529,76 +505,6 @@ export default function MentorRegistrationForm() {
           <Plus className="w-4 h-4 mr-1" />
           Add Expertise Area
         </button>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Mentorship Type *</label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {['One-on-One', 'Group Sessions', 'Both'].map((type) => (
-            <label key={type} className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-              <input
-                type="radio"
-                name="mentorshipType"
-                value={type.toLowerCase().replace(' ', '-')}
-                checked={formData.mentorshipType === type.toLowerCase().replace(' ', '-')}
-                onChange={(e) => updateFormData('mentorshipType', e.target.value)}
-                className="text-primary focus:ring-primary"
-              />
-              <span className="ml-3 text-sm font-medium text-gray-900">{type}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Availability *</label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <select
-              value={formData.availability}
-              onChange={(e) => updateFormData('availability', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-            >
-              <option value="">Select availability</option>
-              <option value="weekdays">Weekdays</option>
-              <option value="weekends">Weekends</option>
-              <option value="flexible">Flexible</option>
-              <option value="evenings">Evenings Only</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate (USD)</label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="number"
-              value={formData.hourlyRate}
-              onChange={(e) => updateFormData('hourlyRate', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-              placeholder="50"
-              min="0"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Number of Mentees</label>
-        <div className="relative">
-          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="number"
-            value={formData.maxMentees}
-            onChange={(e) => updateFormData('maxMentees', e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-            placeholder="5"
-            min="1"
-            max="50"
-          />
-        </div>
       </div>
 
       <div>
