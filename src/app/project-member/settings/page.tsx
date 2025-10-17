@@ -1,39 +1,36 @@
 "use client";
 
-import React, { ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
-import {
-  User,
-  Shield,
-  Upload,
-  Camera,
-  Settings,
-  Check,
-  X,
-} from "lucide-react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { User, Shield, Upload, Camera, Settings, Check, X } from "lucide-react";
 import { convertBlobUrlToFile } from "@/lib/converToFile";
 import { uploadImage } from "@/lib/storageClient";
 import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileEditor from "./ProfileEditor";
 
-
 interface SettingsProps {}
 
-export interface OneUser{
-    id: string;
-    firstName:string;
-    lastName:string;
-    username: string;
-    email: string;
-    mobileNumber?: string;
-    dateOfBirth?:string;
-    userRole:string;
-    createdAt:string;
-    status:string;
-    city?:string;
-    gender: string;
-    bio?:string;
-    avatar:string;
+export interface OneUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  mobileNumber?: string;
+  dateOfBirth?: string;
+  userRole: string;
+  createdAt: string;
+  status: string;
+  city?: string;
+  gender: string;
+  bio?: string;
+  avatar: string;
 }
 
 const settingsFunctions = {
@@ -50,23 +47,17 @@ const settingsFunctions = {
     }
   },
 
-
-    getOneUserData: async (userId: string): Promise<OneUser> => {
+  getOneUserData: async (userId: string): Promise<OneUser> => {
     try {
       const response = await api.get(`/api/v1/users/${userId}`);
-      console.log('User Data:', response.data);
+      console.log("User Data:", response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
       throw error;
     }
   },
-
 };
-
-
-
-
 
 const SettingsPage: React.FC<SettingsProps> = () => {
   const { user } = useAuth();
@@ -84,19 +75,21 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<'success' | 'error' | null>(null);
+  const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<
+    "success" | "error" | null
+  >(null);
 
   const handlePasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
       setMessage("New passwords do not match");
-      setPasswordUpdateStatus('error');
+      setPasswordUpdateStatus("error");
       setShowPasswordModal(true);
       return;
     }
 
     if (newPassword.length < 6) {
       setMessage("Password must be at least 6 characters long");
-      setPasswordUpdateStatus('error');
+      setPasswordUpdateStatus("error");
       setShowPasswordModal(true);
       return;
     }
@@ -108,27 +101,22 @@ const SettingsPage: React.FC<SettingsProps> = () => {
     if (error) {
       console.error(error);
       setMessage(error.message || "Failed to update password");
-      setPasswordUpdateStatus('error');
+      setPasswordUpdateStatus("error");
       setShowPasswordModal(true);
     } else {
       setMessage("Password updated successfully!");
-      setPasswordUpdateStatus('success');
+      setPasswordUpdateStatus("success");
       setShowPasswordModal(true);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      
+
       // Auto close modal after 3 seconds on success
       setTimeout(() => {
         setShowPasswordModal(false);
       }, 3000);
     }
   };
-  
-
-
-  
-
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -140,7 +128,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
     fetchUserData();
   }, [userId]);
-
 
   //image upload begin
 
@@ -166,41 +153,40 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   };
 
   const handleClickUploadImagesButton = async () => {
-  if (imageUrls.length === 0) return;
+    if (imageUrls.length === 0) return;
 
-  try {
-    const urls: string[] = [];
+    try {
+      const urls: string[] = [];
 
-    for (const url of imageUrls) {
-      const imageFile = await convertBlobUrlToFile(url);
+      for (const url of imageUrls) {
+        const imageFile = await convertBlobUrlToFile(url);
 
-      const { imageUrl, error } = await uploadImage({
-        file: imageFile,
-        bucket: "uploads",
-        folder: "avatars",
-        userId: userId!, // overwrite per user
-      });
+        const { imageUrl, error } = await uploadImage({
+          file: imageFile,
+          bucket: "uploads",
+          folder: "avatars",
+          userId: userId!, // overwrite per user
+        });
 
-      if (error) {
-        console.error(error);
-        return;
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        urls.push(imageUrl);
       }
 
-      urls.push(imageUrl);
+      console.log("Uploaded avatar URLs:", urls);
+
+      // Update only with the first (profile pic)
+      settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
+
+      // Clear after upload
+      setImageUrls([]);
+    } catch (err) {
+      console.error("Upload failed:", err);
     }
-
-    console.log("Uploaded avatar URLs:", urls);
-
-    // Update only with the first (profile pic)
-    settingsFunctions.updateUserProfileAvatar(userId!, urls[0]);
-
-    // Clear after upload
-    setImageUrls([]);
-  } catch (err) {
-    console.error("Upload failed:", err);
-  }
-};
-
+  };
 
   //image upload end
 
@@ -213,26 +199,27 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const SettingsTab = ({ id, label, icon: Icon, isActive, onClick }: any) => (
     <button
       onClick={() => onClick(id)}
-      className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-all duration-200 ${
+      className={`flex items-center space-x-3 w-full px-4 py-2 rounded-lg transition-all duration-200 ${
         isActive
-          ? "bg-primary text-white shadow-lg"
+          ? "bg-primary text-white"
           : "text-gray-600 hover:bg-value3 hover:text-primary"
       }`}
     >
       <Icon size={20} />
-      <span className="font-medium">{label}</span>
+      <span className="font-small">{label}</span>
     </button>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="w-full">
-
         <div className="flex gap-8">
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0 h-[100vh] sticky top-0">
             <div className="bg-white border-r border-gray-200 p-4 h-full">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Settings
+              </h2>
               <nav className="space-y-2">
                 {settingsTabs.map((tab) => (
                   <SettingsTab
@@ -250,23 +237,6 @@ const SettingsPage: React.FC<SettingsProps> = () => {
 
           {/* Main Content */}
           <div className="flex-1 p-8 max-w-7xl mx-auto">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             {/* Profile Settings */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -306,8 +276,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                             className="w-full h-full object-cover"
                             alt="Profile Avatar"
                           />
-                        ) : (
-                        oneUserData?.avatar ? (
+                        ) : oneUserData?.avatar ? (
                           <img
                             src={oneUserData.avatar}
                             className="w-full h-full object-cover"
@@ -315,9 +284,7 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                           />
                         ) : (
                           <User size={60} className="text-gray-400" />
-                        )
                         )}
-                        
                       </div>
 
                       {/* Edit Button Overlay */}
@@ -416,47 +383,8 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 </div>
 
                 <ProfileEditor />
-                
               </div>
             )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             {/* Privacy Settings */}
             {activeTab === "privacy" && (
@@ -466,16 +394,12 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                 </h2>
 
                 <div className="space-y-6">
-                
-                 
-
                   {/* Data Export */}
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       Data Management
                     </h3>
                     <div className="space-y-4">
-                      
                       <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
                         <div>
                           <p className="font-medium text-red-900">
@@ -493,109 +417,110 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                     </div>
                   </div>
                 </div>
-
-                
               </div>
             )}
 
             {/* Account Settings */}
             {activeTab === "account" && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Account Settings
+                </h2>
 
-      <div className="space-y-8">
-        {/* Change Password */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Enter new password"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Confirm new password"
-              />
-            </div>
-            <button
-              onClick={handlePasswordUpdate}
-              disabled={!newPassword || !confirmPassword}
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
-            >
-              Update Password
-            </button>
-          </div>
-        </div>
-      </div>
+                <div className="space-y-8">
+                  {/* Change Password */}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Change Password
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      <button
+                        onClick={handlePasswordUpdate}
+                        disabled={!newPassword || !confirmPassword}
+                        className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary hover:text-black transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+                      >
+                        Update Password
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {/* Password Update Modal */}
+                {showPasswordModal && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-slideUp">
+                      <div className="text-center">
+                        {/* Icon */}
+                        <div
+                          className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                            passwordUpdateStatus === "success"
+                              ? "bg-green-100"
+                              : "bg-red-100"
+                          }`}
+                        >
+                          {passwordUpdateStatus === "success" ? (
+                            <Check size={32} className="text-green-600" />
+                          ) : (
+                            <X size={32} className="text-red-600" />
+                          )}
+                        </div>
 
-      {/* Password Update Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-slideUp">
-            <div className="text-center">
-              {/* Icon */}
-              <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-                passwordUpdateStatus === 'success' 
-                  ? 'bg-green-100' 
-                  : 'bg-red-100'
-              }`}>
-                {passwordUpdateStatus === 'success' ? (
-                  <Check size={32} className="text-green-600" />
-                ) : (
-                  <X size={32} className="text-red-600" />
+                        {/* Title */}
+                        <h3
+                          className={`text-2xl font-bold mb-2 ${
+                            passwordUpdateStatus === "success"
+                              ? "text-green-900"
+                              : "text-red-900"
+                          }`}
+                        >
+                          {passwordUpdateStatus === "success"
+                            ? "Success!"
+                            : "Error"}
+                        </h3>
+
+                        {/* Message */}
+                        <p className="text-gray-600 mb-6">{message}</p>
+
+                        {/* Close Button */}
+                        <button
+                          onClick={() => setShowPasswordModal(false)}
+                          className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                            passwordUpdateStatus === "success"
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-red-600 hover:bg-red-700 text-white"
+                          }`}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-
-              {/* Title */}
-              <h3 className={`text-2xl font-bold mb-2 ${
-                passwordUpdateStatus === 'success' 
-                  ? 'text-green-900' 
-                  : 'text-red-900'
-              }`}>
-                {passwordUpdateStatus === 'success' 
-                  ? 'Success!' 
-                  : 'Error'}
-              </h3>
-
-              {/* Message */}
-              <p className="text-gray-600 mb-6">
-                {message}
-              </p>
-
-              {/* Close Button */}
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                  passwordUpdateStatus === 'success'
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-red-600 hover:bg-red-700 text-white'
-                }`}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
             )}
-
-           
           </div>
         </div>
       </div>
