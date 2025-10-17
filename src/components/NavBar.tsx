@@ -165,13 +165,13 @@ const NavBar: React.FC = () => {
     const baseItems = [
       { 
         label: 'Profile', 
-        href: '/profile', 
+        href: userRole == "Mentor" ? `/mentor/${user?.id}` : '/profile',
         icon: <UserCircle className="w-4 h-4" />,
         description: 'Manage your profile'
       },
       { 
-        label: 'Settings', 
-        href: '/settings', 
+        label: userRole == "Mentor" ? "Edit Profile" : 'Settings', 
+        href: userRole == "Mentor" ? "/domain-expert/edit-profile" : '/settings', 
         icon: <Settings className="w-4 h-4" />,
         description: 'Account preferences'
       },
@@ -298,7 +298,7 @@ const NavBar: React.FC = () => {
 
   return (
     <>
-      <header className={`z-50 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
+      <header className={`z-9999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
         <nav className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
