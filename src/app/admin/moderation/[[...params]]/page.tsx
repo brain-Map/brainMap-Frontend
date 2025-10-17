@@ -51,13 +51,78 @@ interface InquiryItem {
   id: string;
   reportedUser: string;
   reportedUserAvatar: string;
-  contentType: "project" | "comment" | "post" | "review";
+  contentType: "project" | "comment" | "post" | "review" | "support" | "issue" | "payment";
   contentTitle: string;
   reason: string;
   status: "pending" | "reviewed" | "resolved";
-  reportedBy: string;
+  reportedBy: string; // resolver username if available
   reportDate: string;
   description: string;
+}
+
+// Helper to map backend DTO to UI InquiryItem
+const mapDtoToInquiryItem = (dto: BackendInquiry): InquiryItem => {
+  const displayUser = dto.user?.username || dto.userId;
+  const avatarInitials = ((displayUser || "U").replace(/[^a-zA-Z0-9]/g, "").slice(0, 2) || "U").toUpperCase();
+  const typeLower = dto.inquiryType.toLowerCase();
+  // Map backend type to our UI union keys
+  const typeMap: Record<string, InquiryItem["contentType"]> = {
+    project: "project",
+    comment: "comment",
+    post: "post",
+    review: "review",
+    support: "support",
+    issue: "issue",
+    payment: "payment",
+  };
+  const uiType = typeMap[typeLower] ?? "post";
+  const statusLower = dto.status.toLowerCase() as InquiryItem["status"];
+  return {
+    id: dto.inquiryId,
+    reportedUser: displayUser,
+    reportedUserAvatar: avatarInitials,
+    contentType: uiType,
+    contentTitle: dto.title,
+    reason: dto.inquiryContent,
+    status: statusLower,
+    reportedBy: dto.resolverUser?.username || "-",
+    reportDate: dto.createdAt,
+    description: dto.inquiryContent,
+  };
+};
+
+// Backend DTOs
+interface BackendUser {
+  id: string;
+  username: string | null;
+  email: string | null;
+  avatar: string | null;
+}
+
+interface BackendInquiry {
+  inquiryId: string;
+  userId: string;
+  resolver: string | null;
+  inquiryType: string; // e.g., REVIEW | SUPPORT | ISSUE | PAYMENT | PROJECT
+  title: string;
+  inquiryContent: string;
+  status: "PENDING" | "REVIEWED" | "RESOLVED";
+  createdAt: string;
+  resolvedAt: string | null;
+  user?: BackendUser | null;
+  resolverUser?: BackendUser | null;
+  responseContent: string | null;
+}
+
+interface InquiryListResponse {
+  content: BackendInquiry[];
+  totalPages: number;
+  totalElements: number;
+  numberOfElements: number;
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
 }
 
 interface ResponseModalProps {
@@ -136,7 +201,7 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
             </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Reported User:</span>
+                <span className="text-gray-600">User:</span>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-xs font-medium">
@@ -164,9 +229,9 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
                 </p>
               </div>
               <div>
-                <span className="text-gray-600">Reported By:</span>
+                <span className="text-gray-600">Resolver:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {inquiry.reportedBy}
+                  {inquiry.reportedBy || "-"}
                 </p>
               </div>
               <div className="col-span-2">
@@ -260,102 +325,20 @@ export default function InquiryManagement() {
   const [overviewLoading, setOverviewLoading] = useState<boolean>(false);
   const [overviewError, setOverviewError] = useState<string | null>(null);
 
-  // Sample data
-  const [inquiries, setInquiries] = useState<InquiryItem[]>([
-    {
-      id: "RPT-001",
-      reportedUser: "John Smith",
-      reportedUserAvatar: "JS",
-      contentType: "post",
-      contentTitle: "Machine Learning Fundamentals Discussion",
-      reason: "Inappropriate Content",
-      status: "pending",
-      reportedBy: "Sarah Wilson",
-      reportDate: "2024-01-15 14:30",
-      description:
-        "User posted inappropriate comments that violate community guidelines regarding respectful discourse.",
-    },
-    {
-      id: "RPT-002",
-      reportedUser: "Emily Chen",
-      reportedUserAvatar: "EC",
-      contentType: "project",
-      contentTitle: "Advanced React Components Library",
-      reason: "Spam/Self-promotion",
-      status: "reviewed",
-      reportedBy: "Michael Davis",
-      reportDate: "2024-01-15 11:20",
-      description:
-        "Project appears to be spam with excessive self-promotion and irrelevant content.",
-    },
-    {
-      id: "RPT-003",
-      reportedUser: "David Johnson",
-      reportedUserAvatar: "DJ",
-      contentType: "comment",
-      contentTitle: 'Comment on "Data Science Best Practices"',
-      reason: "Harassment",
-      status: "resolved",
-      reportedBy: "Lisa Anderson",
-      reportDate: "2024-01-14 16:45",
-      description:
-        "User made harassing comments towards other community members in the discussion thread.",
-    },
-    {
-      id: "RPT-004",
-      reportedUser: "Maria Garcia",
-      reportedUserAvatar: "MG",
-      contentType: "review",
-      contentTitle: 'Review for "Python for Beginners" course',
-      reason: "False Information",
-      status: "pending",
-      reportedBy: "Tom Rodriguez",
-      reportDate: "2024-01-14 09:15",
-      description:
-        "Review contains misleading information about course content and instructor qualifications.",
-    },
-    {
-      id: "RPT-005",
-      reportedUser: "Alex Thompson",
-      reportedUserAvatar: "AT",
-      contentType: "post",
-      contentTitle: "Web Development Career Path",
-      reason: "Copyright Violation",
-      status: "pending",
-      reportedBy: "Jennifer Lee",
-      reportDate: "2024-01-13 13:22",
-      description:
-        "Post contains copyrighted material used without proper attribution or permission.",
-    },
-  ]);
+  // Backend-driven list
+  const [inquiryList, setInquiryList] = useState<InquiryListResponse | null>(null);
 
   // Filter and sort inquiries
-  const filteredInquiries = inquiries
-    .filter((inquiry) => {
-      const matchesSearch =
-        inquiry.reportedUser.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inquiry.contentTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inquiry.reason.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || inquiry.status === statusFilter;
-      const matchesContentType =
-        contentTypeFilter === "all" || inquiry.contentType === contentTypeFilter;
-      return matchesSearch && matchesStatus && matchesContentType;
-    })
-    .sort((a, b) => {
-      const aValue = a[sortField as keyof InquiryItem];
-      const bValue = b[sortField as keyof InquiryItem];
-      const direction = sortDirection === "asc" ? 1 : -1;
-      return aValue < bValue ? -direction : aValue > bValue ? direction : 0;
-    });
+  // Server provides filtered & paginated results; use backend content directly
+  const filteredInquiries = inquiryList?.content ?? [];
 
   // Pagination derived values
-  const totalItems = filteredInquiries.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const totalItems = inquiryList?.totalElements ?? 0;
+  const totalPages = Math.max(1, inquiryList?.totalPages ?? 1);
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const paginatedInquiries = filteredInquiries.slice(startIndex, endIndex);
+  const startIndex = Math.max(0, (safeCurrentPage - 1) * itemsPerPage);
+  const endIndex = Math.min(startIndex + (inquiryList?.numberOfElements ?? 0), totalItems);
+  const paginatedInquiries = filteredInquiries; // backend already paginates
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -377,7 +360,7 @@ export default function InquiryManagement() {
   };
 
   const getContentTypeIcon = (type: string) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case "project":
         return <Book className="w-4 h-4 text-purple-600" />;
       case "comment":
@@ -386,6 +369,12 @@ export default function InquiryManagement() {
         return <FileText className="w-4 h-4 text-green-600" />;
       case "review":
         return <Star className="w-4 h-4 text-yellow-600" />;
+      case "support":
+        return <MessageSquare className="w-4 h-4 text-indigo-600" />;
+      case "issue":
+        return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case "payment":
+        return <FileText className="w-4 h-4 text-emerald-600" />;
       default:
         return <FileText className="w-4 h-4 text-gray-600" />;
     }
@@ -397,15 +386,7 @@ export default function InquiryManagement() {
   };
 
   const handleResponseSubmit = (response: string, status: string) => {
-    if (selectedInquiry) {
-      setInquiries((prev) =>
-        prev.map((inquiry) =>
-          inquiry.id === selectedInquiry.id
-            ? { ...inquiry, status: status as InquiryItem["status"] }
-            : inquiry
-        )
-      );
-    }
+    // For now, just close modal. Backend integration for response can be added.
   };
 
   // Clear filters like user management page
@@ -432,9 +413,7 @@ export default function InquiryManagement() {
     });
     if (!result.isConfirmed) return;
 
-    setInquiries((prev) =>
-      prev.map((r) => (r.id === inquiry.id ? { ...r, status: newStatus } : r))
-    );
+    // Optimistic UI update could be done; for now, no-op or refetch
 
     await Swal.fire({
       title: "Updated!",
@@ -457,7 +436,7 @@ export default function InquiryManagement() {
     });
     if (!result.isConfirmed) return;
 
-    setInquiries((prev) => prev.filter((r) => r.id !== inquiry.id));
+  // Optimistic UI update could be done; for now, no-op or refetch
 
     await Swal.fire({
       title: "Deleted!",
@@ -478,6 +457,63 @@ export default function InquiryManagement() {
       setStatusFilter("pending")
     }
   }, [inquiryType]);
+
+  // Fetch inquiries list from backend with filters & pagination
+  useEffect(() => {
+    const fetchInquiries = async () => {
+      try {
+        const apiPage = Math.max(0, safeCurrentPage - 1);
+        const direction = sortDirection.toUpperCase();
+        const sortBy = "createdAt";
+
+        const statusMap: Record<string, string> = {
+          pending: "PENDING",
+          reviewed: "REVIEWED",
+          resolved: "RESOLVED",
+        };
+        const typeMap: Record<string, string> = {
+          Project: "PROJECT",
+          Review: "REVIEW",
+          Support: "SUPPORT",
+          Issue: "ISSUE",
+          Payment: "PAYMENT",
+        };
+
+        let url = `/api/v1/inquiries/filter?page=${apiPage}&size=${itemsPerPage}&sortBy=${sortBy}&direction=${direction}`;
+        if (statusFilter !== "all") {
+          const s = statusMap[statusFilter];
+          if (s) url += `&status=${s}`;
+        }
+        if (contentTypeFilter !== "all") {
+          const t = typeMap[contentTypeFilter as keyof typeof typeMap];
+          if (t) url += `&type=${t}`;
+        }
+        if (searchTerm) {
+          url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+
+        const res = await api.get(url);
+        const data = res?.data as InquiryListResponse;
+        if (data) {
+          setInquiryList(data);
+          const fetchedPage = typeof data.pageable?.pageNumber === "number" ? data.pageable.pageNumber : apiPage;
+          const uiPage = fetchedPage + 1;
+          if (uiPage !== safeCurrentPage) setCurrentPage(uiPage);
+        }
+      } catch (err) {
+        console.error("Failed to load inquiries:", err);
+        setInquiryList({
+          content: [],
+          totalPages: 1,
+          totalElements: 0,
+          numberOfElements: 0,
+          pageable: { pageNumber: 0, pageSize: itemsPerPage },
+        });
+      }
+    };
+    fetchInquiries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeCurrentPage, itemsPerPage, statusFilter, contentTypeFilter, searchTerm, sortDirection]);
 
   // Fetch inquiries overview stats
   useEffect(() => {
@@ -531,7 +567,7 @@ export default function InquiryManagement() {
                   Total Inquiries
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {overview?.totalInquiries ?? inquiries.length}
+                  {overview?.totalInquiries ?? inquiryList?.totalElements ?? 0}
                 </p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
@@ -544,9 +580,7 @@ export default function InquiryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {overview?.pending ?? inquiries.filter((r) => r.status === "pending").length}
-                </p>
+                <p className="text-2xl font-bold text-yellow-600">{overview?.pending ?? 0}</p>
               </div>
               <div className="p-3 bg-yellow-500 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-white" />
@@ -558,9 +592,7 @@ export default function InquiryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Reviewed</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {overview?.reviewed ?? inquiries.filter((r) => r.status === "reviewed").length}
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{overview?.reviewed ?? 0}</p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
                 <Eye className="w-6 h-6 text-white" />
@@ -572,9 +604,7 @@ export default function InquiryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Resolved</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {overview?.resolved ?? inquiries.filter((r) => r.status === "resolved").length}
-                </p>
+                <p className="text-2xl font-bold text-green-600">{overview?.resolved ?? 0}</p>
               </div>
               <div className="p-3 bg-green-500 rounded-lg">
                 <Check className="w-6 h-6 text-white" />
@@ -653,7 +683,7 @@ export default function InquiryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-gray-900">
-                  Inquiries ({totalItems === 0 ? 0 : endIndex - startIndex} of {totalItems})
+                  Inquiries ({inquiryList?.numberOfElements ?? 0} of {totalItems})
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {totalItems <= itemsPerPage ? "Showing all inquiries" : `Filtered results: ${totalItems} inquiries found`}
@@ -680,9 +710,26 @@ export default function InquiryManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedInquiries.map((inquiry, index) => (
+                {paginatedInquiries.map((dto: BackendInquiry, index) => {
+                  // map DTO -> display fields
+                  const displayId = dto.inquiryId;
+                  const displayUser = dto.user?.username || dto.userId;
+                  const userAvatar = dto.user?.avatar || "";
+                  const avatarInitials = ((displayUser || "U").replace(/[^a-zA-Z0-9]/g, "").slice(0, 2) || "U").toUpperCase();
+                  const displayTitle = dto.title;
+                  const displayType = dto.inquiryType.toLowerCase();
+                  const displayReason = dto.inquiryContent;
+                  const displayStatus = dto.status.toLowerCase(); // pending | reviewed | resolved
+                  const formatDate = (dateString: string | null) => {
+                    if (!dateString) return "N/A";
+                    const d = new Date(dateString);
+                    if (isNaN(d.getTime())) return dateString;
+                    return d.toLocaleDateString("en-US", { year: "numeric", month: "short" }) +
+                      " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+                  };
+                  return (
                   <TableRow
-                    key={inquiry.id}
+                    key={displayId}
                     className={`border-gray-200 hover:bg-gray-50 transition-colors ${
                       index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
                     }`}
@@ -690,44 +737,40 @@ export default function InquiryManagement() {
                     <TableCell className="font-medium py-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border-2 border-gray-200">
-                          {/* If you later have an image URL, set AvatarImage src here */}
-                          <AvatarImage src={""} />
+                          <AvatarImage src={userAvatar || ""} />
                           <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
-                            {inquiry.reportedUserAvatar}
+                            {avatarInitials}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-gray-900 flex items-center gap-2">
-                            <span>{inquiry.reportedUser}</span>
-                            <span className="text-xs text-gray-400">#{inquiry.id}</span>
-                          </div>
-                          <div className="text-sm text-gray-500">{inquiry.contentTitle}</div>
+                          <div className="font-medium text-gray-900">{displayTitle}</div>
+                          <div className="text-xs text-gray-500">by {displayUser}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
                       <div className="flex items-center gap-2">
-                        {getContentTypeIcon(inquiry.contentType)}
-                        <span className="capitalize text-gray-700">{inquiry.contentType}</span>
+                        {getContentTypeIcon(displayType)}
+                        <span className="capitalize text-gray-700">{displayType}</span>
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <span className="text-gray-700">{inquiry.reason}</span>
+                      <span className="text-gray-700 line-clamp-1" title={displayReason}>{displayReason}</span>
                     </TableCell>
                     <TableCell className="py-4">
                       <Badge
                         className={
-                          inquiry.status === "pending"
+                          displayStatus === "pending"
                             ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200"
-                            : inquiry.status === "reviewed"
+                            : displayStatus === "reviewed"
                             ? "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200"
                             : "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
                         }
                       >
-                        {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                        {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500 py-4">{inquiry.reportDate}</TableCell>
+                    <TableCell className="text-gray-500 py-4">{formatDate(dto.createdAt)}</TableCell>
                     <TableCell className="text-right py-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -741,35 +784,35 @@ export default function InquiryManagement() {
                         <DropdownMenuContent align="end" className="w-56 bg-white">
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleViewInquiry(inquiry)}
+                            onClick={() => handleViewInquiry(mapDtoToInquiryItem(dto))}
                           >
                             <Eye className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">View Details</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleViewInquiry(inquiry)}
+                            onClick={() => handleViewInquiry(mapDtoToInquiryItem(dto))}
                           >
                             <MessageSquare className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">Respond</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleMarkStatus(inquiry, "reviewed")}
+                            onClick={() => handleMarkStatus(mapDtoToInquiryItem(dto), "reviewed")}
                           >
                             <Eye className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">Mark Reviewed</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleMarkStatus(inquiry, "resolved")}
+                            onClick={() => handleMarkStatus(mapDtoToInquiryItem(dto), "resolved")}
                           >
                             <Check className="mr-2 h-4 w-4 text-gray-500" />
                             <span className="text-gray-700">Mark Resolved</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="cursor-pointer hover:bg-red-50 text-red-600"
-                            onClick={() => handleDeleteInquiry(inquiry)}
+                            onClick={() => handleDeleteInquiry(mapDtoToInquiryItem(dto))}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             Delete Inquiry
@@ -778,12 +821,12 @@ export default function InquiryManagement() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                );})}
               </TableBody>
             </Table>
           </div>
 
-          {filteredInquiries.length === 0 && (
+          {(inquiryList?.content?.length ?? 0) === 0 && (
             <div className="text-center py-12">
               <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <Search className="h-6 w-6 text-gray-400" />
@@ -805,7 +848,7 @@ export default function InquiryManagement() {
           )}
 
           {/* Pagination */}
-          {filteredInquiries.length > 0 && totalPages > 1 && (
+          {(inquiryList?.content?.length ?? 0) > 0 && totalPages > 1 && (
             <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
               <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {endIndex} of {totalItems} results
