@@ -70,6 +70,8 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
   const [activeTab, setActiveTab] = useState('Overview');
   const [collaborators, setCollaborators] = useState<collaborator[] | []>([]);
 
+  const owner = collaborators.find((c) => c.role === 'OWNER');
+
 
 
   useEffect(()=>{
@@ -95,8 +97,11 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
             setIsLoadingProjects(true);
             setProjectsError(null);
             const projects = await projectApi.getProjects(user?.id || '');
-            setBackendProjects(projects);
-            console.log('Fetched projects:', projects);
+            const project2 = await projectApi.getProject(params.id);
+            setBackendProjects([project2]);
+            console.log('Fetched single project:', project2);
+            // console.log('owener id:', owner?.id);
+            // console.log('Fetched projects:', projects);
           } catch (error: any) {
             console.error('Error fetching projects:', error);
             setProjectsError(error.response?.data?.message || error.message || 'Failed to fetch projects');
@@ -140,7 +145,9 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
   
       ];
       
-  const project = allProjects.find((p) => p.id === params.id);
+  const project = allProjects.find((p) => p.id === user?.id || params.id);
+
+  // console.log('Current project:', project);
 
   // Split collaborators into mentors and non-mentors
   const mentorCollaborators = collaborators.filter((c) => c.role === 'MENTOR');
