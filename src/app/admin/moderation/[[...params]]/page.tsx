@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import api from "@/utils/api";
 import {
   Eye,
   MessageSquare,
@@ -18,7 +19,7 @@ import {
 import { useParams } from "next/navigation";
 
 // Types
-interface Report {
+interface InquiryItem {
   id: string;
   reportedUser: string;
   reportedUserAvatar: string;
@@ -34,7 +35,7 @@ interface Report {
 interface ResponseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  report: Report | null;
+  inquiry: InquiryItem | null;
   onSubmit: (response: string, status: string) => void;
 }
 
@@ -42,13 +43,13 @@ interface ResponseModalProps {
 const ResponseModal: React.FC<ResponseModalProps> = ({
   isOpen,
   onClose,
-  report,
+  inquiry,
   onSubmit,
 }) => {
   const [response, setResponse] = useState("");
   const [status, setStatus] = useState("reviewed");
 
-  if (!isOpen || !report) return null;
+  if (!isOpen || !inquiry) return null;
 
   const handleSubmit = () => {
     onSubmit(response, status);
@@ -84,9 +85,9 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Respond to Report
+                  Respond to Inquiry
                 </h2>
-                <p className="text-sm text-gray-600">Report ID: {report.id}</p>
+                <p className="text-sm text-gray-600">Inquiry ID: {inquiry.id}</p>
               </div>
             </div>
             <button
@@ -100,10 +101,10 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 
         {/* Modal Content */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
-          {/* Report Details */}
+          {/* Inquiry Details */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Report Details
+              Inquiry Details
             </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -111,44 +112,44 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-xs font-medium">
-                      {report.reportedUserAvatar}
+                      {inquiry.reportedUserAvatar}
                     </span>
                   </div>
                   <span className="font-medium text-gray-900">
-                    {report.reportedUser}
+                    {inquiry.reportedUser}
                   </span>
                 </div>
               </div>
               <div>
-                <span className="text-gray-600">Content Type:</span>
+                <span className="text-gray-600">Inquiry Type:</span>
                 <div className="flex items-center space-x-2 mt-1">
-                  {getContentTypeIcon(report.contentType)}
+                  {getContentTypeIcon(inquiry.contentType)}
                   <span className="font-medium text-gray-900 capitalize">
-                    {report.contentType}
+                    {inquiry.contentType}
                   </span>
                 </div>
               </div>
               <div>
                 <span className="text-gray-600">Content Title:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.contentTitle}
+                  {inquiry.contentTitle}
                 </p>
               </div>
               <div>
                 <span className="text-gray-600">Reported By:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.reportedBy}
+                  {inquiry.reportedBy}
                 </p>
               </div>
               <div className="col-span-2">
                 <span className="text-gray-600">Reason:</span>
                 <p className="font-medium text-gray-900 mt-1">
-                  {report.reason}
+                  {inquiry.reason}
                 </p>
               </div>
               <div className="col-span-2">
                 <span className="text-gray-600">Description:</span>
-                <p className="text-gray-700 mt-1">{report.description}</p>
+                <p className="text-gray-700 mt-1">{inquiry.description}</p>
               </div>
             </div>
           </div>
@@ -208,18 +209,31 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
 };
 
 // Main Component
-export default function ReportManagement() {
+export default function InquiryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [contentTypeFilter, setContentTypeFilter] = useState("all");
   const [sortField, setSortField] = useState("reportDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<InquiryItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 1-based
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const params = useParams();
 
+  // Overview stats from backend
+  type InquiryOverview = {
+    totalInquiries: number;
+    pending: number;
+    resolved: number;
+    reviewed: number;
+  };
+  const [overview, setOverview] = useState<InquiryOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState<boolean>(false);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
+
   // Sample data
-  const [reports, setReports] = useState<Report[]>([
+  const [inquiries, setInquiries] = useState<InquiryItem[]>([
     {
       id: "RPT-001",
       reportedUser: "John Smith",
@@ -287,25 +301,33 @@ export default function ReportManagement() {
     },
   ]);
 
-  // Filter and sort reports
-  const filteredReports = reports
-    .filter((report) => {
+  // Filter and sort inquiries
+  const filteredInquiries = inquiries
+    .filter((inquiry) => {
       const matchesSearch =
-        report.reportedUser.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.contentTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.reason.toLowerCase().includes(searchTerm.toLowerCase());
+        inquiry.reportedUser.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inquiry.contentTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inquiry.reason.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
-        statusFilter === "all" || report.status === statusFilter;
+        statusFilter === "all" || inquiry.status === statusFilter;
       const matchesContentType =
-        contentTypeFilter === "all" || report.contentType === contentTypeFilter;
+        contentTypeFilter === "all" || inquiry.contentType === contentTypeFilter;
       return matchesSearch && matchesStatus && matchesContentType;
     })
     .sort((a, b) => {
-      const aValue = a[sortField as keyof Report];
-      const bValue = b[sortField as keyof Report];
+      const aValue = a[sortField as keyof InquiryItem];
+      const bValue = b[sortField as keyof InquiryItem];
       const direction = sortDirection === "asc" ? 1 : -1;
       return aValue < bValue ? -direction : aValue > bValue ? direction : 0;
     });
+
+  // Pagination derived values
+  const totalItems = filteredInquiries.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedInquiries = filteredInquiries.slice(startIndex, endIndex);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -314,6 +336,7 @@ export default function ReportManagement() {
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1);
   };
 
   const getStatusBadge = (status: string) => {
@@ -340,18 +363,18 @@ export default function ReportManagement() {
     }
   };
 
-  const handleViewReport = (report: Report) => {
-    setSelectedReport(report);
+  const handleViewInquiry = (inquiry: InquiryItem) => {
+    setSelectedInquiry(inquiry);
     setIsModalOpen(true);
   };
 
   const handleResponseSubmit = (response: string, status: string) => {
-    if (selectedReport) {
-      setReports((prev) =>
-        prev.map((report) =>
-          report.id === selectedReport.id
-            ? { ...report, status: status as Report["status"] }
-            : report
+    if (selectedInquiry) {
+      setInquiries((prev) =>
+        prev.map((inquiry) =>
+          inquiry.id === selectedInquiry.id
+            ? { ...inquiry, status: status as InquiryItem["status"] }
+            : inquiry
         )
       );
     }
@@ -359,15 +382,38 @@ export default function ReportManagement() {
 
   // filter from params 
   const allParams = params?.params as string[] | undefined;
-  const reportType = allParams?.[0];
+  const inquiryType = allParams?.[0];
   const status = allParams?.[1]
 
   useEffect(() => {
-    // filter pending reports
+    // filter pending inquiries
     if(status == "pending"){
       setStatusFilter("pending")
     }
-  }, [reportType]);
+  }, [inquiryType]);
+
+  // Fetch inquiries overview stats
+  useEffect(() => {
+    const loadOverview = async () => {
+      setOverviewLoading(true);
+      setOverviewError(null);
+      try {
+        const res = await api.get("/api/v1/inquiries/overview");
+        setOverview(res.data as InquiryOverview);
+      } catch (err: any) {
+        console.error("Failed to load inquiries overview:", err);
+        setOverviewError(err?.message || "Failed to load stats");
+      } finally {
+        setOverviewLoading(false);
+      }
+    };
+    loadOverview();
+  }, []);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, contentTypeFilter]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
@@ -380,10 +426,10 @@ export default function ReportManagement() {
             </div>
             <div className="flex-1 grid gap-1">
               <h1 className="text-3xl font-bold text-gray-900">
-                Report Managements
+                Inquiry Management
               </h1>
               <p className="text-gray-600">
-                Review and manage user-submitted reports across the platform
+                Review and manage user-submitted inquiries across the platform
               </p>
             </div>
           </div>
@@ -395,10 +441,10 @@ export default function ReportManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Reports
+                  Total Inquiries
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {reports.length}
+                  {overview?.totalInquiries ?? inquiries.length}
                 </p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
@@ -412,7 +458,7 @@ export default function ReportManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {reports.filter((r) => r.status === "pending").length}
+                  {overview?.pending ?? inquiries.filter((r) => r.status === "pending").length}
                 </p>
               </div>
               <div className="p-3 bg-yellow-500 rounded-lg">
@@ -426,7 +472,7 @@ export default function ReportManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Reviewed</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {reports.filter((r) => r.status === "reviewed").length}
+                  {overview?.reviewed ?? inquiries.filter((r) => r.status === "reviewed").length}
                 </p>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
@@ -440,7 +486,7 @@ export default function ReportManagement() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Resolved</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {reports.filter((r) => r.status === "resolved").length}
+                  {overview?.resolved ?? inquiries.filter((r) => r.status === "resolved").length}
                 </p>
               </div>
               <div className="p-3 bg-green-500 rounded-lg">
@@ -459,7 +505,7 @@ export default function ReportManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search reports..."
+                  placeholder="Search inquiries..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
@@ -496,12 +542,12 @@ export default function ReportManagement() {
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing {filteredReports.length} of {reports.length} reports
+              Showing {totalItems === 0 ? 0 : startIndex + 1}–{endIndex} of {totalItems} inquiries
             </div>
           </div>
         </div>
 
-        {/* Reports Table */}
+        {/* Inquiries Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Table Header */}
           <div className="bg-gray-50 border-b border-gray-200">
@@ -510,7 +556,7 @@ export default function ReportManagement() {
                 className="col-span-2 flex items-center cursor-pointer hover:text-gray-900"
                 onClick={() => handleSort("id")}
               >
-                Report ID
+                Inquiry ID
                 <ArrowUpDown className="ml-2 w-4 h-4" />
               </div>
               <div
@@ -541,63 +587,63 @@ export default function ReportManagement() {
 
           {/* Table Body */}
           <div className="divide-y divide-gray-100">
-            {filteredReports.map((report) => (
+            {paginatedInquiries.map((inquiry) => (
               <div
-                key={report.id}
+                key={inquiry.id}
                 className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="col-span-2">
-                  <span className="font-medium text-gray-900">{report.id}</span>
+                  <span className="font-medium text-gray-900">{inquiry.id}</span>
                 </div>
 
                 <div className="col-span-2">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium text-gray-600">
-                        {report.reportedUserAvatar}
+                        {inquiry.reportedUserAvatar}
                       </span>
                     </div>
                     <span className="font-medium text-gray-900">
-                      {report.reportedUser}
+                      {inquiry.reportedUser}
                     </span>
                   </div>
                 </div>
 
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
-                    {getContentTypeIcon(report.contentType)}
+                    {getContentTypeIcon(inquiry.contentType)}
                     <span className="capitalize text-gray-700">
-                      {report.contentType}
+                      {inquiry.contentType}
                     </span>
                   </div>
                 </div>
 
                 <div className="col-span-2">
-                  <span className="text-gray-700">{report.reason}</span>
+                  <span className="text-gray-700">{inquiry.reason}</span>
                 </div>
 
                 <div className="col-span-2">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(
-                      report.status
+                      inquiry.status
                     )}`}
                   >
-                    {report.status.charAt(0).toUpperCase() +
-                      report.status.slice(1)}
+                    {inquiry.status.charAt(0).toUpperCase() +
+                      inquiry.status.slice(1)}
                   </span>
                 </div>
 
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleViewReport(report)}
+                      onClick={() => handleViewInquiry(inquiry)}
                       className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       View
                     </button>
                     <button
-                      onClick={() => handleViewReport(report)}
+                      onClick={() => handleViewInquiry(inquiry)}
                       className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <MessageSquare className="w-4 h-4 mr-1" />
@@ -610,15 +656,59 @@ export default function ReportManagement() {
           </div>
 
           {/* Empty State */}
-          {filteredReports.length === 0 && (
+          {filteredInquiries.length === 0 && (
             <div className="px-6 py-12 text-center">
               <AlertTriangle className="mx-auto w-12 h-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No reports found
+                No inquiries found
               </h3>
               <p className="text-gray-600">
                 Try adjusting your search or filter criteria.
               </p>
+            </div>
+          )}
+          {/* Pagination Controls */}
+          {totalPages > 1 && totalItems > 0 && (
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+              <div className="text-sm text-gray-700">
+                Page {safeCurrentPage} of {totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  className="px-3 py-1.5 text-sm border rounded-lg text-gray-700 hover:bg-white disabled:opacity-50"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage === 1}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 5) page = i + 1;
+                  else if (safeCurrentPage <= 3) page = i + 1;
+                  else if (safeCurrentPage >= totalPages - 2) page = totalPages - 4 + i;
+                  else page = safeCurrentPage - 2 + i;
+                  return (
+                    <button
+                      key={page}
+                      className={`px-3 py-1.5 text-sm border rounded-lg ${
+                        page === safeCurrentPage
+                          ? "bg-[#3D52A0] text-white border-[#3D52A0]"
+                          : "text-gray-700 hover:bg-white"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  className="px-3 py-1.5 text-sm border rounded-lg text-gray-700 hover:bg-white disabled:opacity-50"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -627,7 +717,7 @@ export default function ReportManagement() {
         <ResponseModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          report={selectedReport}
+          inquiry={selectedInquiry}
           onSubmit={handleResponseSubmit}
         />
       </div>
