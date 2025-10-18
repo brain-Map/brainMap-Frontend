@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface AccountData {
   userName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -18,7 +20,7 @@ type FormErrors = {
 
 // Alert Component
 const Alert = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center gap-2 ${
+  <div className={`fixed top-4 right-4 z-9999 p-4 rounded-lg shadow-lg flex items-center gap-2 ${
     type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'
   }`}>
     {type === 'success' && <Check className="w-5 h-5" />}
@@ -55,6 +57,8 @@ const AccountCreation = () => {
   // Form data state
   const [accountData, setAccountData] = useState<AccountData>({
     userName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -71,6 +75,8 @@ const AccountCreation = () => {
     const newErrors: FormErrors = {};
 
     if (!accountData.userName.trim()) newErrors.userName = 'Username is required';
+    if (!accountData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!accountData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!accountData.email.trim()) newErrors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(accountData.email)) newErrors.email = 'Email is invalid';
     if (!accountData.password) newErrors.password = 'Password is required';
@@ -93,6 +99,8 @@ const AccountCreation = () => {
     e.preventDefault();
     if (!validateForm()) return;
     const userName = accountData.userName;
+  const firstName = accountData.firstName;
+  const lastName = accountData.lastName;
     const password = accountData.password;
     const email = accountData.email;
     const role = userType;
@@ -106,6 +114,8 @@ const AccountCreation = () => {
       options:{
         data: {
           name: userName,
+          first_name: firstName,
+          last_name: lastName,
           user_role: role
         }
       }
@@ -116,57 +126,67 @@ const AccountCreation = () => {
         setAlert({ message: error.message, type: 'error' });
         return new Response(JSON.stringify({ error: error.message }), { status: 400 });
       }
+    // At this point Supabase has sent a confirmation email. We should
+    // not call the backend until the user verifies their email. Save the
+    // registration payload locally as pendingRegistration so AuthContext
+    // can process it after verification.
 
-      const token = localStorage.getItem("accessToken")
-      console.log("Auth: ", token || "no auth");
-      
-      const userRole = role.replace(" ", "_")
-      // Send user data to backend API
-      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          username: userName,
-          email: email,
-          userRole: userRole,
-          userId: data.user?.id
-        })
-      });
+    const userRole = role.replace(" ", "_")
+    const payload = {
+      username: userName,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      userRole: userRole,
+      // userId will be attached after email verification when we have a session
+      userId: data.user?.id || null
+    }
 
-      if (!backendResponse.ok) {
-        const errorData = await backendResponse.json();
-        setIsSubmitting(false);
-        setAlert({ message: errorData.error || 'Failed to create user profile', type: 'error' });
-        return;
-      }
-
+    try {
+      localStorage.setItem('pendingRegistration', JSON.stringify(payload));
+      // Persist the chosen role so OAuth flows can pick it up too
+      localStorage.setItem('user_role', role);
+    } catch (err) {
+      console.error('Error saving pending registration to localStorage', err);
+    }
 
     setIsSubmitting(false);
-
-    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    redirectAfterRegister(userType);
+    setAlert({ message: 'Account created. Please check your email and verify your address before continuing.', type: 'success' });
+    // Redirect to verification page with the email so the user can follow instructions
+    router.push(`/register/verify?email=${encodeURIComponent(email)}`);
+    // Don't redirect to dashboard yet; wait for email verification handled in AuthContext
   };
 
   const handleGoogleSignup = async () => {
     setIsSubmitting(true);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    // Persist the selected role so the OAuth callback or AuthContext can
+    // use it when the user returns after verifying their email.
+    try {
+      localStorage.setItem('user_role', userType || '');
+      // Save a minimal pendingRegistration so the backend will be called after verification.
+      const pending = {
+        username: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        userRole: (userType || '').replace(' ', '_'),
+        userId: null,
+      };
+      localStorage.setItem('pendingRegistration', JSON.stringify(pending));
+    } catch (err) {
+      console.error('Error saving user role/pending registration for OAuth', err);
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
 
     if (error) {
       setAlert({ message: error.message, type: 'error' });
+      setIsSubmitting(false);
+      return;
     }
 
-    setIsSubmitting(false);
-
-    localStorage.setItem("user_role", userType || "");
-
-    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    redirectAfterRegister(userType);
+    // The OAuth flow will redirect the user away; nothing more to do here.
   }
 
   const handleBackToRoleSelection = () => {
@@ -227,6 +247,49 @@ const AccountCreation = () => {
                     {errors.userName}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={accountData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#7091E6] transition-colors ${
+                      errors.firstName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your first name"
+                  />
+                  {errors.firstName && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.firstName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={accountData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#7091E6] transition-colors ${
+                      errors.lastName ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your last name"
+                  />
+                  {errors.lastName && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.lastName}
+                    </p>
+                  )}
+                </div>
               </div>
               
               <div>

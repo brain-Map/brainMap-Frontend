@@ -53,9 +53,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) console.error("Session error:", error.message);
+        const isVerified = (u: any) => Boolean(u?.email_confirmed_at || u?.confirmed_at || u?.email_confirmed);
+
         if (session?.user) {
-          localStorage.setItem('accessToken', session.access_token);
-          setUser(mapSupabaseUser(session.user));
+          // Only treat the user as authenticated if their email is verified
+          if (isVerified(session.user)) {
+            localStorage.setItem('accessToken', session.access_token);
+            setUser(mapSupabaseUser(session.user));
+          } else {
+            // Don't treat unverified users as logged in
+            localStorage.removeItem('accessToken');
+            setUser(null);
+          }
         } else {
           setUser(null);
         }
@@ -71,14 +80,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
+      const isVerified = (u: any) => Boolean(u?.email_confirmed_at || u?.confirmed_at || u?.email_confirmed);
+
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('accessToken');
         console.log("User signed out");
         setUser(null);
       } else if (session?.user) {
+        // If user is not verified, prevent login
+        if (!isVerified(session.user)) {
+          console.log('User signed in but email not verified — signing out');
+          localStorage.removeItem('accessToken');
+          // Clear any server session
+          supabase.auth.signOut().catch(err => console.error('Error signing out unverified user', err));
+          setUser(null);
+          return;
+        }
+
         localStorage.setItem('accessToken', session.access_token);
         setUser(mapSupabaseUser(session.user));
 
+        // Ensure user_role metadata is set if we stored it locally during signup
         const user_role = localStorage.getItem("user_role");
         if (!session.user.user_metadata?.user_role && user_role) {
           supabase.auth.updateUser({
@@ -87,6 +109,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error) console.error("Error updating user role:", error);
           });
         }
+
+        // If there's a pending registration (created at signup time), call backend now that the user is verified
+        (async () => {
+          try {
+            const pending = localStorage.getItem('pendingRegistration');
+            if (!pending) return;
+
+            const payload = JSON.parse(pending);
+            // Attach confirmed user id from Supabase session
+            payload.userId = session.user.id;
+
+            const token = session.access_token;
+            const backendUrl = `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`;
+
+            const resp = await fetch(backendUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify(payload),
+            });
+
+            if (resp.ok) {
+              console.log('Backend registration completed successfully');
+              localStorage.removeItem('pendingRegistration');
+            } else {
+              const errText = await resp.text();
+              console.error('Backend registration failed', errText);
+            }
+          } catch (err) {
+            console.error('Error processing pending registration:', err);
+          }
+        })();
       }
     });
 
