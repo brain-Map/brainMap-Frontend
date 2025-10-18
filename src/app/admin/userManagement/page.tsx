@@ -31,7 +31,6 @@ import {
   Search,
   Filter,
   MoreHorizontal,
-  Edit,
   Trash2,
   UserCheck,
   Download,
@@ -39,6 +38,8 @@ import {
   ChevronRight,
   Users,
   UserRound,
+  Ban,
+  PauseCircle,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import api from "@/utils/api";
@@ -185,39 +186,46 @@ export default function AllUsersPage() {
   };
 
   useEffect(() => {
-  if (!param) return;
+    if (!param) return;
 
-  const roleMapping: Record<string, string> = {
-    "members": "Member",
-    "domain-experts": "Domain Expert",
-    "moderators": "Moderator",
-    "admins": "Admin"
-  };
+    const roleMapping: Record<string, string> = {
+      "members": "Member",
+      "domain-experts": "Domain Expert",
+      "moderators": "Moderator",
+      "admins": "Admin"
+    };
 
-  const statusMapping: Record<string, string> = {
-    "active-users": "Active",
-    "inactive-users": "Inactive",
-    "banned-users": "Banned",
-  };
+    const statusMapping: Record<string, string> = {
+      "active-users": "Active",
+      "inactive-users": "Inactive",
+      "banned-users": "Banned",
+    };
 
-  const lower = param.toLowerCase();
+    const lower = param.toLowerCase();
 
-  if (roleMapping[lower]) {
-    setRoleFilter(roleMapping[lower]);
-    setStatusFilter("all");
-    setCurrentPage(1); // ← reset page to first for filtered results
-    console.log("rolemaped! ", lower)
-    console.log("Role Filter:", roleFilter, "Status Filter:", statusFilter);
-  } else if (statusMapping[lower]) {
-    setStatusFilter(statusMapping[lower]);
-    setRoleFilter("all");
-    setCurrentPage(1); // ← reset page to first for filtered results
-  } else {
-    setRoleFilter("all");
-    setStatusFilter("all");
-    setCurrentPage(1);
-  }
-}, [param]);
+    if (roleMapping[lower]) {
+      setRoleFilter(roleMapping[lower]);
+      setStatusFilter("all");
+      setCurrentPage(1); // reset page to first for filtered results
+    } else if (statusMapping[lower]) {
+      setStatusFilter(statusMapping[lower]);
+      setRoleFilter("all");
+      setCurrentPage(1); // reset page to first for filtered results
+    } else {
+      setRoleFilter("all");
+      setStatusFilter("all");
+      setCurrentPage(1);
+    }
+
+    // Ensure fetch runs after React commits the state updates to avoid
+    // race conditions where fetchFilteredUsers would read stale filters.
+    // Using setTimeout(..., 0) defers the fetch to the next macrotask.
+    const t = setTimeout(() => {
+      fetchFilteredUsers();
+    }, 0);
+
+    return () => clearTimeout(t);
+  }, [param, fetchFilteredUsers]);
 
 useEffect(() => {
   console.log("Role Filter changed:", roleFilter, "Status Filter:", statusFilter);
@@ -248,15 +256,6 @@ useEffect(() => {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className=""
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
           </div>
         </div>
 
@@ -556,20 +555,33 @@ useEffect(() => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-white">
-                            {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-50"> */}
-                              {/* <Edit className="mr-2 h-4 w-4 text-gray-500" /> */}
-                              {/* <span className="text-gray-700">Edit User</span> */}
-                            {/* </DropdownMenuItem> */}
-                            <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'BANNED')}
+                            >
+                              <Ban className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Set Banned</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'INACTIVE')}
+                            >
+                              <PauseCircle className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Set Inactive</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'ACTIVE')}
+                            >
                               <UserCheck className="mr-2 h-4 w-4 text-gray-500" />
-                              <span className="text-gray-700">Show Profile</span>
+                              <span className="text-gray-700">Set Active</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                             className="cursor-pointer hover:bg-red-50 text-red-600"
                             onClick= { () => deleteUser(user)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete User
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -708,6 +720,48 @@ useEffect(() => {
         text: 'Failed to delete user. Check console for details.',
         icon: 'error',
         confirmButtonColor: '#d33'
+      });
+    }
+  }
+
+  // Update user status via admin endpoint with confirmation and feedback
+  async function changeUserStatus(user: User, nextStatus: 'ACTIVE' | 'INACTIVE' | 'BANNED') {
+    const statusLabelMap: Record<'ACTIVE' | 'INACTIVE' | 'BANNED', string> = {
+      ACTIVE: 'Active',
+      INACTIVE: 'Inactive',
+      BANNED: 'Banned',
+    };
+
+    const result = await Swal.fire({
+      title: 'Change status?',
+      text: `Set ${user.username}'s status to ${statusLabelMap[nextStatus]}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, update',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.put(`/api/v1/admin/userStateUpdate/${user.id}/${nextStatus}`);
+      await fetchFilteredUsers();
+
+      await Swal.fire({
+        title: 'Updated!',
+        text: `User status set to ${statusLabelMap[nextStatus]}.`,
+        icon: 'success',
+        confirmButtonColor: '#3085d6',
+      });
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update user status. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#d33',
       });
     }
   }
