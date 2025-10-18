@@ -62,6 +62,15 @@ class PaymentApiService {
       // Log authentication status
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
       console.log('🔐 Authentication token:', token ? 'Present (will be auto-attached)' : '❌ MISSING');
+      if (token) {
+        console.log('🔑 Token preview:', token.substring(0, 50) + '...');
+        console.log('🔑 Token length:', token.length);
+      } else {
+        console.error('❌ NO TOKEN FOUND IN localStorage OR sessionStorage');
+        console.log('📍 Check these locations:');
+        console.log('  - localStorage.accessToken:', localStorage.getItem('accessToken'));
+        console.log('  - sessionStorage.accessToken:', sessionStorage.getItem('accessToken'));
+      }
       
       const response = await api.post('/api/payments/create-session', requestPayload);
       
