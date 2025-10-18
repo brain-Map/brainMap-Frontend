@@ -3,6 +3,7 @@
 import React from 'react';
 import { useNotifications, NotificationItem } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 export default function NotificationsPanel({
   userId,
@@ -13,7 +14,7 @@ export default function NotificationsPanel({
   token?: string | null;
   onClose?: () => void;
 }) {
-  const { notifications, markAsRead, refresh, connected } = useNotifications(userId || null, token || null);
+  const { notifications, markAsRead, refresh, connected, respondToProjectRequest } = useNotifications(userId || null, token || null);
 
   return (
     <div className="p-3">
@@ -36,14 +37,31 @@ export default function NotificationsPanel({
                 <div className="text-xs text-gray-400 mt-1">{n.createdAt ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true }) : ''}</div>
               </div>
               <div className="ml-2 flex flex-col items-end">
-                {!n.isRead && (
+                {n.type === 'PROJECT_REQUEST' ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      title="Accept request"
+                      onClick={() => respondToProjectRequest(n, 'ACCEPTED')}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Reject request"
+                      onClick={() => respondToProjectRequest(n, 'REJECTED')}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : !n.isRead ? (
                   <button
                     onClick={() => markAsRead(n.id)}
                     className="text-xs text-blue-600"
                   >
                     Mark read
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

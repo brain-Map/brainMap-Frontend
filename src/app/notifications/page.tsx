@@ -3,14 +3,56 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, NotificationItem } from '@/hooks/useNotifications';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns'; 
+import { CheckCircle2, XCircle } from 'lucide-react';
+import api from '@/utils/api';
+
+interface approveRequestApi {
+  projectId: string;
+  status: 'ACCEPTED' | 'PENDING';
+}
+
+const ProjectApprove = {
+  updateApproval: async (id: string, data: approveRequestApi) => {
+    try {
+      const response = await api.put(`/api/v1/notifications/projects/${id}/approve`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating project approval:', error);
+      throw error;
+    }
+  }
+}
 
 export default function NotificationsPage() {
   const { user, loading } = useAuth();
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const userId = user?.id || null;
 
+
   const { notifications, markAsRead, refresh, connected } = useNotifications(userId, token);
+
+  // Custom handler for PROJECT_REQUEST notifications
+  const handleProjectRequest = async (n: NotificationItem, status: 'ACCEPTED' | 'PENDING') => {
+    // Extract projectId from notification data (supports string or object shapes)
+    const projectId = typeof n.data === 'string'
+      ? n.data
+      : (n.data|| '');
+
+    if (!projectId) {
+      alert('No projectId found in notification data.');
+      return;
+    }
+
+    try {
+      console.log('User ID:', userId);
+      console.log('Notification projectId:', projectId);
+      await ProjectApprove.updateApproval(userId || '', { projectId, status });
+      markAsRead(n.id);
+    } catch (e) {
+      alert('Failed to update project approval.');
+    }
+  };
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -35,13 +77,30 @@ export default function NotificationsPage() {
 
                 {n.body && <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{n.body}</div>}
 
-                {n.data && (
+                {/* {n.data && (
                   <pre className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600 overflow-auto">{JSON.stringify(n.data, null, 2)}</pre>
-                )}
+                )} */}
               </div>
 
               <div className="flex-shrink-0 ml-4 flex flex-col items-end gap-2">
-                {!n.isRead ? (
+                {n.type === 'PROJECT_REQUEST' ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      title="Accept request"
+                      onClick={() => handleProjectRequest(n, 'ACCEPTED')}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      title="Reject request"
+                      onClick={() => handleProjectRequest(n, 'PENDING')}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+                ) : !n.isRead ? (
                   <button onClick={() => markAsRead(n.id)} className="text-sm text-blue-600 hover:text-blue-700">Mark read</button>
                 ) : (
                   <div className="text-sm text-gray-400">Read</div>

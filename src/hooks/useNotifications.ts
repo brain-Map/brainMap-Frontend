@@ -127,6 +127,72 @@ export function useNotifications(userId?: string | null, token?: string | null) 
     [token]
   );
 
+  // Respond to a project request notification
+  const respondToProjectRequest = useCallback(
+    async (notification: NotificationItem, decision: 'ACCEPTED' | 'REJECTED') => {
+      if (!token || !notification?.id) return;
+
+      const id = notification.id;
+      const actionUrl = notification?.data?.actionUrl || `${API_URL}/api/v1/notifications/${id}/respond`;
+      const method: 'POST' | 'PUT' = (notification?.data?.method === 'PUT' ? 'PUT' : 'POST');
+      const body: any = { status: decision };
+      if (notification?.data?.requestId) body.requestId = notification.data.requestId;
+
+      // Optimistic UI: mark as read and set local status
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === id
+            ? { ...n, isRead: true, data: { ...(n.data || {}), status: decision } }
+            : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - (notification.isRead ? 0 : 1)));
+
+      try {
+        const res = await fetch(actionUrl, {
+          method,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          console.error('Failed to respond to project request', res.status, res.statusText);
+          // rollback
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === id ? { ...n, isRead: notification.isRead ?? false, data: { ...(notification.data || {}) } } : n
+            )
+          );
+          setUnreadCount((prev) => prev + (notification.isRead ? 0 : 1));
+          return;
+        }
+
+        // If API returns updated notification, merge it; otherwise keep optimistic
+        try {
+          const updated: NotificationItem = await res.json();
+          if (updated && updated.id) {
+            setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, ...updated } : n)));
+          }
+        } catch (_) {
+          // no body
+        }
+      } catch (e) {
+        console.error('Error responding to project request', e);
+        // rollback
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id ? { ...n, isRead: notification.isRead ?? false, data: { ...(notification.data || {}) } } : n
+          )
+        );
+        setUnreadCount((prev) => prev + (notification.isRead ? 0 : 1));
+      }
+    },
+    [token]
+  );
+
   console.log("Noti: ",notifications);
   
 
@@ -136,6 +202,7 @@ export function useNotifications(userId?: string | null, token?: string | null) 
     markAsRead,
     refresh,
     connected,
+    respondToProjectRequest,
   } as const;
 }
 
