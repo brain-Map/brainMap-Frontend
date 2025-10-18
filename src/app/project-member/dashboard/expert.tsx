@@ -130,10 +130,56 @@ const ServiceListTabs: React.FC = () => {
     // Add your message logic here
   };
 
-  const handlePayment = (id: number) => {
-    console.log('Payment for service:', id);
-    // Redirect to payment gateway checkout page
-    router.push('/payment-gateway/checkout');
+  const handlePayment = async (id: number) => {
+    console.log('💳 [PAYMENT] Payment button clicked for service ID:', id);
+    
+    try {
+      // Fetch booking details from the API
+      console.log('📡 [PAYMENT] Fetching booking details from API...');
+      const bookingDetails = await hireingFunctions.getBookingService(id.toString());
+      
+      console.log('✅ [PAYMENT] Booking details fetched:', bookingDetails);
+      
+      if (!bookingDetails || bookingDetails.length === 0) {
+        console.error('❌ [PAYMENT] No booking details found');
+        alert('No booking details found for this service');
+        return;
+      }
+      
+      // Get the first booking detail (or you can handle multiple bookings differently)
+      const booking = bookingDetails[0];
+      console.log('📊 [PAYMENT] Processing booking:', booking);
+      
+      // Determine the price: use updatedPrice if available, otherwise use totalPrice
+      const paymentAmount = booking.updatedPrice ?? booking.totalPrice;
+      const serviceTitle = booking.serviceTitle;
+      
+      console.log('💰 [PAYMENT] Payment amount:', paymentAmount);
+      console.log('📝 [PAYMENT] Service title:', serviceTitle);
+      
+      if (!paymentAmount) {
+        console.error('❌ [PAYMENT] No price found in booking details');
+        alert('Price information not available for this service');
+        return;
+      }
+      
+      // Create query parameters with payment details
+      const queryParams = new URLSearchParams({
+        amount: paymentAmount.toString(),
+        serviceTitle: serviceTitle || 'BrainMap Service',
+        serviceId: booking.serviceId || id.toString(),
+        bookingId: booking.id.toString()
+      });
+      
+      console.log('🔗 [PAYMENT] Redirecting to checkout with params:', queryParams.toString());
+      
+      // Redirect to payment gateway checkout page with query parameters
+      router.push(`/payment-gateway/checkout?${queryParams.toString()}`);
+      
+    } catch (error: any) {
+      console.error('❌ [PAYMENT] Error fetching booking details:', error);
+      alert('Failed to load payment details. Please try again.');
+    }
   };
 
   const openServiceDetails = async (service: Service) => {

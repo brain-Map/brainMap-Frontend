@@ -21,10 +21,10 @@ interface CheckoutProps {
 }
 
 export default function CheckoutPage({
-  amount = 1000,
+  amount: propAmount = 1000,
   currency = 'LKR',
-  orderId = `ORDER_${Date.now()}`,
-  itemDescription = 'BrainMap Service',
+  orderId: propOrderId = `ORDER_${Date.now()}`,
+  itemDescription: propItemDescription = 'BrainMap Service',
   customerName = '',
   customerEmail = '',
   customerPhone = '',
@@ -44,10 +44,59 @@ export default function CheckoutPage({
     country
   });
   const [showTestCards, setShowTestCards] = useState(false);
+  
+  // Dynamic payment details from URL params
+  const [amount, setAmount] = useState(propAmount);
+  const [itemDescription, setItemDescription] = useState(propItemDescription);
+  const [orderId, setOrderId] = useState(propOrderId);
+  const [serviceId, setServiceId] = useState<string>('');
+  const [bookingId, setBookingId] = useState<string>('');
 
   // Get PayHere configuration
   const payHereConfigData = payHereConfig.getConfig();
   const testCards = payHereConfig.getTestCards();
+
+  // Extract query parameters on mount
+  useEffect(() => {
+    console.log('🔍 [CHECKOUT] Checking for URL parameters...');
+    
+    // Get query parameters from URL
+    const params = new URLSearchParams(window.location.search);
+    const amountParam = params.get('amount');
+    const serviceTitleParam = params.get('serviceTitle');
+    const serviceIdParam = params.get('serviceId');
+    const bookingIdParam = params.get('bookingId');
+    
+    console.log('📊 [CHECKOUT] URL Parameters:', {
+      amount: amountParam,
+      serviceTitle: serviceTitleParam,
+      serviceId: serviceIdParam,
+      bookingId: bookingIdParam
+    });
+    
+    // Update state with URL parameters if they exist
+    if (amountParam) {
+      const parsedAmount = parseFloat(amountParam);
+      setAmount(parsedAmount);
+      console.log('💰 [CHECKOUT] Amount set to:', parsedAmount);
+    }
+    
+    if (serviceTitleParam) {
+      setItemDescription(serviceTitleParam);
+      console.log('📝 [CHECKOUT] Service title set to:', serviceTitleParam);
+    }
+    
+    if (serviceIdParam) {
+      setServiceId(serviceIdParam);
+      setOrderId(`ORDER_${serviceIdParam}_${Date.now()}`);
+      console.log('🆔 [CHECKOUT] Service ID set to:', serviceIdParam);
+    }
+    
+    if (bookingIdParam) {
+      setBookingId(bookingIdParam);
+      console.log('📋 [CHECKOUT] Booking ID set to:', bookingIdParam);
+    }
+  }, []);
 
   // Check authentication status on mount
   useEffect(() => {
