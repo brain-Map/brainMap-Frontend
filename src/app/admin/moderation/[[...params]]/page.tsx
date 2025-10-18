@@ -420,6 +420,7 @@ export default function InquiryManagement() {
       });
 
   // Optionally update selectedInquiry snapshot
+  // test
   setSelectedInquiry(mapDtoToInquiryItem(updated));
 
       await Swal.fire({
