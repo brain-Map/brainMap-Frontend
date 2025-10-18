@@ -9,6 +9,7 @@ import { Search, MoreVertical, Phone, Video, Paperclip, Send, X } from "lucide-r
 import { useAuth } from "@/contexts/AuthContext"
 import useStomp from "@/hooks/useStomp"
 import React from "react"
+import { group } from "console"
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
 const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/ws"
@@ -151,7 +152,6 @@ export default function ChatInterface() {
           setError(payloadData.message || "An error occurred while processing the message.")
           return
         }
-        // Only add message if it's for the selected chat
         if (
           selectedChat &&
           ((payloadData.senderId === selectedChat.id && payloadData.receiverId === userId) ||
@@ -183,7 +183,6 @@ export default function ChatInterface() {
     [selectedChat, userId]
   )
 
-  // WebSocket connect/disconnect
   // Use reusable STMOP hook
   const { connect, disconnect, subscribe, unsubscribe, publish, client } = useStomp({
     token,
@@ -383,34 +382,34 @@ export default function ChatInterface() {
     }
   }
 
-  // Create group API call
-  const createGroup = () => {
-    if (!newGroupName.trim()) return
-    const payload: any = { name: newGroupName.trim(), members: groupMembersToAdd.map(m => m.id) }
-    console.log(JSON.stringify(payload));
+  // // Create group API call
+  // const createGroup = () => {
+  //   if (!newGroupName.trim()) return
+  //   const payload: any = { name: newGroupName.trim(), members: groupMembersToAdd.map(m => m.id) }
+  //   console.log(JSON.stringify(payload));
     
-    fetch(`${API_URL}/api/v1/messages/groups`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        // refresh groups
-        return fetch(`${API_URL}/api/v1/messages/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
-      })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((groupsData) => {
-        const apiGroups = (Array.isArray(groupsData) ? groupsData : []).map((g: any) => ({ id: g.id, name: g.name, avatar: g.avatar || '/image/avatar/default.jpg', lastMessage: g.lastMessage || '', time: g.time || '' }))
-        setGroups(apiGroups)
-        setShowCreateGroup(false)
-        setNewGroupName("")
-        setGroupMembersToAdd([])
-      })
-      .catch(() => {
-        setError('Failed to create group')
-      })
-  }
+  //   fetch(`${API_URL}/api/v1/messages/groups`, {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  //     body: JSON.stringify(payload),
+  //   })
+  //     .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+  //     .then((data) => {
+  //       // refresh groups
+  //       return fetch(`${API_URL}/api/v1/messages/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
+  //     })
+  //     .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+  //     .then((groupsData) => {
+  //       const apiGroups = (Array.isArray(groupsData) ? groupsData : []).map((g: any) => ({ id: g.id, name: g.name, avatar: g.avatar || '/image/avatar/default.jpg', lastMessage: g.lastMessage || '', time: g.time || '' }))
+  //       setGroups(apiGroups)
+  //       setShowCreateGroup(false)
+  //       setNewGroupName("")
+  //       setGroupMembersToAdd([])
+  //     })
+  //     .catch(() => {
+  //       setError('Failed to create group')
+  //     })
+  // }
 
   // Add user to group
   const addUserToGroup = (groupId: string, userToAddId: string) => {
@@ -428,7 +427,7 @@ export default function ChatInterface() {
   // Send message via WebSocket (private or group)
   const handleSend = () => {
     if (!message.trim() || !client.current?.connected) return
-
+    
     // Sending to a group
     if (selectedGroup) {
       const groupMessage = {
@@ -437,6 +436,7 @@ export default function ChatInterface() {
         message: message.trim(),
         status: "GROUP_MESSAGE",
       }
+      console.log("Send to the group: ", selectedGroup);
       publish?.("/app/group-message", groupMessage, { Authorization: `Bearer ${token}` })
       const newMsg = {
         id: Date.now(),
