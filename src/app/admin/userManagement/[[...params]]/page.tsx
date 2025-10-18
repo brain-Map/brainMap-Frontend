@@ -186,39 +186,46 @@ export default function AllUsersPage() {
   };
 
   useEffect(() => {
-  if (!param) return;
+    if (!param) return;
 
-  const roleMapping: Record<string, string> = {
-    "members": "Member",
-    "domain-experts": "Domain Expert",
-    "moderators": "Moderator",
-    "admins": "Admin"
-  };
+    const roleMapping: Record<string, string> = {
+      "members": "Member",
+      "domain-experts": "Domain Expert",
+      "moderators": "Moderator",
+      "admins": "Admin"
+    };
 
-  const statusMapping: Record<string, string> = {
-    "active-users": "Active",
-    "inactive-users": "Inactive",
-    "banned-users": "Banned",
-  };
+    const statusMapping: Record<string, string> = {
+      "active-users": "Active",
+      "inactive-users": "Inactive",
+      "banned-users": "Banned",
+    };
 
-  const lower = param.toLowerCase();
+    const lower = param.toLowerCase();
 
-  if (roleMapping[lower]) {
-    setRoleFilter(roleMapping[lower]);
-    setStatusFilter("all");
-    setCurrentPage(1); // ← reset page to first for filtered results
-    console.log("rolemaped! ", lower)
-    console.log("Role Filter:", roleFilter, "Status Filter:", statusFilter);
-  } else if (statusMapping[lower]) {
-    setStatusFilter(statusMapping[lower]);
-    setRoleFilter("all");
-    setCurrentPage(1); // ← reset page to first for filtered results
-  } else {
-    setRoleFilter("all");
-    setStatusFilter("all");
-    setCurrentPage(1);
-  }
-}, [param]);
+    if (roleMapping[lower]) {
+      setRoleFilter(roleMapping[lower]);
+      setStatusFilter("all");
+      setCurrentPage(1); // reset page to first for filtered results
+    } else if (statusMapping[lower]) {
+      setStatusFilter(statusMapping[lower]);
+      setRoleFilter("all");
+      setCurrentPage(1); // reset page to first for filtered results
+    } else {
+      setRoleFilter("all");
+      setStatusFilter("all");
+      setCurrentPage(1);
+    }
+
+    // Ensure fetch runs after React commits the state updates to avoid
+    // race conditions where fetchFilteredUsers would read stale filters.
+    // Using setTimeout(..., 0) defers the fetch to the next macrotask.
+    const t = setTimeout(() => {
+      fetchFilteredUsers();
+    }, 0);
+
+    return () => clearTimeout(t);
+  }, [param, fetchFilteredUsers]);
 
 useEffect(() => {
   console.log("Role Filter changed:", roleFilter, "Status Filter:", statusFilter);
