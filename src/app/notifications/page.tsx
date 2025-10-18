@@ -21,7 +21,18 @@ const ProjectApprove = {
       console.error('Error updating project approval:', error);
       throw error;
     }
+  },
+
+  getUserProjectData: async (projectId: string, userId: string) => {
+    try {
+      const response = await api.get(`/api/v1/users/getProjectCollaborator/${projectId}/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user project data:', error);
+      throw error;
+    }
   }
+
 }
 
 export default function NotificationsPage() {
@@ -32,12 +43,51 @@ export default function NotificationsPage() {
 
   const { notifications, markAsRead, refresh, connected } = useNotifications(userId, token);
 
+  // Track server-evaluated status for project request notifications
+  const [requestStatuses, setRequestStatuses] = React.useState<Record<string, 'ACCEPTED' | 'PENDING' | null>>({});
+
+  const extractProjectId = React.useCallback((n: NotificationItem) => {
+    return typeof n.data === 'string'
+      ? n.data
+      : (n.data?.projectId || n.data?.id || n.data?.projectID || '');
+  }, []);
+
+  // On notifications change, check each PROJECT_REQUEST against backend
+  React.useEffect(() => {
+    if (!userId) return;
+    const controller = new AbortController();
+    const run = async () => {
+      const entries: Array<Promise<void>> = [];
+      notifications
+        .filter((n) => n.type === 'PROJECT_REQUEST')
+        .forEach((n) => {
+          const projectId = extractProjectId(n);
+          if (!projectId) return;
+          entries.push(
+            ProjectApprove.getUserProjectData(projectId, userId)
+              .then((res) => {
+                // If empty object or array or falsy => PENDING (rejected); if has status ACCEPTED => ACCEPTED; else leave as null (show actions)
+                const isEmptyObj = res && typeof res === 'object' && !Array.isArray(res) && Object.keys(res).length === 0;
+                const status = !res || isEmptyObj || (Array.isArray(res) && res.length === 0)
+                  ? 'PENDING'
+                  : (res.status === 'ACCEPTED' ? 'ACCEPTED' : null);
+                setRequestStatuses((prev) => ({ ...prev, [n.id]: status }));
+              })
+              .catch(() => {
+                // On error, don't force a status
+                setRequestStatuses((prev) => ({ ...prev, [n.id]: null }));
+              })
+          );
+        });
+      await Promise.all(entries);
+    };
+    run();
+    return () => controller.abort();
+  }, [notifications, userId, extractProjectId]);
+
   // Custom handler for PROJECT_REQUEST notifications
   const handleProjectRequest = async (n: NotificationItem, status: 'ACCEPTED' | 'PENDING') => {
-    // Extract projectId from notification data (supports string or object shapes)
-    const projectId = typeof n.data === 'string'
-      ? n.data
-      : (n.data|| '');
+    const projectId = extractProjectId(n);
 
     if (!projectId) {
       alert('No projectId found in notification data.');
@@ -48,6 +98,8 @@ export default function NotificationsPage() {
       console.log('User ID:', userId);
       console.log('Notification projectId:', projectId);
       await ProjectApprove.updateApproval(userId || '', { projectId, status });
+      // Reflect new status in UI immediately
+      setRequestStatuses((prev) => ({ ...prev, [n.id]: status }));
       markAsRead(n.id);
     } catch (e) {
       alert('Failed to update project approval.');
@@ -85,20 +137,28 @@ export default function NotificationsPage() {
               <div className="flex-shrink-0 ml-4 flex flex-col items-end gap-2">
                 {n.type === 'PROJECT_REQUEST' ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      title="Accept request"
-                      onClick={() => handleProjectRequest(n, 'ACCEPTED')}
-                      className="text-green-600 hover:text-green-700"
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      title="Reject request"
-                      onClick={() => handleProjectRequest(n, 'PENDING')}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
+                    {requestStatuses[n.id] === 'ACCEPTED' ? (
+                      <span className="text-green-700 text-sm font-medium">Accepted</span>
+                    ) : requestStatuses[n.id] === 'PENDING' ? (
+                      <span className="text-red-700 text-sm font-medium">Canceled</span>
+                    ) : (
+                      <>
+                        <button
+                          title="Accept request"
+                          onClick={() => handleProjectRequest(n, 'ACCEPTED')}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <CheckCircle2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          title="Mark pending"
+                          onClick={() => handleProjectRequest(n, 'PENDING')}
+                          className="text-yellow-600 hover:text-yellow-700"
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : !n.isRead ? (
                   <button onClick={() => markAsRead(n.id)} className="text-sm text-blue-600 hover:text-blue-700">Mark read</button>
