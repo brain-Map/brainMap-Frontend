@@ -37,6 +37,17 @@ export default function CreateInquiryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = await Swal.fire({
+      title: 'Confirm Submission',
+      text: 'Are you sure you want to submit this inquiry?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, submit',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+    if (!result.isConfirmed) return;
     if (!canSubmit) {
       if (!user?.id) {
         await Swal.fire({
