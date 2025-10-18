@@ -140,7 +140,7 @@ const CommentComponent = ({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showReplyEmojiPicker])
-
+ 
   // Common emojis for reply picker
   const commonEmojis = [
     '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
