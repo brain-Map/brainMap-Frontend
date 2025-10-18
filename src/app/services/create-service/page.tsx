@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/ToastProvider';
 import axios from 'axios';
 import { 
   Camera, 
@@ -45,6 +47,8 @@ interface Availability {
 export default function CreateServicePackage() {
   const { user } = useAuth();
   const token = localStorage.getItem('accessToken');
+  const router = useRouter();
+  const { show } = useToast();
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -195,18 +199,20 @@ export default function CreateServicePackage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
+  try {
       const data = new FormData();
       const { thumbnail } = formData;
 
       // Validate pricings client-side
       for (const p of formData.pricings) {
         if (!allowedPricingTypes.includes(p.pricingType)) {
-          throw new Error('Invalid pricing type: ' + p.pricingType);
+          show('Invalid pricing type: ' + p.pricingType, 'error');
+          return;
         }
         const priceNum = Number(p.price);
         if (isNaN(priceNum) || priceNum <= 0) {
-          throw new Error('Each selected availability mode requires an approximate positive price. Please provide a valid price for ' + p.pricingType + '.');
+          show('Each selected availability mode requires an approximate positive price. Please provide a valid price for ' + p.pricingType + '.', 'error');
+          return;
         }
       }
 
@@ -216,23 +222,23 @@ export default function CreateServicePackage() {
         if (mapping) {
           const p = formData.pricings.find(x => x.pricingType === mapping.pricingType);
           if (!p) {
-            throw new Error(`Please provide an approximate price for ${mapping.label}.`);
+            show(`Please provide an approximate price for ${mapping.label}.`, 'error');
+            return;
           }
           const priceNum = Number(p.price);
           if (isNaN(priceNum) || priceNum <= 0) {
-            throw new Error(`Please provide a valid approximate price for ${mapping.label}.`);
+            show(`Please provide a valid approximate price for ${mapping.label}.`, 'error');
+            return;
           }
         }
       }
 
-      // Prepare payload as per backend requirements
       const packagePayload = {
         title: formData.title,
         category: formData.category,
         availabilityModes: formData.availabilityModes || [],
         description: formData.description,
         pricings: formData.pricings.map(p => ({ pricingType: p.pricingType, price: Number(p.price) })),
-        // thumbnail is handled by FormData
         whatYouGet: formData.whatYouGet
       };
 
@@ -246,16 +252,34 @@ export default function CreateServicePackage() {
       console.log(packagePayload);
       
 
-      await axios.post(
-        `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/service-listings/${user?.id}/create`,
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/${user?.id}/create`,
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Service package created successfully!');
-      // Optionally redirect to packages list
+      // Try to extract the created service id from the response in several common shapes
+      const createdId = res?.data?.id || res?.data?.serviceId || res?.data?.projectId || res?.data?.data?.id || res?.data;
+
+      show('Service package created successfully!', 'success');
+
+      // Redirect to the created service page if we have an id, otherwise go to services list
+      if (createdId) {
+        try {
+          router.push(`/services/${createdId}`);
+        } catch (err) {
+          // Fallback for older environments or if router.push fails
+          window.location.href = `/services/${createdId}`;
+        }
+      } else {
+        try {
+          router.push('/services');
+        } catch (err) {
+          window.location.href = '/services';
+        }
+      }
     } catch (error: any) {
-      alert('Failed to create package: ' + (error?.response?.data?.message || error.message));
+      show('Failed to create package: ' + (error?.response?.data?.message || error.message), 'error');
     }
   };
 
