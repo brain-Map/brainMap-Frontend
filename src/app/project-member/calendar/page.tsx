@@ -5,7 +5,8 @@ const page = () => {
   
 type EventType = "meeting" | "standup" | "review" | "planning" | "demo" | "coffee" | "lunch" | "dinner"
 
-interface CalendarEvent {
+// Rename the page-local event type to avoid colliding with the component's CalendarEvent type
+interface PageEvent {
   id: string
   title: string
   time: string
@@ -18,7 +19,7 @@ interface CalendarEvent {
   attendees?: string[]
 }
 
-const events: CalendarEvent[] = [
+const events: PageEvent[] = [
     {
       id: "1",
       title: "Monday standup",
@@ -115,9 +116,41 @@ const events: CalendarEvent[] = [
       date: new Date(2025, 6, 9),
     },
   ]
+  // Helper: convert 12-hour time like "9:00 AM" to "09:00"
+  const parse12HourTo24 = (time12?: string) => {
+    if (!time12) return ''
+    // Support formats like "9:00 AM", "12:30 PM"
+    const m = time12.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i)
+    if (!m) {
+      // Try to parse already 24-hour style
+      const parts = time12.split(":")
+      if (parts.length >= 2) return parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0')
+      return ''
+    }
+    let hour = parseInt(m[1], 10)
+    const minute = m[2]
+    const period = m[3].toUpperCase()
+    if (period === 'PM' && hour !== 12) hour += 12
+    if (period === 'AM' && hour === 12) hour = 0
+    return String(hour).padStart(2, '0') + ':' + minute
+  }
+
+  // Map page events to the Calendar component's expected shape
+  const calendarEvents = events.map((e) => ({
+    eventId: e.id,
+    title: e.title,
+    description: e.description || '',
+    // Calendar expects ISO date strings YYYY-MM-DD
+    createdDate: e.date.toISOString().split('T')[0],
+    dueDate: e.date.toISOString().split('T')[0],
+    dueTime: parse12HourTo24(e.time),
+    createdTime: parse12HourTo24(e.time) || '00:00',
+    userId: '' // page events don't include userId; set empty or provide an actual id if available
+  }))
+
   return (
     <>
-    <Calendar events={events} />
+      <Calendar events={calendarEvents} />
     </>
   )
 }
