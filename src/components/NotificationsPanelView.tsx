@@ -3,7 +3,7 @@
 import React from 'react';
 import { NotificationItem } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
-import { RefreshCw, X } from 'lucide-react';
+import { RefreshCw, X, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function NotificationsPanelView({
   notifications,
@@ -11,12 +11,14 @@ export default function NotificationsPanelView({
   refresh,
   connected,
   onClose,
+  respondToProjectRequest,
 }: {
   notifications: NotificationItem[];
   markAsRead: (id: string) => void;
   refresh: () => void;
   connected: boolean;
   onClose?: () => void;
+  respondToProjectRequest?: (n: NotificationItem, decision: 'ACCEPTED' | 'REJECTED') => void;
 }) {
   return (
   <div className="p-3 w-full max-w-md bg-white rounded-lg shadow-md" style={{ minWidth: 360 }}>
@@ -69,7 +71,24 @@ export default function NotificationsPanelView({
             </div>
 
             <div className="flex-shrink-0 ml-2 flex flex-col items-end">
-              {!n.isRead ? (
+              {n.type === 'PROJECT_REQUEST' && respondToProjectRequest ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    title="Accept request"
+                    onClick={() => respondToProjectRequest(n, 'ACCEPTED')}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    title="Reject request"
+                    onClick={() => respondToProjectRequest(n, 'REJECTED')}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : !n.isRead ? (
                 <button onClick={() => markAsRead(n.id)} className="text-xs text-blue-600 hover:text-blue-700">
                   Mark read
                 </button>
