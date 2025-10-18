@@ -203,8 +203,11 @@ export default function CheckoutPage({
         paymentId: response.paymentId,
         orderId: response.orderId,
         amount: response.amount,
-        currency: response.currency
+        currency: response.currency,
+        mentorId: mentorId || undefined
       }));
+
+      console.log('💾 [CHECKOUT] Stored payment info with mentor ID:', mentorId);
 
       // Redirect to PayHere hosted payment page
       window.location.href = response.redirectUrl;
@@ -304,6 +307,24 @@ export default function CheckoutPage({
                   <span className="text-gray-600">Order ID:</span>
                   <span className="text-gray-900 text-sm font-mono">{orderId}</span>
                 </div>
+                {mentorId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Mentor ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{mentorId}</span>
+                  </div>
+                )}
+                {serviceId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Service ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{serviceId}</span>
+                  </div>
+                )}
+                {bookingId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Booking ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{bookingId}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-4">
                   <span className="text-xl font-semibold text-gray-900">Total:</span>
                   <span className="text-2xl font-bold text-blue-600">{currency} {amount.toLocaleString()}</span>
