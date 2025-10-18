@@ -58,8 +58,8 @@ export default function DeleteModal({
         onClick={handleClose}
       />
       
-      {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 z-[51] top-[80%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+  {/* Modal */}
+  <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 z-[51]">
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -84,8 +84,8 @@ export default function DeleteModal({
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 justify-end">
+  {/* Actions */}
+  <div className="flex gap-3 justify-center">
           <button
             onClick={handleClose}
             disabled={isLoading}

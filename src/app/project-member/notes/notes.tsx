@@ -48,7 +48,13 @@ interface Note {
 const notesApi2 = {
   getHiredExpertsData: async (userId: string): Promise<ApiNote[]> => {
     try {
-      const response = await api.get(`/api/v1/notes/user/${userId}`);
+      if (!userId) {
+        console.warn('getHiredExpertsData called without userId — skipping request');
+        return [];
+      }
+      const url = `/api/v1/notes/user/${userId}`;
+      console.log('Fetching notes from', url);
+      const response = await api.get(url);
       // assume response.data is an array of ApiNote
       console.log('User Data:', response.data);
       return response.data;
@@ -99,7 +105,14 @@ const fetchNotes = async (userId: string) => {
       type: n.type ?? undefined,
     }));
 
-    setNotes(normalized);
+    // sort by updatedAt (newest first), fallback to createdAt
+    const sorted = normalized.slice().sort((a, b) => {
+      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
+
+    setNotes(sorted);
     if (normalized.length > 0) setSelectedNote(normalized[0]);
   } catch (err) {
     console.error('Error fetching notes:', err);
@@ -178,7 +191,16 @@ const fetchNotes = async (userId: string) => {
           type: (updatedApi as any).type ?? selectedNote.type,
         };
 
-        setNotes((prev) => prev.map((n) => (n.id === selectedNote.id ? updated : n)));
+        setNotes((prev) => {
+          const replaced = prev.map((n) => (n.id === selectedNote.id ? updated : n));
+          // re-sort after update so the updated note appears in correct order
+          replaced.sort((a, b) => {
+            const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+            const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+            return bTime - aTime;
+          });
+          return replaced;
+        });
         setSelectedNote(updated);
       setIsEditing(false);
     } catch (err) {
@@ -217,7 +239,7 @@ const fetchNotes = async (userId: string) => {
   };
 
   // 📝 Edit Note Inline
-  const startEdit = (note: Note) => {
+  const startEdit = (note: any) => {
     setEditTitle(note.title);
     setEditDescription(note.description);
     setIsEditing(true);
@@ -293,19 +315,7 @@ const fetchNotes = async (userId: string) => {
             <div className="px-6 pt-6 pb-2">
               <h2 className="text-lg font-bold text-gray-800">Notes</h2>
             </div>
-            <div className="flex gap-2 px-6 pb-2">
-              {['all', 'project', 'personal', 'starred', 'archived'].map((f) => (
-                <button
-                  key={f}
-                  className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                    filter === f ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                  }`}
-                  onClick={() => setFilter(f as 'all' | 'project' | 'personal' | 'starred' | 'archived')}
-                >
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                </button>
-              ))}
-            </div>
+              {/* Filters removed from view per request. Filter logic remains in code. */}
             <div className="flex-1 overflow-y-auto px-2 pb-4">
               {filteredNotes.map((note) => (
                 <div
@@ -417,33 +427,10 @@ const fetchNotes = async (userId: string) => {
                       <Pencil className="w-5 h-5" />
                     </button>
                     <button
-                      className={
-                        starredNotes.includes(selectedNote.id)
-                          ? 'text-yellow-500'
-                          : 'text-gray-400 hover:text-yellow-600'
-                      }
-                      onClick={() => toggleStar(selectedNote.id)}
-                    >
-                      <Star
-                        className="w-5 h-5"
-                        fill={
-                          starredNotes.includes(selectedNote.id)
-                            ? 'currentColor'
-                            : 'none'
-                        }
-                      />
-                    </button>
-                    <button
                       className="text-gray-400 hover:text-red-600"
                       onClick={() => handleDelete(selectedNote.id, selectedNote.title)}
                     >
                       <Trash2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      className="text-gray-400 hover:text-red-600"
-                      onClick={() => archiveNote(selectedNote.id)}
-                    >
-                      <Archive className="w-5 h-5" />
                     </button>
                   </div>
                   <div className="text-gray-700 text-base whitespace-pre-line bg-gray-50 rounded-lg p-6 min-h-[200px]">
