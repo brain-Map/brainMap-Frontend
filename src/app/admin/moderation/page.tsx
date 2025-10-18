@@ -410,6 +410,12 @@ export default function InquiryManagement() {
       const res = await api.post(`/api/v1/inquiries/resoponedToInquiry/${selectedInquiry.id}`, payload);
       const updated: BackendInquiry = res?.data;
 
+      // Refresh overview stats silently
+      try {
+        const res = await api.get("/api/v1/inquiries/overview");
+        setOverview(res.data as any);
+      } catch {}
+
       // Update current page list optimistically
       setInquiryList((prev) => {
         if (!prev) return prev;
@@ -615,7 +621,7 @@ export default function InquiryManagement() {
       }
     };
     loadOverview();
-  }, []);
+  }, [searchTerm, statusFilter, inquiryTypeFilter]);
 
   // Reset to first page when filters/search change
   useEffect(() => {
