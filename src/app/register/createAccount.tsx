@@ -126,61 +126,67 @@ const AccountCreation = () => {
         setAlert({ message: error.message, type: 'error' });
         return new Response(JSON.stringify({ error: error.message }), { status: 400 });
       }
+    // At this point Supabase has sent a confirmation email. We should
+    // not call the backend until the user verifies their email. Save the
+    // registration payload locally as pendingRegistration so AuthContext
+    // can process it after verification.
 
-      const token = localStorage.getItem("accessToken")
-      console.log("Auth: ", token || "no auth");
+    const userRole = role.replace(" ", "_")
+    const payload = {
+      username: userName,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      userRole: userRole,
+      // userId will be attached after email verification when we have a session
+      userId: data.user?.id || null
+    }
 
-      const userRole = role.replace(" ", "_")
-      const payload = {
-          username: userName,
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          userRole: userRole,
-          userId: data.user?.id
-        }
-      
-      // Send user data to backend API
-      const backendResponse = await fetch(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!backendResponse.ok) {
-        const errorData = await backendResponse.json();
-        setIsSubmitting(false);
-        setAlert({ message: errorData.error || 'Failed to create user profile', type: 'error' });
-        return;
-      }
-
+    try {
+      localStorage.setItem('pendingRegistration', JSON.stringify(payload));
+      // Persist the chosen role so OAuth flows can pick it up too
+      localStorage.setItem('user_role', role);
+    } catch (err) {
+      console.error('Error saving pending registration to localStorage', err);
+    }
 
     setIsSubmitting(false);
-
-    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    redirectAfterRegister(userType);
+    setAlert({ message: 'Account created. Please check your email and verify your address before continuing.', type: 'success' });
+    // Redirect to verification page with the email so the user can follow instructions
+    router.push(`/register/verify?email=${encodeURIComponent(email)}`);
+    // Don't redirect to dashboard yet; wait for email verification handled in AuthContext
   };
 
   const handleGoogleSignup = async () => {
     setIsSubmitting(true);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    // Persist the selected role so the OAuth callback or AuthContext can
+    // use it when the user returns after verifying their email.
+    try {
+      localStorage.setItem('user_role', userType || '');
+      // Save a minimal pendingRegistration so the backend will be called after verification.
+      const pending = {
+        username: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        userRole: (userType || '').replace(' ', '_'),
+        userId: null,
+      };
+      localStorage.setItem('pendingRegistration', JSON.stringify(pending));
+    } catch (err) {
+      console.error('Error saving user role/pending registration for OAuth', err);
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
 
     if (error) {
       setAlert({ message: error.message, type: 'error' });
+      setIsSubmitting(false);
+      return;
     }
 
-    setIsSubmitting(false);
-
-    localStorage.setItem("user_role", userType || "");
-
-    setAlert({ message: 'Account created successfully! Please complete your profile.', type: 'success' });
-    redirectAfterRegister(userType);
+    // The OAuth flow will redirect the user away; nothing more to do here.
   }
 
   const handleBackToRoleSelection = () => {
