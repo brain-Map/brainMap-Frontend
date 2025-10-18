@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UserX, Shield, Users, Eye, Code, X, Search } from 'lucide-react';
 import api from "@/utils/api";
 import { useParams } from 'next/navigation';
+import { useDeleteModal } from '@/hooks/useDeleteModal';
+import DeleteModal from '@/components/modals/DeleteModal';
 
 
 type MemberRole = 'MEMBER' | 'OWNER';
@@ -78,10 +80,7 @@ const memberSearch = {
 
   removeProjectMember: async (projectId: string, userId: string) => {
     try {
-      const response = await api.post(`/project-member/projects/remove-collaborator`, {
-        projectId,
-        userId,
-      });
+      const response = await api.delete(`/project-member/projects/collaborators/${projectId}/${userId}`);
       console.log('Removed collaborator:', response.data);
       return response.data;
     } catch (error) {
@@ -109,6 +108,13 @@ const MembersAndTeams = () => {
 
   // const [filteredUsers, setFilteredUsers] = useState<SearchUser[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Delete confirmation modal for removing a project member
+  const { openModal: openDeleteModal, modalProps: deleteModalProps } = useDeleteModal({
+    title: 'Remove project member',
+    confirmText: 'Yes, remove',
+    cancelText: 'No',
+  });
   useEffect(() => {
   if (!searchQuery) {
     setSearchUsers([]);
@@ -163,7 +169,7 @@ useEffect(() => {
         if (collaborator.role === 'MENTOR') {
           // Add to supervisors list
           supervisorsList.push({
-            id: collaborator.id,
+            id: collaborator.userId,
             name: collaborator.name,
             email: collaborator.email,
             avatar: collaborator.avatar,
@@ -173,7 +179,7 @@ useEffect(() => {
         } else {
           // Add to members list
           membersList.push({
-            id: collaborator.id,
+            id: collaborator.userId,
             name: collaborator.name,
             email: collaborator.email,
             avatar: collaborator.avatar,
@@ -201,15 +207,20 @@ useEffect(() => {
   );
 
 
-  const removeMember = (id: string) => {
-    // Remove from backend
-    memberSearch.removeProjectMember(projectId, id)
-      .then(() => {
-        setMembers(members.filter(member => member.id !== id));
-      })
-      .catch((error) => {
-        console.error('Error removing member from backend:', error);
-      });
+  const removeMemberConfirmed = async (id: string) => {
+    try {
+      await memberSearch.removeProjectMember(projectId, id);
+      setMembers((prev) => prev.filter((member) => member.id !== id));
+    } catch (error) {
+      console.error('Error removing member from backend:', error);
+    }
+  };
+
+  const confirmRemoveMember = (id: string, name?: string) => {
+    console.log('Removing member with ID:', id);
+    console.log('Removing member with Name:', name);
+    console.log('Project ID:', projectId);
+    openDeleteModal(removeMemberConfirmed, [id], name);
   };
 
   const removeSupervisor = (id: string) => {
@@ -456,7 +467,7 @@ useEffect(() => {
                       {/* Remove Button */}
                      {member.role !== 'OWNER' && (
                        <button
-                         onClick={() => removeMember(member.id)}
+                         onClick={() => confirmRemoveMember(member.id, member.name)}
                          className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition"
                        >
                          <UserX className="w-4 h-4" />
@@ -615,6 +626,8 @@ useEffect(() => {
           </div>
         </div>
       )}
+      {/* Global delete confirmation modal */}
+      <DeleteModal {...deleteModalProps} />
     </div>
   );
 };
