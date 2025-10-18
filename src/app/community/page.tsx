@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,9 +21,14 @@ import {
   ChevronUp,
   ChevronDown,
   Loader2,
+  MoreHorizontal,
+  Trash2,
 } from "lucide-react"
 import { communityApi, PopularTag } from "@/services/communityApi"
 import { StaticImageData } from "next/image"
+import { useAuth } from "@/contexts/AuthContext"
+import DeleteModal from "@/components/modals/DeleteModal"
+import { useDeleteModal } from "@/hooks/useDeleteModal"
 
 
 interface Post {
@@ -31,6 +36,7 @@ interface Post {
   title: string
   content: string
   author: {
+    id: string
     name: string
     avatar: string
     role: string
@@ -52,6 +58,7 @@ interface Post {
 
 export default function CommunityPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +68,13 @@ export default function CommunityPage() {
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set())
   const [popularTags, setPopularTags] = useState<PopularTag[]>([])
   const [tagsLoading, setTagsLoading] = useState(true)
+  const [showOptionsMenu, setShowOptionsMenu] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const deleteModal = useDeleteModal({
+    title: "Delete Post",
+    confirmText: "Delete Post"
+  })
 
   // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -120,6 +134,7 @@ const formatDate = (dateString: string) => {
           title: post.title || "Untitled Post",
           content: post.content || "",
           author: {
+            id: post.author?.id || post.userId,
             name: post.author?.username || "Anonymous",
             avatar: "/image/user_placeholder.jpg",
             role: post.author?.role || "Project Member",
@@ -251,6 +266,59 @@ const formatDate = (dateString: string) => {
   const handlePostClick = (postId: string) => {
     router.push(`/community/post/${postId}`)
   }
+
+  const handleDeletePost = (postId: string, postTitle?: string) => {
+    console.log('🗑️ [HANDLE DELETE] Delete initiated for post:', postId);
+    console.log('🗑️ [HANDLE DELETE] Post title:', postTitle);
+    console.log('🗑️ [HANDLE DELETE] Current user:', user);
+    
+    setShowOptionsMenu(null)
+    deleteModal.openModal(
+      async (id: string) => {
+        console.log('🗑️ [DELETE MODAL] Delete confirmed, executing...');
+        console.log('🗑️ [DELETE MODAL] Post ID to delete:', id);
+        
+        try {
+          await communityApi.deletePost(id)
+          console.log('✅ [DELETE MODAL] API call successful');
+          
+          // Remove post from state
+          setPosts(prevPosts => {
+            const filtered = prevPosts.filter(post => post.id !== id)
+            console.log('✅ [DELETE MODAL] Post removed from state');
+            console.log('✅ [DELETE MODAL] Remaining posts count:', filtered.length);
+            return filtered
+          })
+          
+          console.log('✅ [DELETE MODAL] Delete operation completed successfully');
+        } catch (error) {
+          console.error('❌ [DELETE MODAL] Delete operation failed:', error);
+          throw error;
+        }
+      },
+      [postId],
+      postTitle
+    )
+    
+    console.log('🗑️ [HANDLE DELETE] Delete modal opened');
+  }
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowOptionsMenu(null)
+      }
+    }
+
+    if (showOptionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showOptionsMenu])
 
 
   const filteredPosts = posts.filter((post) => {
@@ -484,17 +552,56 @@ const formatDate = (dateString: string) => {
                         {/* Question Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-2">
-                            <h3 
-                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-2 cursor-pointer"
-                              onClick={() => handlePostClick(post.id)}
-                            >
-                              {post.title}
-                            </h3>
-                            {post.trending && (
-                              <Badge className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-md ml-2">
-                                <Fire className="w-3 h-3 mr-1" />
-                                Hot
-                              </Badge>
+                            <div className="flex-1 flex items-start gap-2">
+                              <h3 
+                                className="text-lg font-semibold text-gray-900 hover:text-blue-600 line-clamp-2 cursor-pointer flex-1"
+                                onClick={() => handlePostClick(post.id)}
+                              >
+                                {post.title}
+                              </h3>
+                              {post.trending && (
+                                <Badge className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-md">
+                                  <Fire className="w-3 h-3 mr-1" />
+                                  Hot
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* More Options Menu - Only show for post author */}
+                            {user && post.author.id === user.id && (
+                              <div className="relative ml-2" ref={showOptionsMenu === post.id ? menuRef : null}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setShowOptionsMenu(showOptionsMenu === post.id ? null : post.id)
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                                
+                                {showOptionsMenu === post.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                    <div className="py-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          console.log('🗑️ [DELETE BUTTON] Delete button clicked');
+                                          console.log('🗑️ [DELETE BUTTON] Post ID:', post.id);
+                                          console.log('🗑️ [DELETE BUTTON] Post title:', post.title);
+                                          console.log('🗑️ [DELETE BUTTON] Post author ID:', post.author.id);
+                                          console.log('🗑️ [DELETE BUTTON] Current user ID:', user?.id);
+                                          handleDeletePost(post.id, post.title)
+                                        }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 transition-colors text-sm"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete Post
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
 
@@ -627,6 +734,9 @@ const formatDate = (dateString: string) => {
         </div>
       </div>
     </div>
+    
+    {/* Delete Modal */}
+    <DeleteModal {...deleteModal.modalProps} />
     </>
   )
 }

@@ -321,9 +321,20 @@ export const communityApi = {
   // Delete post
   deletePost: async (id: string): Promise<void> => {
     try {
-      await api.delete(`/api/v1/posts/${id}`);
-    } catch (error) {
-      console.error('Error deleting post:', error);
+      console.log('🗑️ [DELETE POST] Starting deletion for post ID:', id);
+      console.log('🗑️ [DELETE POST] Request URL:', `/api/v1/posts/${id}`);
+      console.log('🗑️ [DELETE POST] Base URL:', api.defaults.baseURL);
+      
+      const response = await api.delete(`/api/v1/posts/${id}`);
+      
+      console.log('✅ [DELETE POST] Post deleted successfully');
+      console.log('✅ [DELETE POST] Response status:', response.status);
+      console.log('✅ [DELETE POST] Response data:', response.data);
+    } catch (error: any) {
+      console.error('❌ [DELETE POST] Error deleting post:', error);
+      console.error('❌ [DELETE POST] Error response:', error.response?.data);
+      console.error('❌ [DELETE POST] Error status:', error.response?.status);
+      console.error('❌ [DELETE POST] Error message:', error.message);
       throw error;
     }
   },
