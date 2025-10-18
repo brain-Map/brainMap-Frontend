@@ -31,7 +31,6 @@ import {
   Search,
   Filter,
   MoreHorizontal,
-  Edit,
   Trash2,
   UserCheck,
   Download,
@@ -39,6 +38,8 @@ import {
   ChevronRight,
   Users,
   UserRound,
+  Ban,
+  PauseCircle,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import api from "@/utils/api";
@@ -556,20 +557,33 @@ useEffect(() => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-white">
-                            {/* <DropdownMenuItem className="cursor-pointer hover:bg-gray-50"> */}
-                              {/* <Edit className="mr-2 h-4 w-4 text-gray-500" /> */}
-                              {/* <span className="text-gray-700">Edit User</span> */}
-                            {/* </DropdownMenuItem> */}
-                            <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'BANNED')}
+                            >
+                              <Ban className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Set Banned</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'INACTIVE')}
+                            >
+                              <PauseCircle className="mr-2 h-4 w-4 text-gray-500" />
+                              <span className="text-gray-700">Set Inactive</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => changeUserStatus(user, 'ACTIVE')}
+                            >
                               <UserCheck className="mr-2 h-4 w-4 text-gray-500" />
-                              <span className="text-gray-700">Show Profile</span>
+                              <span className="text-gray-700">Set Active</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                             className="cursor-pointer hover:bg-red-50 text-red-600"
                             onClick= { () => deleteUser(user)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete User
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -708,6 +722,48 @@ useEffect(() => {
         text: 'Failed to delete user. Check console for details.',
         icon: 'error',
         confirmButtonColor: '#d33'
+      });
+    }
+  }
+
+  // Update user status via admin endpoint with confirmation and feedback
+  async function changeUserStatus(user: User, nextStatus: 'ACTIVE' | 'INACTIVE' | 'BANNED') {
+    const statusLabelMap: Record<'ACTIVE' | 'INACTIVE' | 'BANNED', string> = {
+      ACTIVE: 'Active',
+      INACTIVE: 'Inactive',
+      BANNED: 'Banned',
+    };
+
+    const result = await Swal.fire({
+      title: 'Change status?',
+      text: `Set ${user.username}'s status to ${statusLabelMap[nextStatus]}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, update',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.put(`/api/v1/admin/userStateUpdate/${user.id}/${nextStatus}`);
+      await fetchFilteredUsers();
+
+      await Swal.fire({
+        title: 'Updated!',
+        text: `User status set to ${statusLabelMap[nextStatus]}.`,
+        icon: 'success',
+        confirmButtonColor: '#3085d6',
+      });
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update user status. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#d33',
       });
     }
   }
