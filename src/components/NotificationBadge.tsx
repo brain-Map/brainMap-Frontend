@@ -6,7 +6,7 @@ import NotificationsPanelView from '@/components/NotificationsPanelView';
 import { Bell } from 'lucide-react';
 
 export default function NotificationBadge({ userId, token, compact }: { userId?: string | null; token?: string | null; compact?: boolean }) {
-  const { unreadCount, notifications, markAsRead, refresh, connected } = useNotifications(userId || null, token || null);
+  const { unreadCount, notifications, markAsRead, refresh, connected, respondToProjectRequest } = useNotifications(userId || null, token || null);
   const [open, setOpen] = useState(false);
 
   return (
@@ -45,6 +45,7 @@ export default function NotificationBadge({ userId, token, compact }: { userId?:
             refresh={refresh}
             connected={connected}
             onClose={() => setOpen(false)}
+            respondToProjectRequest={respondToProjectRequest}
           />
         </div>
       )}
