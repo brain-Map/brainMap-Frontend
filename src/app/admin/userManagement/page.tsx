@@ -257,15 +257,6 @@ useEffect(() => {
               </div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className=""
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-          </div>
         </div>
 
         {/* Stats Cards */}

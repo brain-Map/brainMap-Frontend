@@ -111,13 +111,13 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       count: "",
       color: "bg-orange-500",
     },
-    {
-      title: "Pending Reports",
-      icon: Bell,
-      url: "/admin/moderation/report/pending",  
-      count: "",
-      color: "bg-yellow-500",
-    },
+    // {
+    //   title: "Pending Reports",
+    //   icon: Bell,
+    //   url: "/admin/moderation/report/pending",  
+    //   count: "",
+    //   color: "bg-yellow-500",
+    // },
     // {
     //   title: "Security Alerts",
     //   icon: Shield,
