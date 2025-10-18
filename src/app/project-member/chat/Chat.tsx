@@ -17,7 +17,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const searchParams = useSearchParams()
   const projectId = searchParams?.get("projectId") || ""
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"
   const [owners, setOwners] = useState<any[]>([])
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [groupMembers, setGroupMembers] = useState<string[]>([]) // userIds that are currently in the group

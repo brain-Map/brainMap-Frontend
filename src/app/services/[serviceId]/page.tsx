@@ -9,7 +9,10 @@ import { ServiceListing } from "@/types/service"
 import { Loader2 } from "lucide-react"
 
 // Extended interface for service detail with mentor info
-interface ServiceDetailData extends ServiceListing {
+ interface ServiceDetailData extends ServiceListing {
+  subject: string
+  duration: number | null
+  thumbnailUrl: string
   mentorName?: string
   mentorLevel?: number
   rating?: number
@@ -43,13 +46,16 @@ export default function ServicePage() {
         // For now, adding mock mentor data
         const serviceWithMentorInfo: ServiceDetailData = {
           ...serviceData,
+          subject: (serviceData as any).subject || serviceData.category || 'General',
+          duration: (serviceData as any).duration ?? null,
           mentorName: `${serviceData.mentorFirstName} ${serviceData.mentorLastName}`,
-          mentorAvatar: `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
+          mentorAvatar: `${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
+          thumbnailUrl: serviceData.thumbnailUrl || '/image/default_card.jpg',
           mentorLevel: 2,
           rating: 4.8,
           reviewCount: Math.floor(Math.random() * 500) + 100,
           mentorBio: serviceData.mentorBio,
-          mentorExpertise: [serviceData.subject],
+          // mentorExpertise: [serviceData.subject],
           mentorTotalStudents: 150,
           mentorTotalSessions: 500,
           mentorYearsExperience: 5,

@@ -4,23 +4,35 @@ export interface ServiceAvailability {
   endTime: string;
 }
 
+export interface Pricing {
+  pricingId?: string;
+  pricingType: string; // e.g. "hourly", "monthly", "project-based"
+  price: number;
+}
+
+export interface WhatYouGetItem {
+  title: string;
+  description: string;
+}
+
 export interface ServiceListing {
   serviceId: string;
   title: string;
-  subject: string;
+  category?: string;
   description: string;
-  fee: number | null;
+  availabilityModes: string[]; // e.g. ["HOURLY","MONTHLY","PROJECT_BASED"]
+  availabilities: ServiceAvailability[];
+  thumbnailUrl?: string;
   createdAt: string;
   updatedAt: string;
   mentorId: string;
   mentorFirstName: string;
   mentorLastName: string;
   mentorBio?: string;
-  mentorAvatar: string;
-  availabilities: ServiceAvailability[];
-  thumbnailUrl: string;
-  duration: number | null;
-  serviceType: "video-session" | "chat" | "mixed";
+  mentorAvatar?: string;
+  pricings?: Pricing[];
+  whatYouGet?: WhatYouGetItem[];
+  expertiseAreas?: string[];
 }
 
 export interface PageableSort {

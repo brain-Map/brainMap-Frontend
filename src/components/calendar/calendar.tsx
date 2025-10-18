@@ -142,9 +142,6 @@ const eventFunction = {
 
       // Make sure we're using the correct endpoint with user context
       const response = await api.get('/api/v1/events', {
-        headers: {
-          'user-id': currentUser.id
-        },
         params: {
           userId: currentUser.id
         }
@@ -362,10 +359,6 @@ const eventFunction = {
       const response = await api.put(`/api/v1/events/${eventId}`, {
         ...formattedData,
         userId: currentUser.id
-      }, {
-        headers: {
-          'user-id': currentUser.id
-        }
       })
 
       // Validate response
@@ -455,7 +448,11 @@ const transformApiEventToCalendarEvent = (apiEvent: ApiEvent): CalendarEvent => 
   }
 }
 
-export default function Calendar() {
+interface CalendarProps {
+  events?: CalendarEvent[]
+}
+
+export default function Calendar({ events: initialEvents }: CalendarProps) {
   const { user } = useAuth()
   const today = new Date()
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -464,7 +461,7 @@ export default function Calendar() {
   const [showEventModal, setShowEventModal] = useState(false)
   const [activeFilter, setActiveFilter] = useState("All events")
   const [showAddEvent, setShowAddEvent] = useState(false)
-  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [events, setEvents] = useState<CalendarEvent[]>(initialEvents || [])
   const [loading, setLoading] = useState(false)
   interface NewEventState {
     title: string;
@@ -483,9 +480,11 @@ export default function Calendar() {
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
 
-  // Load events on component mount
+  // Load events on component mount only when no initial events provided
   useEffect(() => {
-    loadEvents()
+    if (!initialEvents || initialEvents.length === 0) {
+      loadEvents()
+    }
   }, [])
 
   const loadEvents = async () => {

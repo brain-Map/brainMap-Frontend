@@ -94,7 +94,7 @@ const Index = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`http://localhost:8080/api/v1/domain-experts/${expertId}/bookings`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/domain-experts/${expertId}/bookings`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -182,7 +182,7 @@ const Index = () => {
       console.log(body);
         // Send update to server
         await axios.put(
-          `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/update`,
           body,
           {
             headers: {
@@ -220,7 +220,7 @@ const Index = () => {
     
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${bookingId}/accept`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${bookingId}/accept`,
         {},
         {
           headers: {
@@ -245,7 +245,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/reject`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/reject`,
         { reason: rejectReason },
         {
           headers: {
@@ -266,7 +266,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/complete`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/complete`,
         {},
         {
           headers: {
@@ -286,7 +286,7 @@ const Index = () => {
     if (!selectedBooking) return;
     try {
       await axios.put(
-        `http://localhost:8080/api/v1/service-listings/service-booking/${selectedBooking.id}/cancel`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/service-listings/service-booking/${selectedBooking.id}/cancel`,
         {},
         {
           headers: {
@@ -351,7 +351,6 @@ const Index = () => {
                       <TableHead>Client</TableHead>
                       <TableHead>Service</TableHead>
                       <TableHead>Session</TableHead>
-                      <TableHead>Date & Time</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Status</TableHead>
@@ -393,12 +392,6 @@ const Index = () => {
                           <Badge className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-medium">
                             {booking.sessionType}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div>{format(new Date(booking.requestedDate), "MMM dd, yyyy")}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {booking.requestedStartTime} - {booking.requestedEndTime}
-                          </div>
                         </TableCell>
                         <TableCell>{booking.duration} min</TableCell>
                         <TableCell>Rs.{booking.updatedPrice ? booking.updatedPrice.toFixed(2) : booking.totalPrice.toFixed(2)}</TableCell>

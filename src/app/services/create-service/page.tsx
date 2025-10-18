@@ -27,13 +27,13 @@ interface ServicePackageFormData {
   title: string;
   description: string;
   thumbnail: File | null;
-  hourlyRatePerPerson: string;
-  hourlyRatePerGroup: string;
+  pricings: { pricingType: string; price: string }[];
   deliverables: string[];
   prerequisites: string;
-  subject: string;
   responseTime: string;
   whatYouGet: WhatYouGetItem[];
+  category?: string;
+  availabilityModes?: string[];
 }
 
 interface Availability {
@@ -60,28 +60,75 @@ export default function CreateServicePackage() {
     title: '',
     description: '',
     thumbnail: null,
-    hourlyRatePerPerson: '',
-    hourlyRatePerGroup: '',
+    pricings: [],
     deliverables: [],
     prerequisites: '',
-    subject: '',
     responseTime: '',
-    whatYouGet: []
+    whatYouGet: [],
+    category: '',
+    availabilityModes: []
   });
 
-  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
-  const [availabilityInput, setAvailabilityInput] = useState<Availability>({
-    dayOfWeek: 1,
-    startTime: '',
-    endTime: ''
-  });
-
-  const dayNames = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-  ];
 
   const updateFormData = (field: keyof ServicePackageFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const allowedPricingTypes = ["hourly", "monthly", "project-based"];
+
+  const availabilityModeOptions = [
+    { key: 'HOURLY', label: 'Hourly', pricingType: 'hourly' },
+    { key: 'MONTHLY', label: 'Monthly', pricingType: 'monthly' },
+    { key: 'PROJECT_BASED', label: 'Project-based', pricingType: 'project-based' },
+  ];
+
+  const addPricingRow = () => {
+    setFormData(prev => ({ ...prev, pricings: [...prev.pricings, { pricingType: '', price: '' }] }));
+  };
+
+  // Update or add pricing by pricingType (used when availability modes require a price)
+  const updatePricingByType = (pricingType: string, price: string) => {
+    setFormData(prev => {
+      const next = [...prev.pricings];
+      const idx = next.findIndex(p => p.pricingType === pricingType);
+      if (idx >= 0) {
+        next[idx] = { ...next[idx], price };
+      } else {
+        next.push({ pricingType, price });
+      }
+      return { ...prev, pricings: next };
+    });
+  };
+
+  // Toggle availability mode and ensure a corresponding pricing entry exists (or is removed)
+  const toggleAvailabilityMode = (modeKey: string, pricingType: string) => {
+    setFormData(prev => {
+      const modes = new Set(prev.availabilityModes || []);
+      const pricings = [...prev.pricings];
+      if (modes.has(modeKey)) {
+        modes.delete(modeKey);
+        const nextPricings = pricings.filter(p => p.pricingType !== pricingType);
+        return { ...prev, availabilityModes: Array.from(modes), pricings: nextPricings };
+      } else {
+        modes.add(modeKey);
+        if (!pricings.find(p => p.pricingType === pricingType)) {
+          pricings.push({ pricingType, price: '' });
+        }
+        return { ...prev, availabilityModes: Array.from(modes), pricings };
+      }
+    });
+  };
+
+  const updatePricingRow = (index: number, key: 'pricingType' | 'price', value: string) => {
+    setFormData(prev => {
+      const next = [...prev.pricings];
+      next[index] = { ...next[index], [key]: value };
+      return { ...prev, pricings: next };
+    });
+  };
+
+  const removePricingRow = (index: number) => {
+    setFormData(prev => ({ ...prev, pricings: prev.pricings.filter((_, i) => i !== index) }));
   };
 
   const handleThumbnailUpload = (file: File) => {
@@ -133,17 +180,6 @@ export default function CreateServicePackage() {
   };
 
 
-  const addDeliverable = () => {
-    if (deliverableInput.trim() && !formData.deliverables.includes(deliverableInput.trim())) {
-      updateFormData('deliverables', [...formData.deliverables, deliverableInput.trim()]);
-      setDeliverableInput('');
-    }
-  };
-
-  const removeDeliverable = (index: number) => {
-    updateFormData('deliverables', formData.deliverables.filter((_, i) => i !== index));
-  };
-
   const addWhatYouGetItem = () => {
     if (whatYouGetInput.title.trim() && whatYouGetInput.description.trim()) {
       updateFormData('whatYouGet', [...formData.whatYouGet, { ...whatYouGetInput }]);
@@ -157,45 +193,46 @@ export default function CreateServicePackage() {
     updateFormData('whatYouGet', formData.whatYouGet.filter((_, i) => i !== index));
   };
 
-  const addAvailability = () => {
-    if (
-      availabilityInput.startTime &&
-      availabilityInput.endTime &&
-      availabilityInput.startTime < availabilityInput.endTime
-    ) {
-      setAvailabilities(prev => [...prev, { ...availabilityInput }]);
-      setAvailabilityInput({ dayOfWeek: 1, startTime: '', endTime: '' });
-    } else {
-      alert('Please select valid start and end times.');
-    }
-  };
-
-  const removeAvailability = (index: number) => {
-    setAvailabilities(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const data = new FormData();
       const { thumbnail } = formData;
 
-      // Prepare availabilities for backend
-      const availabilitiesPayload = availabilities.map(a => ({
-        dayOfWeek: a.dayOfWeek,
-        startTime: a.startTime,
-        endTime: a.endTime
-      }));
+      // Validate pricings client-side
+      for (const p of formData.pricings) {
+        if (!allowedPricingTypes.includes(p.pricingType)) {
+          throw new Error('Invalid pricing type: ' + p.pricingType);
+        }
+        const priceNum = Number(p.price);
+        if (isNaN(priceNum) || priceNum <= 0) {
+          throw new Error('Each selected availability mode requires an approximate positive price. Please provide a valid price for ' + p.pricingType + '.');
+        }
+      }
+
+      // Ensure each selected availability mode has a pricing entry
+      for (const modeKey of (formData.availabilityModes || [])) {
+        const mapping = availabilityModeOptions.find(o => o.key === modeKey);
+        if (mapping) {
+          const p = formData.pricings.find(x => x.pricingType === mapping.pricingType);
+          if (!p) {
+            throw new Error(`Please provide an approximate price for ${mapping.label}.`);
+          }
+          const priceNum = Number(p.price);
+          if (isNaN(priceNum) || priceNum <= 0) {
+            throw new Error(`Please provide a valid approximate price for ${mapping.label}.`);
+          }
+        }
+      }
 
       // Prepare payload as per backend requirements
       const packagePayload = {
         title: formData.title,
-        subject: formData.subject,
+        category: formData.category,
+        availabilityModes: formData.availabilityModes || [],
         description: formData.description,
-        hourlyRatePerPerson: Number(formData.hourlyRatePerPerson),
-        hourlyRatePerGroup: Number(formData.hourlyRatePerGroup),
+        pricings: formData.pricings.map(p => ({ pricingType: p.pricingType, price: Number(p.price) })),
         // thumbnail is handled by FormData
-        availabilities: availabilitiesPayload,
         whatYouGet: formData.whatYouGet
       };
 
@@ -206,6 +243,8 @@ export default function CreateServicePackage() {
       if (thumbnail) {
         data.append('thumbnail', thumbnail);
       }
+      console.log(packagePayload);
+      
 
       await axios.post(
         `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/service-listings/${user?.id}/create`,
@@ -352,52 +391,95 @@ export default function CreateServicePackage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                <select
-                  value={formData.subject}
-                  onChange={(e) => updateFormData('subject', e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={formData.category || ''}
+                  onChange={(e) => updateFormData('category' as any, e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                  required
-                >
-                  <option value="">Select subject</option>
-                  <option value="career-development">Career Development</option>
-                  <option value="technical-skills">Technical Skills</option>
-                  <option value="leadership">Leadership</option>
-                  <option value="entrepreneurship">Entrepreneurship</option>
-                  <option value="personal-growth">Personal Growth</option>
-                  <option value="academic">Academic</option>
-                </select>
+                  placeholder="e.g., Career, Research, Technical"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Person (Rs.) *</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRatePerPerson}
-                    onChange={(e) => updateFormData('hourlyRatePerPerson', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., 500"
-                    min="0"
-                    required
-                  />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Availability Modes</label>
+                <p className="text-sm text-gray-500 mb-4">Choose how you want to offer this service. Select one or more modes and enter an approximate price for each selected mode.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                  {availabilityModeOptions.map(opt => {
+                    const selected = (formData.availabilityModes || []).includes(opt.key);
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => toggleAvailabilityMode(opt.key, opt.pricingType)}
+                        className={`relative text-left p-4 rounded-lg border transition-all flex flex-col items-start gap-2 hover:shadow-sm focus:outline-none ${selected ? 'border-blue-500 bg-blue-50 shadow' : 'border-gray-200 bg-white'}`}
+                        aria-pressed={selected}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div className={`p-2 rounded-md ${selected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                            {/* simple icons by label fallback to Clock/Users/BookOpen */}
+                            {opt.pricingType === 'hourly' && <Clock className="w-5 h-5" />}
+                            {opt.pricingType === 'monthly' && <Users className="w-5 h-5" />}
+                            {opt.pricingType === 'project-based' && <BookOpen className="w-5 h-5" />}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className={`font-medium ${selected ? 'text-gray-900' : 'text-gray-800'}`}>{opt.label}</span>
+                              {selected && <span className="text-xs text-blue-600 font-medium">Selected</span>}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{opt.label === 'Hourly' ? 'Per hour sessions' : opt.label === 'Monthly' ? 'Ongoing monthly support' : 'Fixed-price project engagement'}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate Per Group (Rs.) *</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRatePerGroup}
-                    onChange={(e) => updateFormData('hourlyRatePerGroup', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., 2000"
-                    min="0"
-                    required
-                  />
+
+                {/* Inline pricing inputs for selected modes */}
+                <div className="space-y-3">
+                  {availabilityModeOptions.map(opt => {
+                    const pricing = formData.pricings.find(p => p.pricingType === opt.pricingType);
+                    if (!pricing) return null;
+                    return (
+                      <div key={opt.key} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-3 w-full sm:w-1/3">
+                          <div className="p-2 rounded-md bg-white border border-gray-200">
+                            {opt.pricingType === 'hourly' && <Clock className="w-5 h-5 text-gray-600" />}
+                            {opt.pricingType === 'monthly' && <Users className="w-5 h-5 text-gray-600" />}
+                            {opt.pricingType === 'project-based' && <BookOpen className="w-5 h-5 text-gray-600" />}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-800">{opt.label}</div>
+                            <div className="text-xs text-gray-500">Approximate price</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 w-full sm:w-2/3">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={pricing.price}
+                            onChange={(e) => updatePricingByType(opt.pricingType, e.target.value)}
+                            placeholder="Price (Rs.)"
+                            className="px-3 py-2 border border-gray-300 rounded-lg flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleAvailabilityMode(opt.key, opt.pricingType)}
+                            className="text-sm text-red-500 hover:text-red-700"
+                            title={`Remove ${opt.label}`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-
-            {/* ...removed Mentorship Type and Pricing Section... */}
 
             {/* What You'll Get Section */}
             <div className="space-y-6">
@@ -458,97 +540,6 @@ export default function CreateServicePackage() {
                       </button>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
-
-            {/* Service Availability Section */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-primary flex items-center">
-                <Clock className="w-6 h-6 mr-2" />
-                Service Availability
-              </h2>
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Day of Week</label>
-                  <select
-                    value={availabilityInput.dayOfWeek}
-                    onChange={e => setAvailabilityInput(ai => ({
-                      ...ai,
-                      dayOfWeek: Number(e.target.value)
-                    }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  >
-                    {dayNames.map((name, idx) => (
-                      <option key={idx} value={idx + 1}>{name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    value={availabilityInput.startTime}
-                    onChange={e => setAvailabilityInput(ai => ({
-                      ...ai,
-                      startTime: e.target.value
-                    }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    value={availabilityInput.endTime}
-                    onChange={e => setAvailabilityInput(ai => ({
-                      ...ai,
-                      endTime: e.target.value
-                    }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={addAvailability}
-                  className="flex items-center px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-800 transition-colors shadow"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add
-                </button>
-              </div>
-              {/* List of availabilities */}
-              {availabilities.length > 0 && (
-                <div className="mt-4">
-                  <table className="min-w-full border text-sm">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="px-3 py-2 border">Day</th>
-                        <th className="px-3 py-2 border">Start Time</th>
-                        <th className="px-3 py-2 border">End Time</th>
-                        <th className="px-3 py-2 border"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {availabilities.map((a, idx) => (
-                        <tr key={idx}>
-                          <td className="px-3 py-2 border">{dayNames[a.dayOfWeek - 1]}</td>
-                          <td className="px-3 py-2 border">{a.startTime}</td>
-                          <td className="px-3 py-2 border">{a.endTime}</td>
-                          <td className="px-3 py-2 border text-center">
-                            <button
-                              type="button"
-                              onClick={() => removeAvailability(idx)}
-                              className="text-red-500 hover:text-red-700"
-                              title="Remove"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               )}
             </div>

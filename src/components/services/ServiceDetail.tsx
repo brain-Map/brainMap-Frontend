@@ -38,8 +38,8 @@ interface ServiceDetailProps {
   createdAt: string
   updatedAt: string
   mentorId: string
-  availabilities: Availability[]
   thumbnailUrl: string
+  availabilityModes?: string[]
   duration: number | null
   mentorName?: string
   mentorAvatar?: string
@@ -51,8 +51,7 @@ interface ServiceDetailProps {
   mentorTotalStudents?: number
   mentorTotalSessions?: number
   mentorYearsExperience?: number
-  hourlyRatePerPerson?: number
-  hourlyRatePerGroup?: number
+  pricings?: { pricingId?: string; pricingType: string; price: number }[]
   whatYouGet?: Array<{ title: string; description: string }>
 }
 
@@ -65,6 +64,19 @@ const serviceTypeLabels = {
 
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+const availabilityModeLabels: Record<string, string> = {
+  HOURLY: "Hourly",
+  MONTHLY: "Monthly",
+  PROJECT_BASED: "Project Based",
+}
+
+// Metadata for nicer chips: icon, label, colors and short description
+const availabilityModeMeta: Record<string, { label: string; colorClass: string; icon?: any; description?: string }> = {
+  HOURLY: { label: "Hourly", colorClass: "bg-green-50 text-green-700", icon: Clock, description: "Book this mentor by the hour" },
+  MONTHLY: { label: "Monthly", colorClass: "bg-blue-50 text-blue-700", icon: Calendar, description: "Monthly recurring mentorship" },
+  PROJECT_BASED: { label: "Project Based", colorClass: "bg-purple-50 text-purple-700", icon: Award, description: "Project-based work with milestone pricing" },
+}
+
 export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const router = useRouter()
   const [isFavorite, setIsFavorite] = useState(false)
@@ -73,14 +85,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const mentorLevel = service.mentorLevel || 2
   const thumbnailUrl = "/image/default_card.jpg"
   
-  // Group availabilities by day
-  const availabilityByDay = service.availabilities.reduce((acc, avail) => {
-    if (!acc[avail.dayOfWeek]) {
-      acc[avail.dayOfWeek] = []
-    }
-    acc[avail.dayOfWeek].push(avail)
-    return acc
-  }, {} as Record<number, Availability[]>)
+console.log("AVARAT",service.mentorAvatar);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -94,6 +99,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
       alert("Link copied to clipboard!")
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 mt-15">
@@ -197,38 +203,24 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                     <Calendar className="w-5 h-5 text-blue-600" />
                     Availability Schedule
                   </h2>
-                  {service.availabilities.length > 0 ? (
-                    <div className="space-y-3">
-                      {Object.entries(availabilityByDay)
-                        .sort(([a], [b]) => Number(a) - Number(b))
-                        .map(([day, slots]) => (
+                  {/* Availability Modes chips */}
+                  {service.availabilityModes && service.availabilityModes.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {service.availabilityModes.map((m) => {
+                        const meta = availabilityModeMeta[m] || { label: availabilityModeLabels[m] || m, colorClass: 'bg-gray-100 text-gray-700' }
+                        const Icon = meta.icon
+                        return (
                           <div
-                            key={day}
-                            className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
+                            key={m}
+                            title={meta.description}
+                            className={`flex items-center gap-2 px-3 py-1 rounded-full ${meta.colorClass}`}
                           >
-                            <div className="min-w-[100px]">
-                              <p className="font-semibold text-gray-900">
-                                {dayNames[Number(day)]}
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {slots.map((slot, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  className="bg-white text-gray-700 border-gray-300"
-                                >
-                                  {slot.startTime} - {slot.endTime}
-                                </Badge>
-                              ))}
-                            </div>
+                            {Icon ? <Icon className="w-4 h-4" /> : null}
+                            <span className="text-xs font-medium">{meta.label}</span>
                           </div>
-                        ))}
+                        )
+                      })}
                     </div>
-                  ) : (
-                    <p className="text-gray-600 bg-gray-50 p-4 rounded-lg">
-                      No availability set. Please contact the mentor for scheduling.
-                    </p>
                   )}
                 </div>
               </CardContent>
@@ -244,15 +236,16 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                 </h2>
 
                 <div className="flex items-start gap-6 mb-6">
-                  <Avatar className="w-24 h-24 border-4 border-blue-200">
+                  <Avatar className="w-24 h-24 border-4 border-blue-200 cursor-pointer" onClick={() => { window.location.href = `/mentor/${service.mentorId}` }}>
                     <AvatarImage src={service.mentorAvatar} alt={service.mentorName} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-2xl">
                       {service.mentorName?.charAt(0) || "M"}
                     </AvatarFallback>
                   </Avatar>
+                  
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 cursor-pointer" onClick={() => { window.location.href = `/mentor/${service.mentorId}` }}>
                       <h3 className="text-2xl font-bold text-gray-900">
                         {service.mentorName || "Expert Mentor"}
                       </h3>
@@ -327,29 +320,20 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
             <Card className="sticky top-8 shadow-lg">
               <CardContent className="p-6">
                 <div className="mb-6">
-                  <div className="border rounded-lg p-4 bg-white flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                      <User className="w-6 h-6 text-blue-600" />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-600">Individual Session</span>
-                        <span className="text-xl font-bold text-gray-900">
-                          {service.hourlyRatePerPerson && service.hourlyRatePerPerson > 0
-                            ? `Rs. ${service.hourlyRatePerPerson.toLocaleString()}`
-                            : 'Not available'}
-                        </span>
+                  <div className="border rounded-lg p-4 bg-white flex flex-col gap-3">
+                    <h3 className="text-sm font-semibold text-gray-700">Pricing</h3>
+                    {service.pricings && service.pricings.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {service.pricings.map((p) => (
+                          <div key={p.pricingId || p.pricingType} className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">{p.pricingType.charAt(0).toUpperCase() + p.pricingType.slice(1).replace('-', ' ')}</span>
+                            <span className="text-lg font-bold text-gray-900">Rs. {p.price.toLocaleString()}</span>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Users className="w-6 h-6 text-green-600" />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-600">Group Session</span>
-                        <span className="text-xl font-bold text-gray-900">
-                          {service.hourlyRatePerGroup && service.hourlyRatePerGroup > 0
-                            ? `Rs. ${service.hourlyRatePerGroup.toLocaleString()}`
-                            : 'Not available'}
-                        </span>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">No pricing set for this service.</p>
+                    )}
                   </div>
                 </div>
 
@@ -363,7 +347,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                 </div>
 
                 <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg mb-3 cursor-pointer"
                   onClick={() => router.push(`/services/${service.serviceId}/book`)}
                 >
                   Book Session Now

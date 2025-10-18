@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from '@/lib/superbaseClient';
 import api from '@/utils/api';
+import Swal from 'sweetalert2';
 import {
   Card,
   CardContent,
@@ -49,6 +50,11 @@ export default function Page() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | '' }>({
+    message: '',
+    type: ''
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleInputChange = (field: keyof AccountData, value: string) => {
     setAccountData((prev) => ({ ...prev, [field]: value }));
@@ -76,49 +82,66 @@ export default function Page() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    
+    // Use SweetAlert2 for confirmation
+    const result = await Swal.fire({
+      title: 'Confirm Submission',
+      text: 'Are you sure you want to add this moderator?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, add moderator',
+      cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
     setLoading(true);
     try {
-      // 1) register user with supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: accountData.email,
-        password: accountData.password,
-      });
-
-      if (error) {
-        setErrors({ email: error.message });
-        setLoading(false);
-        return;
-      }
-
-      // supabase returns user in data.user (older SDKs) or data.user
-      const userId = (data as any)?.user?.id || (data as any)?.id;
-      if (!userId) {
-        setErrors({ email: 'Could not retrieve user id from Supabase' });
-        setLoading(false);
-        return;
-      }
 
       // 2) POST to backend with user info and supabase userId
       const payload = {
         username: accountData.userName,
         email: accountData.email,
         userRole: accountData.userRole,
-        userId,
+        password: accountData.password
       };
 
-      await api.post('/api/v1/admin/create-moderator', payload);
+      await api.post('/api/v1/admin/createUser', payload);
 
       // success - reset form
       setAccountData({ userName: '', email: '', userRole: 'MODERATOR', password: '', confirmPassword: '' });
       setErrors({});
-      // TODO: show toast or redirect
+      setIsSubmitted(true);
+      
+      // Show success alert using SweetAlert2
+      await Swal.fire({
+        title: 'Success!',
+        text: 'Moderator added successfully!',
+        icon: 'success',
+        confirmButtonColor: '#3085d6'
+      });
     } catch (err: any) {
       console.error(err);
       setErrors({ general: err?.message || 'An error occurred' });
+      
+      // Show error alert using SweetAlert2
+      await Swal.fire({
+        title: 'Error!',
+        text: err?.message || 'Error adding moderator. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isSubmitted) {
+      // Reset form or perform any other actions after submission
+    }
+  }, [isSubmitted]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
@@ -138,6 +161,12 @@ export default function Page() {
             </div>
           </div>
         </div>
+
+        {alert.message && (
+          <div className={`p-4 mb-4 rounded-lg ${alert.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`} role="alert">
+            {alert.message}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
