@@ -182,51 +182,6 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <CountChart userTrend={UserTrendData?.data}/>
         </div>
-
-
-        {/* Admin Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              User Actions
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => console.log("Navigate to new-users")}
-                className="block w-full text-left p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Review New Users
-              </button>
-              <button
-                onClick={() => console.log("Navigate to banned-users")}
-                className="block w-full text-left p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Manage Banned Users
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Content Moderation
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => console.log("Navigate to reported-posts")}
-                className="block w-full text-left p-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Review Reports
-              </button>
-              <button
-                onClick={() => console.log("Navigate to pending-reviews")}
-                className="block w-full text-left p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-              >
-                Pending Reviews
-              </button>
-            </div>
-          </div>
-
-        </div>
       </div>
     </div>
   );
