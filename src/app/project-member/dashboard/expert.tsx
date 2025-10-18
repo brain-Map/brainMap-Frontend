@@ -8,13 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 type ServiceStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED' | 'CONFIRMED' | 'UPDATED';
 
 interface Service {
-  id: number;
+  id: string;
   serviceId: string;
   serviceSubject: string;
   serviceTitl: string;
   expertFirstName: string;
   expertLastName: string;
   expertEmail: string;
+  mentorId: string;
   status: ServiceStatus;
 }
 
@@ -120,23 +121,25 @@ const ServiceListTabs: React.FC = () => {
   );
 
 
-  const handleCancel = (id: number) => {
-    console.log('Cancel service:', id);
+  const handleCancel = (service: Service) => {
+    console.log('Cancel service:', service.id);
     // Add your cancel logic here
   };
 
-  const handleMessage = (id: number) => {
-    console.log('Message for service:', id);
+  const handleMessage = (service: Service) => {
+    console.log('Message for service:', service.id);
     // Add your message logic here
   };
 
-  const handlePayment = async (id: number) => {
-    console.log('💳 [PAYMENT] Payment button clicked for service ID:', id);
+  const handlePayment = async (service: Service) => {
+    console.log('💳 [PAYMENT] Payment button clicked for service:', service);
+    console.log('💳 [PAYMENT] Service ID:', service.id);
+    console.log('💳 [PAYMENT] Mentor ID:', service.mentorId);
     
     try {
       // Fetch booking details from the API
       console.log('📡 [PAYMENT] Fetching booking details from API...');
-      const bookingDetails = await hireingFunctions.getBookingService(id.toString());
+      const bookingDetails = await hireingFunctions.getBookingService(service.id.toString());
       
       console.log('✅ [PAYMENT] Booking details fetched:', bookingDetails);
       
@@ -153,9 +156,11 @@ const ServiceListTabs: React.FC = () => {
       // Determine the price: use updatedPrice if available, otherwise use totalPrice
       const paymentAmount = booking.updatedPrice ?? booking.totalPrice;
       const serviceTitle = booking.serviceTitle;
+      const mentorId = service.mentorId;
       
       console.log('💰 [PAYMENT] Payment amount:', paymentAmount);
       console.log('📝 [PAYMENT] Service title:', serviceTitle);
+      console.log('👤 [PAYMENT] Mentor ID:', mentorId);
       
       if (!paymentAmount) {
         console.error('❌ [PAYMENT] No price found in booking details');
@@ -163,12 +168,19 @@ const ServiceListTabs: React.FC = () => {
         return;
       }
       
+      if (!mentorId) {
+        console.error('❌ [PAYMENT] No mentor ID found');
+        alert('Mentor information not available for this service');
+        return;
+      }
+      
       // Create query parameters with payment details
       const queryParams = new URLSearchParams({
         amount: paymentAmount.toString(),
         serviceTitle: serviceTitle || 'BrainMap Service',
-        serviceId: booking.serviceId || id.toString(),
-        bookingId: booking.id.toString()
+        serviceId: booking.serviceId || service.id.toString(),
+        bookingId: booking.id.toString(),
+        mentorId: mentorId
       });
       
       console.log('🔗 [PAYMENT] Redirecting to checkout with params:', queryParams.toString());
@@ -260,21 +272,21 @@ const ServiceListTabs: React.FC = () => {
                   {activeTab === 'ACCEPTED' ? (
                     <>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleMessage(service.id); }}
+                        onClick={(e) => { e.stopPropagation(); handleMessage(service); }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                       >
                         <MessageCircle size={18} />
                         Message
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handlePayment(service.id); }}
+                        onClick={(e) => { e.stopPropagation(); handlePayment(service); }}
                         className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                       >
                         <CreditCard size={18} />
                         Payment
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleCancel(service.id); }}
+                        onClick={(e) => { e.stopPropagation(); handleCancel(service); }}
                         className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       >
                         <X size={18} />
@@ -283,7 +295,7 @@ const ServiceListTabs: React.FC = () => {
                     </>
                   ) : activeTab === 'COMPLETED' ? (
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleMessage(service.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleMessage(service); }}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       <MessageCircle size={18} />
@@ -292,14 +304,14 @@ const ServiceListTabs: React.FC = () => {
                   ) : (
                     <>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleMessage(service.id); }}
+                        onClick={(e) => { e.stopPropagation(); handleMessage(service); }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                       >
                         <MessageCircle size={18} />
                         Message
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleCancel(service.id); }}
+                        onClick={(e) => { e.stopPropagation(); handleCancel(service); }}
                         className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                       >
                         <X size={18} />

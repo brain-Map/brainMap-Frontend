@@ -51,6 +51,7 @@ export default function CheckoutPage({
   const [orderId, setOrderId] = useState(propOrderId);
   const [serviceId, setServiceId] = useState<string>('');
   const [bookingId, setBookingId] = useState<string>('');
+  const [mentorId, setMentorId] = useState<string>('');
 
   // Get PayHere configuration
   const payHereConfigData = payHereConfig.getConfig();
@@ -66,12 +67,14 @@ export default function CheckoutPage({
     const serviceTitleParam = params.get('serviceTitle');
     const serviceIdParam = params.get('serviceId');
     const bookingIdParam = params.get('bookingId');
+    const mentorIdParam = params.get('mentorId');
     
     console.log('📊 [CHECKOUT] URL Parameters:', {
       amount: amountParam,
       serviceTitle: serviceTitleParam,
       serviceId: serviceIdParam,
-      bookingId: bookingIdParam
+      bookingId: bookingIdParam,
+      mentorId: mentorIdParam
     });
     
     // Update state with URL parameters if they exist
@@ -95,6 +98,11 @@ export default function CheckoutPage({
     if (bookingIdParam) {
       setBookingId(bookingIdParam);
       console.log('📋 [CHECKOUT] Booking ID set to:', bookingIdParam);
+    }
+    
+    if (mentorIdParam) {
+      setMentorId(mentorIdParam);
+      console.log('👤 [CHECKOUT] Mentor ID set to:', mentorIdParam);
     }
   }, []);
 
