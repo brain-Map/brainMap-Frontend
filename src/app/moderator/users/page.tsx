@@ -429,9 +429,9 @@ export default function ModeratorUsersPage() {
           <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
-                User Distribution by Role
-              </h3>
+                  <TrendingUp className="w-5 h-5 mr-2 text-primary" />
+                  User Distribution by Role
+                </h3>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -469,7 +469,7 @@ export default function ModeratorUsersPage() {
           <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Activity className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                <Activity className="w-5 h-5 mr-2 text-primary" />
                 User Distribution by Status
               </h3>
             </CardHeader>
@@ -521,7 +521,7 @@ export default function ModeratorUsersPage() {
           <Card className="bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
             <CardHeader className="pb-4 border-b border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <UserCheck className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                <UserCheck className="w-5 h-5 mr-2 text-primary" />
                 Domain Expert Approvals
               </h3>
             </CardHeader>
@@ -602,7 +602,7 @@ export default function ModeratorUsersPage() {
           <CardHeader className="pb-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Users className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                <Users className="w-5 h-5 mr-2 text-primary" />
                 User Directory
               </h3>
             </div>

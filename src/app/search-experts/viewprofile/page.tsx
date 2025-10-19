@@ -207,7 +207,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                       <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
                     )}
                   </h1>
-                  <p className="font-semibold text-lg mb-2" style={{ color: '#3D52A0' }}>{expertData.title}</p>
+                  <p className="font-semibold text-lg mb-2 text-primary">{expertData.title}</p>
                   <div className="flex items-center justify-center text-gray-600 mb-3">
                     <MapPin className="w-4 h-4 mr-1" />
                     <span className="text-sm">{expertData.location}</span>
@@ -226,22 +226,22 @@ Her research focuses on deep learning, natural language processing, and ethical 
               <div className="p-6">
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors" style={{ '--hover-border-color': '#8B9DD6' } as React.CSSProperties}>
-                    <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{expertData.completedProjects}</div>
+                    <div className="text-2xl font-bold text-primary">{expertData.completedProjects}</div>
                     <div className="text-xs text-gray-700 font-medium">Projects</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors" style={{ '--hover-border-color': '#8B9DD6' } as React.CSSProperties}>
-                    <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{expertData.responseRate}%</div>
+                    <div className="text-2xl font-bold text-primary">{expertData.responseRate}%</div>
                     <div className="text-xs text-gray-700 font-medium">Response Rate</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors" style={{ '--hover-border-color': '#8B9DD6' } as React.CSSProperties}>
-                    <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{expertData.reviewCount}</div>
+                    <div className="text-2xl font-bold text-primary">{expertData.reviewCount}</div>
                     <div className="text-xs text-gray-700 font-medium">Reviews</div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <button className="w-full text-white py-3 px-4 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-sm border" style={{ backgroundColor: '#3D52A0', borderColor: '#3D52A0' }}>
+                  <button className="w-full text-white py-3 px-4 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-sm border bg-primary border-primary">
                     <MessageCircle className="w-4 h-4 inline mr-2" />
                     Send Message
                   </button>
@@ -256,7 +256,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
             {/* Areas of Expertise */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                  <Award className="w-5 h-5 mr-2 text-primary" />
                 Areas of Expertise
               </h3>
               <div className="space-y-3">
@@ -264,14 +264,14 @@ Her research focuses on deep learning, natural language processing, and ethical 
                   <div key={index} className="p-3 border border-gray-200 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-gray-900 text-sm">{skill.skill}</span>
-                      <span className="text-xs font-semibold" style={{ color: '#3D52A0' }}>{skill.level}%</span>
+                      <span className="text-xs font-semibold text-primary">{skill.level}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
                         className="h-1.5 rounded-full transition-all duration-300"
-                        style={{ 
+                        style={{
                           width: `${skill.level}%`,
-                          backgroundColor: '#3D52A0'
+                          backgroundColor: 'var(--color-primary)'
                         }}
                       ></div>
                     </div>
@@ -282,8 +282,8 @@ Her research focuses on deep learning, natural language processing, and ethical 
 
             {/* Availability */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Clock className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-primary" />
                 Availability
               </h3>                <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -302,7 +302,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
               {/* Weekly Calendar */}
               <div className="mt-6">
                 <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2" style={{ color: '#3D52A0' }} />
+                  <Calendar className="w-4 h-4 mr-2 text-primary" />
                   This Week
                 </h4>
                 <div className="grid grid-cols-7 gap-1 text-center">
@@ -370,10 +370,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                         ? 'text-white border-b-2'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
-                    style={activeTab === tab.key ? { 
-                      borderBottomColor: '#3D52A0', 
-                      color: '#3D52A0' 
-                    } : {}}
+                    style={activeTab === tab.key ? { borderBottomColor: 'var(--color-primary)', color: 'var(--color-primary)' } : {}}
                   >
                     {tab.label}
                   </button>
@@ -386,7 +383,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                   <div className="space-y-8">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <Users className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <Users className="w-5 h-5 mr-2 text-primary" />
                         About
                       </h3>
                       <div className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -401,7 +398,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <Briefcase className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <Briefcase className="w-5 h-5 mr-2 text-primary" />
                         Professional Experience
                       </h3>
                       <div className="space-y-6">
@@ -410,12 +407,12 @@ Her research focuses on deep learning, natural language processing, and ethical 
                             <div className="flex space-x-4">
                               <div className="flex-shrink-0">
                                 <div className="w-12 h-12 border rounded-lg flex items-center justify-center" style={{ backgroundColor: '#F0F4FF', borderColor: '#B8C5E0' }}>
-                                  <Briefcase className="w-6 h-6" style={{ color: '#3D52A0' }} />
+                                  <Briefcase className="w-6 h-6 text-primary" />
                                 </div>
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900">{exp.position}</h4>
-                                <p className="font-medium" style={{ color: '#3D52A0' }}>{exp.company}</p>
+                                <p className="font-medium text-primary">{exp.company}</p>
                                 <p className="text-sm text-gray-600 mb-2">{exp.duration}</p>
                                 <p className="text-gray-700">{exp.description}</p>
                               </div>
@@ -427,7 +424,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
 
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <GraduationCap className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <GraduationCap className="w-5 h-5 mr-2 text-primary" />
                         Education
                       </h3>
                       <div className="space-y-3">
@@ -441,7 +438,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
-                                <p className="font-medium" style={{ color: '#3D52A0' }}>{edu.institution}</p>
+                                <p className="font-medium text-primary">{edu.institution}</p>
                                 <p className="text-sm text-gray-600">{edu.year}</p>
                               </div>
                             </div>
@@ -457,10 +454,10 @@ Her research focuses on deep learning, natural language processing, and ethical 
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <Briefcase className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <Briefcase className="w-5 h-5 mr-2 text-primary" />
                         Recent Projects
                       </h3>
-                      <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                      <button className="hover:opacity-80 text-sm font-medium flex items-center text-primary">
                         View All Projects
                         <ExternalLink className="w-4 h-4 ml-1" />
                       </button>
@@ -489,7 +486,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                               
                               <div className="flex flex-wrap gap-2 mb-4">
                                 {project.tags.map((tag, tagIndex) => (
-                                  <span key={tagIndex} className="px-3 py-1 text-xs rounded-full text-white" style={{ backgroundColor: '#3D52A0' }}>
+                                  <span key={tagIndex} className="px-3 py-1 text-xs rounded-full text-white bg-primary">
                                     {tag}
                                   </span>
                                 ))}
@@ -516,7 +513,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center">
-                  <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                  <DollarSign className="w-5 h-5 mr-2 text-primary" />
                   Consultation Packages
                 </h3>
                 
@@ -539,18 +536,17 @@ Her research focuses on deep learning, natural language processing, and ethical 
                       
                       <div className="text-center">
                         <h4 className="font-bold text-gray-900 text-lg mb-2">{rate.type}</h4>
-                        <div className={`text-3xl font-bold mb-2 ${rate.popular ? 'text-orange-600' : ''}`} style={!rate.popular ? { color: '#3D52A0' } : {}}>
+                        <div className={`text-3xl font-bold mb-2 ${rate.popular ? 'text-orange-600' : 'text-primary'}`}>
                           ${rate.price.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-500 mb-4">{rate.period}</div>
                         <p className="text-sm text-gray-600 mb-4">{rate.description}</p>
-                        <button 
+                        <button
                           className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
-                            rate.popular 
-                              ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                              : 'text-white hover:opacity-90'
+                            rate.popular
+                              ? 'bg-orange-500 text-white hover:bg-orange-600'
+                              : 'bg-primary text-white hover:opacity-90'
                           }`}
-                          style={!rate.popular ? { backgroundColor: '#3D52A0' } : {}}
                         >
                           Select Package
                         </button>
@@ -562,8 +558,8 @@ Her research focuses on deep learning, natural language processing, and ethical 
                 {/* Custom Packages Info */}
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="text-center">
-                    <h4 className="font-bold text-blue-900 mb-2">Need Something Custom?</h4>
-                    <p className="text-sm text-blue-700">For tailored packages that fit your specific requirements, click "Schedule a Meeting" above to discuss your needs.</p>
+                    <h4 className="font-bold text-primary mb-2">Need Something Custom?</h4>
+                    <p className="text-sm text-primary">For tailored packages that fit your specific requirements, click "Schedule a Meeting" above to discuss your needs.</p>
                   </div>
                 </div>
               </div>
@@ -573,8 +569,8 @@ Her research focuses on deep learning, natural language processing, and ethical 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <Star className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-primary" />
                     Client Reviews
                   </h3>
                   <div className="flex items-center space-x-4">
@@ -582,7 +578,7 @@ Her research focuses on deep learning, natural language processing, and ethical 
                       <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
                       <span className="font-medium">{expertData.rating} • {expertData.reviewCount} reviews</span>
                     </div>
-                    <button className="hover:opacity-80 text-sm font-medium flex items-center" style={{ color: '#3D52A0' }}>
+                    <button className="hover:opacity-80 text-sm font-medium flex items-center text-primary">
                       View All Reviews
                       <ExternalLink className="w-4 h-4 ml-1" />
                     </button>

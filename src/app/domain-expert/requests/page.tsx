@@ -12,7 +12,7 @@ type Booking = {
   userLastName?: string
   username?: string
   bookingMode: 'HOURLY' | 'MONTHLY' | 'PROJECT_BASED'
-  status: 'PENDING' | 'UPDATED' | 'CONFIRMED' | 'REJECTED'
+  status: 'PENDING' | 'UPDATED' | 'CONFIRMED' | 'REJECTED' | 'ACCEPTED'
   totalPrice: number
   requestedDate?: string | null // YYYY-MM-DD
   requestedStartTime?: string | null // HH:MM:SS
@@ -32,7 +32,7 @@ type Booking = {
 }
 
 
-const tabs = ['Pending', 'Updated', 'Confirmed', 'Rejected', 'All']
+const tabs = ['Pending', 'Updated', 'Confirmed', 'Accepted', 'Rejected', 'All']
 
 export default function RequestsPage() {
   const searchParams = useSearchParams()
@@ -72,6 +72,7 @@ export default function RequestsPage() {
     (currentTab === 'Pending' && r.status === 'PENDING') ||
     (currentTab === 'Updated' && r.status === 'UPDATED') ||
     (currentTab === 'Confirmed' && r.status === 'CONFIRMED') ||
+    (currentTab === 'Accepted' && r.status === 'ACCEPTED') ||
     (currentTab === 'Rejected' && r.status === 'REJECTED')
   )
 
@@ -155,7 +156,7 @@ export default function RequestsPage() {
     setCurrentTab('Updated')
   }
 
-  // Map API response item to our Booking type (defensive)
+  // Map API response item to Booking type
   const mapApiToBooking = (item: any): Booking => {
     return {
       id: item.id,
@@ -171,7 +172,7 @@ export default function RequestsPage() {
       requestedMonths: item.requestedMonths ?? item.requested_months ?? undefined,
       projectDeadline: item.projectDeadline ?? item.project_deadline ?? null,
       projectDetails: item.projectDetails ?? item.projectDetails ?? item.description ?? null,
-      // proposed/updated values might come from API as updated* fields or proposed* fields
+      // updated values
       updatedDate: item.updatedDate ?? item.proposedDate ?? item.proposed_date ?? null,
       updatedStartTime: item.updatedStartTime ?? item.proposedStartTime ?? item.proposed_start_time ?? null,
       updatedEndTime: item.updatedEndTime ?? item.proposedEndTime ?? item.proposed_end_time ?? null,
@@ -191,7 +192,6 @@ export default function RequestsPage() {
       })
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
       const data = await res.json()
-      // API returns array
       const mapped = Array.isArray(data) ? data.map(mapApiToBooking) : []
       setRequests(mapped)
     } catch (err: any) {
@@ -203,24 +203,20 @@ export default function RequestsPage() {
   }
 
   useEffect(() => {
-    // wait for mentorId and token
     if (!mentorId || !token) return
     fetchBookings(mentorId)
   }, [mentorId, token])
 
-  // close detail on ESC
   useEffect(()=>{
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDetail() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selected])
 
-  // API actions
   const acceptBooking = async (bookingId: string, booking?: Booking) => {
     setIsSubmitting(true)
     try {
       const body: any = {}
-      // try to send minimal useful accepted data if available
       if (booking) {
         if (booking.bookingMode === 'HOURLY') {
           body.acceptedDate = booking.requestedDate

@@ -311,6 +311,7 @@ export default function ChatInterface() {
 
   // Group subscription ref so we can unsubscribe when switching
   const groupSubscriptionRef = useRef<any>(null)
+  const groupSubscriptionRetryRef = useRef<Record<string, number>>({})
 
   // Fetch messages for group
   const fetchGroupMessages = (groupId: string) => {
@@ -344,8 +345,29 @@ export default function ChatInterface() {
   }
 
   const subscribeToGroup = (groupId: string) => {
-    if (!client.current?.connected || !groupId) return
+    if (!groupId) return
+
+    // If client not connected yet, attempt to connect and retry subscription a few times
+    if (!client.current?.connected) {
+      try {
+        connect?.()
+      } catch (e) {
+        // ignore
+      }
+      const attempts = groupSubscriptionRetryRef.current[groupId] || 0
+      if (attempts >= 12) {
+        console.warn(`Giving up subscribing to group ${groupId} after ${attempts} attempts`)
+        return
+      }
+      groupSubscriptionRetryRef.current[groupId] = attempts + 1
+      // retry after a short delay
+      setTimeout(() => subscribeToGroup(groupId), 500)
+      return
+    }
+
     try {
+      // reset retry counter on successful connect
+      if (groupSubscriptionRetryRef.current[groupId]) groupSubscriptionRetryRef.current[groupId] = 0
       groupSubscriptionRef.current?.unsubscribe?.()
       const dest = `/group/${groupId}/messages`
       const sub = subscribe(dest, (msg: any) => {
@@ -377,6 +399,8 @@ export default function ChatInterface() {
     try {
       groupSubscriptionRef.current?.unsubscribe?.()
       groupSubscriptionRef.current = null
+      // clear any pending retry attempts for the active group
+      Object.keys(groupSubscriptionRetryRef.current).forEach(k => { groupSubscriptionRetryRef.current[k] = 0 })
     } catch (e) {
       // ignore
     }
@@ -428,7 +452,7 @@ export default function ChatInterface() {
   const handleSend = () => {
     if (!message.trim() || !client.current?.connected) return
     
-    // Sending to a group
+    // Sending to a group: publish and rely on backend broadcast to update UI
     if (selectedGroup) {
       const groupMessage = {
         senderId: userId,
@@ -436,21 +460,8 @@ export default function ChatInterface() {
         message: message.trim(),
         status: "GROUP_MESSAGE",
       }
-      console.log("Send to the group: ", selectedGroup);
       publish?.("/app/group-message", groupMessage, { Authorization: `Bearer ${token}` })
-      const newMsg = {
-        id: Date.now(),
-        senderId: userId,
-        groupId: selectedGroup.id,
-        message: message.trim(),
-        avatar: "/image/avatar/default.jpg",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isOwn: true,
-      }
-      setMessages((prev) => [...prev, newMsg])
-      setLastMessageId(newMsg.id)
-      // update group's last message
-      setGroups((prev) => prev.map((g) => g.id === selectedGroup.id ? { ...g, lastMessage: message.trim(), time: newMsg.time } : g))
+      // clear input and rely on server broadcast to append message to UI
       setMessage("")
       return
     }
@@ -463,6 +474,7 @@ export default function ChatInterface() {
       message: message.trim(),
       status: "MESSAGE",
     }
+    // Publish private message and rely on backend to broadcast it back to the client
     publish?.("/app/private-message", chatMessage, { Authorization: `Bearer ${token}` })
     const newMsg = {
       id: Date.now(),
@@ -518,7 +530,7 @@ export default function ChatInterface() {
                   placeholder="Search users by username..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 rounded-full border-gray-200 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                  className="pl-10 rounded-full border-gray-200 focus-border-primary focus-ring-primary"
                 />
               </div>
 
@@ -566,19 +578,19 @@ export default function ChatInterface() {
         {/* Chat Tabs */}
         <div className="flex border-b border-gray-200">
           <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'All' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
+            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'All' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
             onClick={() => { setActiveTab('All'); setSelectedGroup(null); unsubscribeGroup(); }}
           >
             All
           </button>
           <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Personal' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
+            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Personal' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
             onClick={() => { setActiveTab('Personal'); setSelectedGroup(null); unsubscribeGroup(); }}
           >
             Personal
           </button>
           <button
-            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Groups' ? 'text-[#3D52A0] border-b-2 border-[#3D52A0]' : 'text-gray-500'}`}
+            className={`flex-1 py-3 px-4 text-sm font-medium ${activeTab === 'Groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
             onClick={() => setActiveTab('Groups')}
           >
             Groups
@@ -598,7 +610,7 @@ export default function ChatInterface() {
               <div
                 key={`chat-${chat.id}`}
                 className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer ${
-                  selectedChat?.id === chat.id && !selectedGroup ? "bg-[#3D52A0]/5" : ""
+                  selectedChat?.id === chat.id && !selectedGroup ? "bg-primary-5" : ""
                 }`}
                 onClick={() => { setSelectedChat(chat); setSelectedGroup(null); unsubscribeGroup(); fetch(`${API_URL}/api/v1/messages/chats/${userId}/${chat.id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : Promise.reject(r)).then(d => { setMessages(d.map((m:any) => ({ id:m.id, senderId:m.senderId, receiverId:m.receiverId, message:m.message, avatar:m.avatar||'/image/avatar/default.jpg', time:m.time, isOwn:m.senderId===userId }))); setTimeout(scrollToBottom,100) }).catch(()=>{}) }}
               >
@@ -628,7 +640,7 @@ export default function ChatInterface() {
                   groups.map((g) => (
                     <div
                       key={`group-${g.id}`}
-                      className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedGroup?.id === g.id ? 'bg-[#3D52A0]/5' : ''}`}
+                      className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedGroup?.id === g.id ? 'bg-primary-5' : ''}`}
                       onClick={() => { setSelectedGroup(g); setSelectedChat(null); fetchGroupMessages(g.id); unsubscribeGroup(); subscribeToGroup(g.id); }}
                     >
                       <Avatar className="h-10 w-10">
@@ -666,7 +678,7 @@ export default function ChatInterface() {
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                     {selectedChat.name}
                   </h3>
-                  <p className="text-sm text-[#3D52A0]">Online</p>
+                  <p className="text-sm text-primary">Online</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -711,14 +723,14 @@ export default function ChatInterface() {
               <div className={`max-w-md ${msg.isOwn ? "order-first" : ""}`}>
                 <div
                   className={`rounded-2xl p-3 transition-all duration-200 ${
-                    msg.isOwn ? "bg-[#3D52A0] text-white" : "bg-gray-100 text-gray-900"
+                    msg.isOwn ? "bg-primary text-white" : "bg-gray-100 text-gray-900"
                   } ${msg.id === lastMessageId ? "scale-105" : "scale-100"}`}
                 >
                   <p className="text-sm">{msg.message}</p>
                 </div>
                 <div className="flex items-center justify-end gap-2 mt-1">
                   <span className="text-xs text-gray-500">{msg.time}</span>
-                  {msg.isOwn && <div className="text-[#3D52A0]">✓✓</div>}
+                  {msg.isOwn && <div className="text-primary">✓✓</div>}
                 </div>
               </div>
               {msg.isOwn && (
@@ -743,7 +755,7 @@ export default function ChatInterface() {
                 placeholder="Write a message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="pr-12 rounded-full border-gray-200 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                className="pr-12 rounded-full border-gray-200 focus-border-primary focus-ring-primary"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault()
@@ -752,7 +764,7 @@ export default function ChatInterface() {
                 }}
               />
             </div>
-            <Button size="icon" className="rounded-full bg-[#3D52A0] hover:bg-[#3D52A0]/90" onClick={handleSend}>
+            <Button size="icon" className="rounded-full bg-primary hover-bg-primary-90" onClick={handleSend}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

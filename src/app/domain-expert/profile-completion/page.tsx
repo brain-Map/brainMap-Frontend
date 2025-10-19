@@ -1,8 +1,10 @@
 'use client'
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, User, BookOpen, Award, Upload, Phone, Mail, MapPin, Calendar, Clock, DollarSign, Users, Plus, Trash2, FileText, Image, File as FileIcon, X, Camera } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/ToastProvider';
 
 interface Education {
   degree: string;
@@ -34,6 +36,8 @@ interface MentorFormData {
 
 export default function MentorRegistrationForm() {
   const { user } = useAuth();
+  const router = useRouter();
+  const { show: showToast } = useToast();
   const token = localStorage.getItem('accessToken');
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [dragActive, setDragActive] = useState<boolean>(false);
@@ -248,9 +252,10 @@ export default function MentorRegistrationForm() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Registration submitted successfully!');
+      showToast('Profile completed successfully!', 'success');
+      router.push('/domain-expert/dashboard');
     } catch (error: any) {
-      alert('Submission failed: ' + (error?.response?.data?.message || error.message));
+      showToast('Submission failed: ' + (error?.response?.data?.message || error.message), 'error');
     }
   };
 

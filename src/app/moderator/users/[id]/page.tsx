@@ -572,14 +572,14 @@ export default function UserDetailPage() {
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {/* Ongoing Projects Stat */}
                   <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                    <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>
+                    <div className="text-2xl font-bold text-primary">
                       {userProjects.filter(p => p.status === 'active').length}
                     </div>
                     <div className="text-xs text-gray-700 font-medium">Ongoing Projects</div>
                   </div>
                   {/* Completed Projects Stat */}
                   <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                    <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>
+                    <div className="text-2xl font-bold text-primary">
                       {userProjects.filter(p => p.status === 'completed').length}
                     </div>
                     <div className="text-xs text-gray-700 font-medium">Completed Projects</div>
@@ -587,28 +587,28 @@ export default function UserDetailPage() {
                   {/* Keep domain expert stats if applicable */}
                   {user.role === 'domain-expert' && user.responseRate && (
                     <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                      <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{user.responseRate}%</div>
+                      <div className="text-2xl font-bold text-primary">{user.responseRate}%</div>
                       <div className="text-xs text-gray-700 font-medium">Response Rate</div>
                     </div>
                   )}
                   {user.role === 'domain-expert' && user.reviewCount && (
                     <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                      <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{user.reviewCount}</div>
+                      <div className="text-2xl font-bold text-primary">{user.reviewCount}</div>
                       <div className="text-xs text-gray-700 font-medium">Reviews</div>
                     </div>
                   )}
                   {user.role === 'domain-expert' && (
                     <>
                       <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                        <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{user.totalSessions}</div>
+                        <div className="text-2xl font-bold text-primary">{user.totalSessions}</div>
                         <div className="text-xs text-gray-700 font-medium">Sessions</div>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                        <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{user.mentorshipHours}</div>
+                        <div className="text-2xl font-bold text-primary">{user.mentorshipHours}</div>
                         <div className="text-xs text-gray-700 font-medium">Hours</div>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                        <div className="text-2xl font-bold" style={{ color: '#3D52A0' }}>{user.rating}/5</div>
+                        <div className="text-2xl font-bold text-primary">{user.rating}/5</div>
                         <div className="text-xs text-gray-700 font-medium">Rating</div>
                       </div>
                     </>
@@ -620,7 +620,7 @@ export default function UserDetailPage() {
             {/* Contact Information */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Mail className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                <Mail className="w-5 h-5 mr-2 text-primary" />
                 Contact Information
               </h3>
               <div className="space-y-3">
@@ -655,7 +655,7 @@ export default function UserDetailPage() {
             {user.role === 'domain-expert' && user.expertise && user.expertise.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                          <Award className="w-5 h-5 mr-2 text-primary" />
                   Areas of Expertise
                 </h3>
                 <div className="space-y-3">
@@ -663,14 +663,14 @@ export default function UserDetailPage() {
                     <div key={index} className="p-3 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium text-gray-900 text-sm">{item.skill}</span>
-                        <span className="text-xs font-semibold" style={{ color: '#3D52A0' }}>{item.level}%</span>
+                        <span className="text-xs font-semibold text-primary">{item.level}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1.5">
                         <div 
                           className="h-1.5 rounded-full transition-all duration-300"
                           style={{ 
                             width: `${item.level}%`,
-                            backgroundColor: '#3D52A0'
+                            backgroundColor: 'var(--color-primary)'
                           }}
                         ></div>
                       </div>
@@ -705,8 +705,8 @@ export default function UserDetailPage() {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                     style={activeTab === tab.key ? { 
-                      borderBottomColor: '#3D52A0', 
-                      color: '#3D52A0' 
+                      borderBottomColor: 'var(--color-primary)', 
+                      color: 'var(--color-primary)' 
                     } : {}}
                   >
                     {tab.label}
@@ -718,7 +718,7 @@ export default function UserDetailPage() {
                 {activeTab === 'hired-experts' && user.role === 'project-member' && (
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                      <Award className="w-5 h-5 mr-2 text-primary" />
                       Hired Domain Experts
                     </h3>
                     {hiredExperts.length === 0 ? (
@@ -765,7 +765,7 @@ export default function UserDetailPage() {
                     {user.bio && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                          <User className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                          <User className="w-5 h-5 mr-2 text-primary" />
                           About
                         </h3>
                         <div className="text-gray-700 leading-relaxed">
@@ -778,7 +778,7 @@ export default function UserDetailPage() {
 
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <Activity className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <Activity className="w-5 h-5 mr-2 text-primary" />
                         Account Details
                       </h3>
                       <div className="grid grid-cols-2 gap-6">
@@ -819,7 +819,7 @@ export default function UserDetailPage() {
                     {user.role === 'domain-expert' && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                          <Award className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                          <Award className="w-5 h-5 mr-2 text-primary" />
                           Performance Metrics
                         </h3>
                         <div className="grid grid-cols-2 gap-6">
@@ -856,7 +856,7 @@ export default function UserDetailPage() {
                     {user.experience && user.experience.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                          <Briefcase className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                          <Briefcase className="w-5 h-5 mr-2 text-primary" />
                           Professional Experience
                         </h3>
                         <div className="space-y-4">
@@ -865,12 +865,12 @@ export default function UserDetailPage() {
                               <div className="flex space-x-4">
                                 <div className="flex-shrink-0">
                                   <div className="w-12 h-12 border rounded-lg flex items-center justify-center" style={{ backgroundColor: '#F0F4FF', borderColor: '#B8C5E0' }}>
-                                    <Briefcase className="w-6 h-6" style={{ color: '#3D52A0' }} />
+                                    <Briefcase className="w-6 h-6 text-primary" />
                                   </div>
                                 </div>
                                 <div className="flex-1">
                                   <h4 className="font-semibold text-gray-900">{exp.position}</h4>
-                                  <p className="font-medium" style={{ color: '#3D52A0' }}>{exp.company}</p>
+                                  <p className="font-medium text-primary">{exp.company}</p>
                                   <p className="text-sm text-gray-600 mb-2">{exp.duration}</p>
                                   <p className="text-gray-700">{exp.description}</p>
                                 </div>
@@ -885,7 +885,7 @@ export default function UserDetailPage() {
                     {user.education && user.education.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                          <GraduationCap className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                          <GraduationCap className="w-5 h-5 mr-2 text-primary" />
                           Education
                         </h3>
                         <div className="space-y-4">
@@ -899,7 +899,7 @@ export default function UserDetailPage() {
                                 </div>
                                 <div className="flex-1">
                                   <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
-                                  <p className="font-medium" style={{ color: '#3D52A0' }}>{edu.institution}</p>
+                                  <p className="font-medium text-primary">{edu.institution}</p>
                                   <p className="text-sm text-gray-600">{edu.year}</p>
                                 </div>
                               </div>
@@ -916,7 +916,7 @@ export default function UserDetailPage() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <BookOpen className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <BookOpen className="w-5 h-5 mr-2 text-primary" />
                         {user.role === 'domain-expert' ? 'Mentored Projects' : 'Participating Projects'}
                       </h3>
                     </div>
@@ -960,7 +960,7 @@ export default function UserDetailPage() {
                               {project.tags && project.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                   {project.tags.map((tag, tagIndex) => (
-                                    <span key={tagIndex} className="px-3 py-1 text-xs rounded-full text-white" style={{ backgroundColor: '#3D52A0' }}>
+                                    <span key={tagIndex} className="px-3 py-1 text-xs rounded-full text-white bg-primary">
                                       {tag}
                                     </span>
                                   ))}
@@ -977,7 +977,7 @@ export default function UserDetailPage() {
                                     className="h-2 rounded-full transition-all duration-300"
                                     style={{ 
                                       width: `${project.progress}%`,
-                                      backgroundColor: '#3D52A0'
+                                      backgroundColor: 'var(--color-primary)'
                                     }}
                                   ></div>
                                 </div>
@@ -1004,15 +1004,15 @@ export default function UserDetailPage() {
                 {activeTab === 'activity' && (
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <Activity className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                      <Activity className="w-5 h-5 mr-2 text-primary" />
                       Recent Activity
                     </h3>
                     <div className="space-y-4">
                       {recentActivity.map((activity) => (
                         <div key={activity.id} className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
                           <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F0F4FF' }}>
-                              <div style={{ color: '#3D52A0' }}>
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-5">
+                              <div className="text-primary">
                                 {getActivityIcon(activity.type)}
                               </div>
                             </div>
@@ -1034,7 +1034,7 @@ export default function UserDetailPage() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <Star className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                        <Star className="w-5 h-5 mr-2 text-primary" />
                         Client Reviews
                       </h3>
                       <div className="flex items-center space-x-4">
@@ -1078,7 +1078,7 @@ export default function UserDetailPage() {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2" style={{ color: '#3D52A0' }} />
+                    <DollarSign className="w-5 h-5 mr-2 text-primary" />
                     Consultation Packages
                   </h3>
                   
@@ -1101,7 +1101,7 @@ export default function UserDetailPage() {
                         
                         <div className="text-center">
                           <h4 className="font-bold text-gray-900 text-lg mb-2">{pkg.type}</h4>
-                          <div className={`text-3xl font-bold mb-2 ${pkg.popular ? 'text-orange-600' : ''}`} style={!pkg.popular ? { color: '#3D52A0' } : {}}>
+                          <div className={`text-3xl font-bold mb-2 ${pkg.popular ? 'text-orange-600' : ''}`} style={!pkg.popular ? { color: 'var(--color-primary)' } : {}}>
                             ${pkg.price.toLocaleString()}
                           </div>
                           <div className="text-sm text-gray-500 mb-4">{pkg.period}</div>
@@ -1114,7 +1114,7 @@ export default function UserDetailPage() {
                   {/* Custom Packages Info */}
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="text-center">
-                      <h4 className="font-bold text-blue-900 mb-2">Custom Packages Available</h4>
+                      <h4 className="font-bold text-primary mb-2">Custom Packages Available</h4>
                       <p className="text-sm text-blue-700">This expert allows custom packages tailored to specific requirements and project needs.</p>
                     </div>
                   </div>

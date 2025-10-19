@@ -128,7 +128,7 @@ const AboutUs: React.FC = () => {
                 <span className="text-slate-700 font-medium">Empowering Project Success Since 2020</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-8 leading-tight">
+              <h1 className="text-5xl md:text-6xl font-bold text-primary mb-8 leading-tight">
                 About{' '}
                 <span className="text-primary">
                    brainMap
