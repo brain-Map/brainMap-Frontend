@@ -58,25 +58,16 @@ export function Sidebar() {
       title: "Appointment Requests",
       icon: BookOpen,
       url: "/domain-expert/requests",
-      count: "3",
-    },
-    {
-      title: "Chat Messages",
-      url: "/chat",
-      icon: MessageSquare,
-      count: "5",
     },
     {
       title: "Video Calls",
       url: "/domain-expert/video-calls",
       icon: Video,
-      count: "2",
     },
     {
       title: "Ratings & Reviews",
       icon: Star,
       url: "/domain-expert/reviews",
-      count: "12",
     },
   ]
 
@@ -86,7 +77,6 @@ export function Sidebar() {
       title: "Finances",
       icon: CreditCard,
       url: "/domain-expert/finances",
-      count: "Rs. 3,240",
     },
   ]
 
@@ -132,7 +122,6 @@ export function Sidebar() {
                   {/* <div className={`w-2 h-2 rounded-full ${item.color}`}></div> */}
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1 text-left">{item.title}</span>
-                  <span className="text-xs text-gray-500">{item.count}</span>
                 </button>
               ))}
             </div>
@@ -154,7 +143,6 @@ export function Sidebar() {
                 >
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1 text-left">{item.title}</span>
-                  <span className="text-xs text-gray-500">{item.count}</span>
                 </button>
               ))}
             </div>

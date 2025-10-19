@@ -3,8 +3,7 @@
 import React from 'react';
 import { MentorPublicProfile, Service } from '@/types/mentor';
 // import { ServiceCard } from './ServiceCard';
-import { ServiceCard } from "@/components/services/ServiceCard"
-
+import { MentorProfileServiceCard } from './MentorProfileServiceCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface MentorServicesProps {
@@ -32,7 +31,7 @@ export const MentorServices: React.FC<MentorServicesProps> = ({ services, onBook
         <h2 className="text-2xl font-bold mb-6">Services Offered ({services.length})</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
-            <ServiceCard key={service.serviceId} service={service} onBook={onBookService} />
+            <MentorProfileServiceCard key={service.serviceId} service={service}/>
           ))}
         </div>
       </div>

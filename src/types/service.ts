@@ -21,7 +21,7 @@ export interface ServiceListing {
   category?: string;
   description: string;
   availabilityModes: string[]; // e.g. ["HOURLY","MONTHLY","PROJECT_BASED"]
-  availabilities: ServiceAvailability[];
+  // availabilities: ServiceAvailability[];
   thumbnailUrl?: string;
   createdAt: string;
   updatedAt: string;
