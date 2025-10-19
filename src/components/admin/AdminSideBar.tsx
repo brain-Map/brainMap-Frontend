@@ -70,7 +70,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   const menuItems: MenuItem[] = [
     { title: "Dashboard", icon: Home, url: "/admin" },
     // { title: "Content", icon: FileText, url: "/admin/content" },
-    { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
+    // { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
     { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
     // { title: "Settings", icon: Settings, url: "/admin/settings" },
     {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
@@ -100,7 +100,14 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     url: "/admin/userManagement/addAdministrator",
     count: "",
     color: "bg-green-500",
-  },
+    },
+    {
+        title: "Expert Approvals",
+        icon: UserCheck,
+        url: "/admin/userManagement/expert-approval",
+        count: "",
+        color: "bg-yellow-500",
+      }
   ];
 
   // Moderation Items
