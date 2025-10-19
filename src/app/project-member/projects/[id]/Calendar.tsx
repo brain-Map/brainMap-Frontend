@@ -258,10 +258,10 @@ export default function EventCalendarApp() {
                             <Clock size={16} />
                             {event.createdTime}
                           </span>
-                          <span className="flex items-center gap-1">
+                          {/* <span className="flex items-center gap-1">
                             <User size={16} />
                             {event.userId}
-                          </span>
+                          </span> */}
                         </div>
                       </div>
                     </div>
