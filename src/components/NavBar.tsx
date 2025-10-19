@@ -98,16 +98,17 @@ const NavBar: React.FC = () => {
     { label: 'Find Experts', href: '/search-experts' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for project members
   const projectMemberNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/project-member/dashboard' },
-    { label: 'Find a Mentor', href: '/search-experts' },
     { label: 'Find a Service', href: '/services' },
     { label: 'Community', href: '/community' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for mentors (previously domain experts)
@@ -118,6 +119,7 @@ const NavBar: React.FC = () => {
     { label: 'Community', href: '/community' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for moderators
@@ -128,6 +130,7 @@ const NavBar: React.FC = () => {
     { label: 'Reports', href: '/moderator/reports' },
     { label: 'Withdrawals', href: '/moderator/withdrawals' },
     { label: 'Settings', href: '/moderator/settings' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for admins
@@ -138,6 +141,7 @@ const NavBar: React.FC = () => {
     { label: 'Messages', href: '/admin/messages' },
     { label: 'Reports', href: '/admin/reports' },
     { label: 'Settings', href: '/admin/settings' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Determine which navigation items to use
@@ -170,8 +174,8 @@ const NavBar: React.FC = () => {
         description: 'Manage your profile'
       },
       { 
-        label: userRole == "Mentor" ? "Edit Profile" : 'Settings', 
-        href: userRole == "Mentor" ? "/domain-expert/edit-profile" : '/settings', 
+        label: 'Settings', 
+        href: userRole == "Mentor" ? "/domain-expert/settings" : '/settings', 
         icon: <Settings className="w-4 h-4" />,
         description: 'Account preferences'
       },
