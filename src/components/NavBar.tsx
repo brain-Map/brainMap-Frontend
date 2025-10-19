@@ -261,7 +261,7 @@ const NavBar: React.FC = () => {
   const getCreateButtonConfig = () => {
     switch (userRole) {
       case 'Project Member':
-        return { text: 'New Project', action: () => console.log('Create project') };
+        return { text: 'New Project', action: () => router.push('/project-member/projects/create-project') };
       case 'Mentor':
         return { text: 'New Package', action: () => console.log('Create package') };
       case 'Moderator':

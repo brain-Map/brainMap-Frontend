@@ -115,7 +115,6 @@ const visibleProjects = showAll
   const menuItems: MenuItem[] = [
     { title: "Dashboard", icon: Home, url: "/project-member/dashboard", pathname: "dashboard" },
     { title: "Projects", icon: FileText, url: "/project-member/projects", pathname: "projects" },
-    { title: "Messages", icon: MessageSquare, url: "/project-member/chat" , pathname: "chat"},
     { title: "Calendar", icon: Calendar, url: "/project-member/calendar", pathname: "calendar" },
     { title: "Notes", icon: NotepadText , url: "/project-member/notes", pathname: "notes" },
     { title: "Feedbacks", icon: Star, url: "/project-member/feedbacks", pathname: "feedbacks" },
