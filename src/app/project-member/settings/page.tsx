@@ -13,6 +13,9 @@ import { uploadImage } from "@/lib/storageClient";
 import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileEditor from "./ProfileEditor";
+import DeleteModal from "@/components/modals/DeleteModal";
+import { useDeleteModal } from "@/hooks/useDeleteModal";
+import Swal from "sweetalert2";
 
 interface SettingsProps {}
 
@@ -60,13 +63,21 @@ const settingsFunctions = {
 };
 
 const SettingsPage: React.FC<SettingsProps> = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const userId = user?.id;
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [oneUserData, setOneUserData] = useState<OneUser | null>(null);
   const [activeTab, setActiveTab] = useState("profile");
   const [showSuccess, setShowSuccess] = useState(false);
+  // Delete modal state via shared hook for consistent UX
+  const { openModal: openDeleteModal, modalProps: deleteModalProps } = useDeleteModal({
+    title: "Delete Account",
+    confirmText: "Delete Account",
+    cancelText: "Cancel",
+    message:
+      "This will permanently delete your account and all associated data. This action cannot be undone.",
+  });
 
   const { updatePassword } = useAuth();
 
@@ -78,6 +89,49 @@ const SettingsPage: React.FC<SettingsProps> = () => {
   const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<
     "success" | "error" | null
   >(null);
+
+  // Handles actual user deletion API call and result alerts
+  const handleDeleteAccount = async () => {
+    if (!userId) {
+      await Swal.fire({
+        icon: "error",
+        title: "Cannot delete account",
+        text: "No user is currently logged in.",
+        confirmButtonText: "Close",
+      });
+      return;
+    }
+
+    try {
+      await api.delete(`/api/v1/admin/deleteUser/${userId}`);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Account deleted",
+        text:
+          "Your account and all associated data have been permanently deleted. We're sorry to see you go.",
+        confirmButtonText: "OK",
+      });
+
+      // Sign out locally after deletion
+      await signOut();
+    } catch (err: any) {
+      // Extract error details comprehensively
+      const status = err?.response?.status;
+      const serverMessage =
+        err?.response?.data?.message || err?.response?.data?.error || err?.message || "Unknown error";
+
+      await Swal.fire({
+        icon: "error",
+        title: "Could not delete account",
+        html: `<div class="text-left">\
+                <p class="mb-2">${serverMessage}</p>\
+                ${status ? `<p class="text-sm text-gray-500">Status code: ${status}</p>` : ""}\
+              </div>`,
+        confirmButtonText: "Close",
+      });
+    }
+  };
 
   const handlePasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
@@ -410,7 +464,10 @@ const SettingsPage: React.FC<SettingsProps> = () => {
                             data
                           </p>
                         </div>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <button
+                          onClick={() => openDeleteModal(handleDeleteAccount, [], "your account")}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
                           Delete Account
                         </button>
                       </div>
@@ -523,9 +580,21 @@ const SettingsPage: React.FC<SettingsProps> = () => {
             )}
           </div>
         </div>
+        {/* Global delete confirmation modal */}
+        <DeleteModal {...deleteModalProps} />
       </div>
     </div>
   );
 };
 
 export default SettingsPage;
+
+// Render the shared DeleteModal once at the root of this page
+// Note: In Next.js App Router, placing portals at the page root ensures proper stacking
+// We append this after export default due to file structure; bundler will still include it.
+// Alternatively, move inside the component return near the end if preferred.
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+(() => {
+  // This IIFE is a no-op placeholder to keep file-level additions minimal.
+})();
+
