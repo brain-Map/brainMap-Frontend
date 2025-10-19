@@ -1,49 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import api from '@/utils/api';
+import {useAuth} from '@/contexts/AuthContext';
 
 interface Event {
-  id: string;
+  eventId: string;
+  projectId: string;
   title: string;
-  date: string;
-  time: string;
-  location: string;
   description: string;
-  organizer: string;
+  createDate: string;
+  dueDate: string;
+  userId: string;
+  createdTime: string;
+}
+
+interface CalendarEventApi {
+  projectId: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  dueTime: string;
+  userId: string;
+}
+
+interface FormData {
+    title: string;
+    dueDate: string;
+    dueTime: string;
+    description: string;
+}
+
+const CalendarData = {
+    getCalendarEvents: async (projectId: string) => {
+      try {
+      const response = await api.get(`/project-member/projects/kanban-board/${projectId}`);
+      console.log('kanban Data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching kanban:', error);
+      throw error;
+    }
+    },
+
+    createEvent: async (Event: CalendarEventApi) => {
+        try {
+          const response = await api.post(`/project-member/projects/create-events`, Event);
+          console.log('Created Event:', response.data);
+          return response.data;
+        } catch (error) {
+          console.error('Error creating event:', error);
+          throw error;
+        }
+    }
 }
 
 export default function EventCalendarApp() {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Team Meeting',
-      date: '2025-10-20',
-      time: '10:00',
-      location: 'Conference Room A',
-      description: 'Monthly team sync-up meeting',
-      organizer: 'John Doe'
-    },
-    {
-      id: '2',
-      title: 'Project Deadline',
-      date: '2025-10-25',
-      time: '17:00',
-      location: 'Online',
-      description: 'Final submission for Q4 project',
-      organizer: 'Jane Smith'
-    }
-  ]);
+    const user = useAuth().user;
+  const params = useParams();
+  const projectId = params?.id as string;
 
+  const [events, setEvents] = useState<Event[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 19)); // October 2025
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
-    organizer: ''
+    dueDate: '',
+    dueTime: '',
+    description: ''
   });
+
+  // Load events on component mount
+  useEffect(() => {
+    if (projectId) {
+      loadEvents();
+    }
+  }, [projectId]);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const data = await CalendarData.getCalendarEvents(projectId);
+      if (data && Array.isArray(data)) {
+        setEvents(data);
+      }
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -57,7 +105,7 @@ export default function EventCalendarApp() {
   };
 
   const getEventsForDate = (date: string) => {
-    return events.filter(event => event.date === date);
+    return events.filter(event => event.dueDate === date);
   };
 
   const formatDate = (date: Date) => {
@@ -72,26 +120,50 @@ export default function EventCalendarApp() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
-  const handleCreateEvent = () => {
-    if (!formData.title || !formData.date || !formData.time || !formData.location || !formData.description || !formData.organizer) {
+  const handleCreateEvent = async () => {
+    if (!formData.title || !formData.dueDate || !formData.dueTime || !formData.description) {
       alert('Please fill in all fields');
       return;
     }
-    
-    const newEvent: Event = {
-      id: Date.now().toString(),
-      ...formData
-    };
-    setEvents([...events, newEvent]);
-    setFormData({
-      title: '',
-      date: '',
-      time: '',
-      location: '',
-      description: '',
-      organizer: ''
-    });
-    setShowCreateModal(false);
+
+    try {
+      setLoading(true);
+      
+      // Get userId from localStorage or auth context
+      const userId = user?.id || '';
+      
+      const eventData: CalendarEventApi = {
+        projectId,
+        title: formData.title,
+        description: formData.description,
+        dueDate: formData.dueDate,
+        dueTime: formData.dueTime,
+        userId
+      };
+      console.log('Creating event with data:', eventData);
+
+      // Call the API to create the event
+      const createdEvent = await CalendarData.createEvent(eventData);
+      
+      // Reload events from backend to get the updated list
+      await loadEvents();
+      
+      // Reset form
+      setFormData({
+        title: '',
+        dueDate: '',
+        dueTime: '',
+        description: ''
+      });
+      setShowCreateModal(false);
+      
+      alert('Event created successfully!');
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      alert('Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
@@ -121,11 +193,11 @@ export default function EventCalendarApp() {
         <div className="space-y-1">
           {dayEvents.slice(0, 2).map(event => (
             <div
-              key={event.id}
+              key={event.eventId}
               onClick={() => setSelectedEvent(event)}
               className="text-xs bg-blue-500 text-white px-2 py-1 rounded cursor-pointer hover:bg-blue-600 truncate"
             >
-              {event.time} - {event.title}
+              {event.createdTime} - {event.title}
             </div>
           ))}
           {dayEvents.length > 2 && (
@@ -188,10 +260,10 @@ export default function EventCalendarApp() {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Events</h3>
             <div className="space-y-3">
               {events
-                .sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime())
+                .sort((a, b) => new Date(a.dueDate + ' ' + a.createdTime).getTime() - new Date(b.dueDate + ' ' + b.createdTime).getTime())
                 .map(event => (
                   <div
-                    key={event.id}
+                    key={event.eventId}
                     onClick={() => setSelectedEvent(event)}
                     className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                   >
@@ -201,15 +273,15 @@ export default function EventCalendarApp() {
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <Calendar size={16} />
-                            {new Date(event.date).toLocaleDateString()}
+                            {new Date(event.dueDate).toLocaleDateString()}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock size={16} />
-                            {event.time}
+                            {event.createdTime}
                           </span>
                           <span className="flex items-center gap-1">
-                            <MapPin size={16} />
-                            {event.location}
+                            <User size={16} />
+                            {event.userId}
                           </span>
                         </div>
                       </div>
@@ -237,19 +309,19 @@ export default function EventCalendarApp() {
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-gray-700">
                 <Calendar size={20} className="text-blue-600" />
-                <span>{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span>{new Date(selectedEvent.dueDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               <div className="flex items-center gap-3 text-gray-700">
                 <Clock size={20} className="text-blue-600" />
-                <span>{selectedEvent.time}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <MapPin size={20} className="text-blue-600" />
-                <span>{selectedEvent.location}</span>
+                <span>{selectedEvent.createdTime}</span>
               </div>
               <div className="flex items-center gap-3 text-gray-700">
                 <User size={20} className="text-blue-600" />
-                <span>{selectedEvent.organizer}</span>
+                <span>User: {selectedEvent.userId}</span>
+              </div>
+              <div className="flex items-center gap-3 text-gray-700">
+                <Calendar size={20} className="text-blue-600" />
+                <span>Created: {new Date(selectedEvent.createDate).toLocaleDateString()}</span>
               </div>
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="font-semibold text-gray-800 mb-2">Description</h4>
@@ -289,8 +361,8 @@ export default function EventCalendarApp() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                   <input
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    value={formData.dueDate}
+                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -298,32 +370,14 @@ export default function EventCalendarApp() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                   <input
                     type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    value={formData.dueTime}
+                    onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter location"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Organizer</label>
-                <input
-                  type="text"
-                  value={formData.organizer}
-                  onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter organizer name"
-                />
-              </div>
+              
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
