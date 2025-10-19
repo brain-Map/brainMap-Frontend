@@ -318,8 +318,7 @@ export default function MentorEditForm() {
       );
 
       alert('Profile updated successfully!');
-      // Redirect back to domain-expert dashboard
-      router.push(`/domain-expert/${id}/dashboard`);
+      router.push(`/mentor/${id}/`);
     } catch (error: any) {
       alert('Update failed: ' + (error?.response?.data?.message || error.message));
     }
@@ -857,9 +856,9 @@ export default function MentorEditForm() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 mt-16">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-lg p-8">
+    <div className="">
+      <div className="mx-auto">
+        <div className="bg-white rounded-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-primary mb-2">Edit Mentor Profile</h1>
             <p className="text-gray-600">Update your mentor profile details</p>
