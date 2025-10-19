@@ -11,12 +11,9 @@ interface MentorHeaderProps {
 }
 
 export const MentorHeader: React.FC<MentorHeaderProps> = ({ mentor }) => {
+  console.log("Mentorrrrrrr: ", mentor);
+  
   const profileImage = mentor.profilePhotoUrl || mentor.avatar;
-  // Build a safe image URL:
-  // - If profileImage is an absolute URL, use it
-  // - Else if NEXT_PUBLIC_API_URL is set, join them
-  // - Else use a relative path (ensures '/uploads/...' works from public or server)
-  // Use a leading slash for public images so Next/Image receives a valid relative path
   let imageUrl = '/image/user_placeholder.jpg';
   if (profileImage) {
     if (/^https?:\/\//i.test(profileImage)) {
@@ -24,12 +21,10 @@ export const MentorHeader: React.FC<MentorHeaderProps> = ({ mentor }) => {
     } else if (process.env.NEXT_PUBLIC_API_URL) {
       const base = String(process.env.NEXT_PUBLIC_API_URL).replace(/\/+$/g, '');
       const path = String(profileImage).replace(/^\/+/, '');
-      // Ensure we form a valid absolute URL; guard against invalid NEXT_PUBLIC_API_URL or profileImage
       try {
         const maybeUrl = new URL(`${base}/${path}`);
         imageUrl = maybeUrl.toString();
       } catch (err) {
-        // fall back to placeholder
         imageUrl = '/image/user_placeholder.jpg';
       }
     } else {
@@ -45,7 +40,7 @@ export const MentorHeader: React.FC<MentorHeaderProps> = ({ mentor }) => {
           <div className="flex-shrink-0">
             <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-4 border-blue-400 shadow-lg">
               <Image
-                src={"https://uvekrjsbsjxvaveqtbnu.supabase.co/storage/v1/object/public/uploads/avatars/56fd13ac-095a-409b-83bb-97452c446b5c.png?t=1760625878370"}
+                src={imageUrl}
                 alt={`${mentor.firstName} ${mentor.lastName}`}
                 fill
                 className="object-cover"

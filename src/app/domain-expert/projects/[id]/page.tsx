@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import ProjectOverview from "@/app/domain-expert/projects/ProjectOverview";
 import KanbanBoard from "@/app/project-member/projects/[id]/Kanban";
 import ProjectChat from "@/app/project-member/projects/[id]/ProjectChat";
+import VideoCallPage from "@/app/video-call/page";
 
 export default function DomainExpertProjectPage() {
   const params = useParams();
@@ -45,7 +46,7 @@ export default function DomainExpertProjectPage() {
             <div className="bg-white rounded-lg border p-6">Calendar view (TODO: integrate calendar component)</div>
           )}
           {activeTab === 'Video' && (
-            <div className="bg-white rounded-lg border p-6">Videos view (TODO: integrate videos player/list)</div>
+            <VideoCallPage/>
           )}
         </div>
       </div>
