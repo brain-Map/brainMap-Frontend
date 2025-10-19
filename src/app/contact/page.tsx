@@ -183,13 +183,6 @@ const ContactUs: React.FC = () => {
       action: 'Start Chat'
     },
     {
-      icon: HelpCircle,
-      title: 'Help Center',
-      description: 'Browse our comprehensive knowledge base',
-      availability: 'Self-service',
-      action: 'Visit Help Center'
-    },
-    {
       icon: Users,
       title: 'Community Forum',
       description: 'Ask questions and get help from other users and experts',
@@ -224,7 +217,7 @@ const ContactUs: React.FC = () => {
               Looking for community guidance? We're here to assist you every step of the way in your project journey.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center00">
               <CustomButton
                 text="Start Live Chat"
                 backgroundColor="bg-white"
@@ -447,8 +440,8 @@ const ContactUs: React.FC = () => {
       </section>
 
       {/* Support Channels */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-20 bg-gray-50 mx-auto">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center bg-primary/10 rounded-full px-4 py-2 mb-6">
               <HelpCircle className="w-5 h-5 text-primary mr-2" />
@@ -465,7 +458,7 @@ const ContactUs: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {supportChannels.map((channel, index) => (
               <div key={index} className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-6">
@@ -482,6 +475,8 @@ const ContactUs: React.FC = () => {
                   textColor="text-white"
                   hoverBackgroundColor="hover:bg-secondary hover:text-black"
                   onClick={() => handleClick(channel.action)}
+                  className='mx-auto'
+                  
                 />
               </div>
             ))}
