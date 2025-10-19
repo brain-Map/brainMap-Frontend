@@ -226,6 +226,40 @@ class PaymentApiService {
       );
     }
   }
+
+  /**
+   * Update payment session status to COMPLETED
+   * This should be called after successful payment verification
+   */
+  async updatePaymentSessionStatus(paymentId: string, status: string = 'COMPLETED'): Promise<any> {
+    try {
+      console.log('🔄 [PAYMENT STATUS] Updating payment session status...');
+      console.log('🔄 [PAYMENT STATUS] Payment ID:', paymentId);
+      console.log('🔄 [PAYMENT STATUS] New Status:', status);
+      console.log('🔗 [PAYMENT STATUS] Backend URL:', api.defaults.baseURL + `/api/payments/${paymentId}/status`);
+      
+      const response = await api.put(`/api/payments/${paymentId}/status`, { status });
+      
+      console.log('✅ [PAYMENT STATUS] Payment session status updated successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ [PAYMENT STATUS] Failed to update payment session status:', error);
+      console.error('❌ [PAYMENT STATUS] Error response:', error.response?.data);
+      console.error('❌ [PAYMENT STATUS] Error status:', error.response?.status);
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required to update payment status');
+      } else if (error.response?.status === 404) {
+        throw new Error('Payment session not found');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.message || 'Invalid status update request');
+      }
+      
+      throw new Error(
+        error.response?.data?.message || 'Failed to update payment session status'
+      );
+    }
+  }
 }
 
 export const paymentApiService = new PaymentApiService();
