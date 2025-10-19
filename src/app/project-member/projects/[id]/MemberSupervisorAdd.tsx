@@ -484,32 +484,32 @@ useEffect(() => {
 
       {/* Search Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/75 bg-opacity-10 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl mx-4 text-white">
+        <div className="fixed inset-0 bg-black/50 bg-opacity-10 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-4 text-gray-900">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium">
                 Add people to your project
               </h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-gray-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <p className="text-gray-300 text-sm mb-4">
+            <p className="text-gray-900 text-sm mb-4">
               Search by email
             </p>
             
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 w-4 h-4" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Find people"
-                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-blue-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-blue-200 rounded text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
             </div>
@@ -521,10 +521,10 @@ useEffect(() => {
                   {selectedUsers.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-3 bg-primary border border-primary rounded"
+                      className="flex items-center justify-between p-3 bg-primary border-gray-300 border rounded"
                     >
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                        <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-gray-900 font-medium text-sm mr-3 overflow-hidden">
                           {user.avatar ? (
                             <img
                               src={user.avatar}
@@ -540,17 +540,17 @@ useEffect(() => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">
+                          <p className="text-sm font-medium text-gray-900 truncate">
                             {user.name}
                           </p>
-                          <p className="text-xs text-blue-300 truncate">
+                          <p className="text-xs text-gray-400 truncate">
                             {user.username}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => removeSelectedUser(user.id)}
-                        className="text-blue-300 hover:text-white transition-colors"
+                        className="text-blue-300 hover:text-gray-900 transition-colors"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -560,7 +560,7 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="max-h-64 overflow-y-auto mb-4 border border-gray-700 rounded">
+            <div className="max-h-64 overflow-y-auto mb-4 border border-gray-300 rounded">
               {searchQuery && filteredUsers.length > 0 ? (
                 <div className="divide-y divide-gray-700">
                   {filteredUsers
@@ -569,9 +569,9 @@ useEffect(() => {
                     <div
                       key={user.id}
                       onClick={() => selectUser(user)}
-                      className="flex items-center p-3 hover:bg-gray-700 transition-colors cursor-pointer"
+                      className="flex items-center p-3 hover:bg-gray-300 transition-colors cursor-pointer"
                     >
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">
+                      <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-gray-900 font-medium text-sm mr-3 overflow-hidden">
                           {user.avatar ? (
                             <img
                               src={user.avatar}
@@ -587,10 +587,10 @@ useEffect(() => {
                           )}
                         </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {user.name}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">
+                        <p className="text-xs text-gray-600 truncate">
                           {user.username} • Invite collaborator
                         </p>
                       </div>
