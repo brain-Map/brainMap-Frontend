@@ -21,10 +21,10 @@ interface CheckoutProps {
 }
 
 export default function CheckoutPage({
-  amount = 1000,
+  amount: propAmount = 1000,
   currency = 'LKR',
-  orderId = `ORDER_${Date.now()}`,
-  itemDescription = 'BrainMap Service',
+  orderId: propOrderId = `ORDER_${Date.now()}`,
+  itemDescription: propItemDescription = 'BrainMap Service',
   customerName = '',
   customerEmail = '',
   customerPhone = '',
@@ -44,10 +44,67 @@ export default function CheckoutPage({
     country
   });
   const [showTestCards, setShowTestCards] = useState(false);
+  
+  // Dynamic payment details from URL params
+  const [amount, setAmount] = useState(propAmount);
+  const [itemDescription, setItemDescription] = useState(propItemDescription);
+  const [orderId, setOrderId] = useState(propOrderId);
+  const [serviceId, setServiceId] = useState<string>('');
+  const [bookingId, setBookingId] = useState<string>('');
+  const [mentorId, setMentorId] = useState<string>('');
 
   // Get PayHere configuration
   const payHereConfigData = payHereConfig.getConfig();
   const testCards = payHereConfig.getTestCards();
+
+  // Extract query parameters on mount
+  useEffect(() => {
+    console.log('🔍 [CHECKOUT] Checking for URL parameters...');
+    
+    // Get query parameters from URL
+    const params = new URLSearchParams(window.location.search);
+    const amountParam = params.get('amount');
+    const serviceTitleParam = params.get('serviceTitle');
+    const serviceIdParam = params.get('serviceId');
+    const bookingIdParam = params.get('bookingId');
+    const mentorIdParam = params.get('mentorId');
+    
+    console.log('📊 [CHECKOUT] URL Parameters:', {
+      amount: amountParam,
+      serviceTitle: serviceTitleParam,
+      serviceId: serviceIdParam,
+      bookingId: bookingIdParam,
+      mentorId: mentorIdParam
+    });
+    
+    // Update state with URL parameters if they exist
+    if (amountParam) {
+      const parsedAmount = parseFloat(amountParam);
+      setAmount(parsedAmount);
+      console.log('💰 [CHECKOUT] Amount set to:', parsedAmount);
+    }
+    
+    if (serviceTitleParam) {
+      setItemDescription(serviceTitleParam);
+      console.log('📝 [CHECKOUT] Service title set to:', serviceTitleParam);
+    }
+    
+    if (serviceIdParam) {
+      setServiceId(serviceIdParam);
+      setOrderId(`ORDER_${serviceIdParam}_${Date.now()}`);
+      console.log('🆔 [CHECKOUT] Service ID set to:', serviceIdParam);
+    }
+    
+    if (bookingIdParam) {
+      setBookingId(bookingIdParam);
+      console.log('📋 [CHECKOUT] Booking ID set to:', bookingIdParam);
+    }
+    
+    if (mentorIdParam) {
+      setMentorId(mentorIdParam);
+      console.log('👤 [CHECKOUT] Mentor ID set to:', mentorIdParam);
+    }
+  }, []);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -146,8 +203,11 @@ export default function CheckoutPage({
         paymentId: response.paymentId,
         orderId: response.orderId,
         amount: response.amount,
-        currency: response.currency
+        currency: response.currency,
+        mentorId: mentorId || undefined
       }));
+
+      console.log('💾 [CHECKOUT] Stored payment info with mentor ID:', mentorId);
 
       // Redirect to PayHere hosted payment page
       window.location.href = response.redirectUrl;
@@ -247,6 +307,24 @@ export default function CheckoutPage({
                   <span className="text-gray-600">Order ID:</span>
                   <span className="text-gray-900 text-sm font-mono">{orderId}</span>
                 </div>
+                {mentorId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Mentor ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{mentorId}</span>
+                  </div>
+                )}
+                {serviceId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Service ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{serviceId}</span>
+                  </div>
+                )}
+                {bookingId && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-gray-600">Booking ID:</span>
+                    <span className="text-gray-900 text-sm font-mono">{bookingId}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-4">
                   <span className="text-xl font-semibold text-gray-900">Total:</span>
                   <span className="text-2xl font-bold text-blue-600">{currency} {amount.toLocaleString()}</span>

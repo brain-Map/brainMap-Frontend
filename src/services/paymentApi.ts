@@ -36,6 +36,22 @@ export interface PaymentStatusResponse {
   message?: string;
 }
 
+export interface TransactionRequest {
+  amount: number;
+  senderId: string;    // UUID format - User ID of the payer (student/project member)
+  receiverId: string;  // UUID format - User ID of the receiver (mentor/domain expert)
+  status: string;      // Transaction status: 'COMPLETED', 'PENDING', 'FAILED'
+}
+
+export interface TransactionResponse {
+  id: string;          // UUID format - Transaction ID
+  amount: number;
+  senderId: string;    // UUID format - User ID of the payer
+  receiverId: string;  // UUID format - User ID of the receiver
+  status: string;
+  createdAt: string;   // ISO 8601 timestamp
+}
+
 class PaymentApiService {
   /**
    * Create a new PayHere payment session
@@ -163,6 +179,52 @@ class PaymentApiService {
    */
   getTestCards() {
     return payHereConfig.getTestCards();
+  }
+
+  /**
+   * Record a transaction in the database after successful payment
+   */
+  async recordTransaction(transactionData: TransactionRequest): Promise<TransactionResponse> {
+    try {
+      // UUID format validation (basic check)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (!uuidRegex.test(transactionData.senderId)) {
+        console.warn('⚠️ [TRANSACTION] senderId may not be in valid UUID format:', transactionData.senderId);
+      } else {
+        console.log('✅ [TRANSACTION] senderId is valid UUID format');
+      }
+      
+      if (!uuidRegex.test(transactionData.receiverId)) {
+        console.warn('⚠️ [TRANSACTION] receiverId may not be in valid UUID format:', transactionData.receiverId);
+      } else {
+        console.log('✅ [TRANSACTION] receiverId is valid UUID format');
+      }
+      
+      console.log('💾 [TRANSACTION] Recording transaction:', transactionData);
+      console.log('🔗 [TRANSACTION] Backend URL:', api.defaults.baseURL + '/api/transactions/record');
+      
+      const response = await api.post('/api/transactions/record', transactionData);
+      
+      console.log('✅ [TRANSACTION] Transaction recorded successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ [TRANSACTION] Failed to record transaction:', error);
+      console.error('❌ [TRANSACTION] Error response:', error.response?.data);
+      console.error('❌ [TRANSACTION] Error status:', error.response?.status);
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required to record transaction');
+      } else if (error.response?.status === 404) {
+        throw new Error('Transaction recording endpoint not found');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.message || 'Invalid transaction data');
+      }
+      
+      throw new Error(
+        error.response?.data?.message || 'Failed to record transaction'
+      );
+    }
   }
 }
 
