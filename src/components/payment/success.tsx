@@ -113,7 +113,8 @@ export default function PaymentSuccess() {
                 amount: status.amount,
                 senderId: user.id,
                 receiverId: finalMentorId,
-                status: 'COMPLETED'
+                status: 'COMPLETED',
+                paymentId: finalPaymentId || null
               };
               
               console.log('📦 [SUCCESS] Transaction payload:', JSON.stringify(transactionData, null, 2));
