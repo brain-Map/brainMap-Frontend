@@ -21,6 +21,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<{ data: any, error: any }>;
   updatePassword: (newPassword: string) => Promise<{ data: any, error: any }>;
+  sendPasswordResetEmail: (email: string) => Promise<{ data: any, error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateUserMetadata: async () => ({ data: null, error: null }),
   updatePassword: async () => ({ data: null, error: null }),
+  sendPasswordResetEmail: async () => ({ data: null, error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -166,6 +168,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/');
   };
 
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      // redirectTo should point to a page in the app that tells user to check their email
+      const redirectTo = (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password` : `${typeof window !== 'undefined' ? window.location.origin + '/reset-password' : '/reset-password'}`);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
   const updateUserMetadata = async (metadata: { name?: string; user_role?: string }) => {
     const { data, error } = await supabase.auth.updateUser({ data: metadata });
     if (!error && data?.user) {
@@ -187,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateUserMetadata,
     updatePassword,
+    sendPasswordResetEmail,
   };
 
   return (
