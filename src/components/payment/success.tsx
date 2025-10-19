@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentApiService, PaymentStatusResponse } from '@/services/paymentApi';
 import { supabase } from '@/lib/superbaseClient';
@@ -13,8 +13,17 @@ export default function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mentorId, setMentorId] = useState<string | null>(null);
+  
+  // useRef to prevent duplicate execution in React Strict Mode
+  const hasRecordedTransaction = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate execution
+    if (hasRecordedTransaction.current) {
+      console.log('⏭️ [SUCCESS] Transaction already processed, skipping...');
+      return;
+    }
+
     const verifyPayment = async () => {
       try {
         // Get payment details from URL parameters or localStorage
@@ -67,6 +76,9 @@ export default function PaymentSuccess() {
 
         // Record transaction if payment is successful
         if (status.status === 'PENDING') {
+          // Mark as processed immediately to prevent duplicate calls
+          hasRecordedTransaction.current = true;
+          
           try {
             // Get current user from Supabase session
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -83,10 +95,11 @@ export default function PaymentSuccess() {
             console.log('👤 [SUCCESS] User email:', user?.email);
             
             if (user && user.id && finalMentorId) {
-              console.log('💾 [SUCCESS] Recording transaction...');
+              console.log('💾 [SUCCESS] Recording transaction and updating payment status...');
               console.log('💾 [SUCCESS] Amount:', status.amount);
               console.log('💾 [SUCCESS] Sender ID (current user):', user.id);
               console.log('💾 [SUCCESS] Receiver ID (mentor):', finalMentorId);
+              console.log('💾 [SUCCESS] Payment ID (payment_sessions.payment_id):', finalPaymentId);
               
               // Validate UUID format
               const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -100,13 +113,24 @@ export default function PaymentSuccess() {
                 amount: status.amount,
                 senderId: user.id,
                 receiverId: finalMentorId,
-                status: 'COMPLETED'
+                status: 'COMPLETED',
+                paymentId: finalPaymentId || null
               };
               
               console.log('📦 [SUCCESS] Transaction payload:', JSON.stringify(transactionData, null, 2));
               
-              await paymentApiService.recordTransaction(transactionData);
-              console.log('✅ [SUCCESS] Transaction recorded successfully');
+              // Execute both operations simultaneously using Promise.all
+              console.log('⚡ [SUCCESS] Executing transaction record and payment status update simultaneously...');
+              console.log('📝 [SUCCESS] Will update payment_sessions WHERE payment_id =', finalPaymentId);
+              console.log('🛡️ [SUCCESS] Using useRef guard to prevent duplicate execution');
+              
+              const [transactionResult, paymentStatusResult] = await Promise.all([
+                paymentApiService.recordTransaction(transactionData),
+                finalPaymentId ? paymentApiService.updatePaymentSessionStatus(finalPaymentId, 'COMPLETED') : Promise.resolve(null)
+              ]);
+              
+              console.log('✅ [SUCCESS] Transaction recorded successfully:', transactionResult);
+              console.log('✅ [SUCCESS] Payment session status updated successfully:', paymentStatusResult);
               toast.success('Payment and transaction recorded successfully!');
             } else {
               console.warn('⚠️ [SUCCESS] Missing user ID or mentor ID, transaction not recorded');
@@ -116,17 +140,17 @@ export default function PaymentSuccess() {
               toast.success('Payment completed successfully!');
             }
           } catch (transactionError: any) {
-            console.error('❌ [SUCCESS] Failed to record transaction:', transactionError);
+            console.error('❌ [SUCCESS] Failed to record transaction or update payment status:', transactionError);
             // Don't fail the entire process if transaction recording fails
             toast.success('Payment completed successfully!');
             toast.error('Failed to record transaction in database');
+            // Keep the ref as true to prevent retry
           }
           
           // Clear stored payment info on successful verification
           localStorage.removeItem('currentPayment');
-        } else if (status.status === 'PENDING') {
-          toast.loading('Payment is being processed...');
         } else {
+          console.log('⏭️ [SUCCESS] Payment status is not PENDING, skipping transaction recording');
           toast.error('Payment verification failed');
         }
 
@@ -134,14 +158,18 @@ export default function PaymentSuccess() {
         console.error('❌ [SUCCESS] Payment verification failed:', err);
         setError(err.message || 'Failed to verify payment status');
         toast.error('Failed to verify payment status');
+        // Reset the ref on error to allow retry
+        hasRecordedTransaction.current = false;
       } finally {
         setLoading(false);
       }
     };
+    
     console.log('🔍 [SUCCESS] Search Params:', searchParams);
+    console.log('🛡️ [SUCCESS] Has recorded transaction:', hasRecordedTransaction.current);
 
     verifyPayment();
-  }, []);
+  }, [searchParams]);
 
   const handleContinue = () => {
     // Navigate to dashboard or appropriate page
