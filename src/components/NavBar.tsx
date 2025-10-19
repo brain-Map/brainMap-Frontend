@@ -85,7 +85,7 @@ const NavBar: React.FC = () => {
   const visitorNavItems: NavItem[] = [
     {
       label: 'Why brainMap?',
-      href: '/why-brainMap',
+      href: '/features',
       hasDropdown: true,
       dropdownItems: [
         { label: 'Project Management', href: '/features/project-management', description: 'Smart tools & collaboration', icon: <Grid3X3 className="w-4 h-4" /> },
