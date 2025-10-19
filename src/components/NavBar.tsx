@@ -197,7 +197,7 @@ const NavBar: React.FC = () => {
         return [
           { 
             label: 'Dashboard', 
-            href: '/mentor/dashboard', 
+            href: '/domain-expert/dashboard', 
             icon: <LayoutDashboard className="w-4 h-4" />,
             description: 'Manage your services'
           },
