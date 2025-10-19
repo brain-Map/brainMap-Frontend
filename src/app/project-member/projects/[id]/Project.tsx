@@ -8,6 +8,8 @@ import ProjectChat from './ProjectChat';
 import { projectApi, ProjectResponse } from '@/services/projectApi';
 import api from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
+import EventCalendarApp from './Calendar';
+import VideoCallPage from '../../../../app/video-call/page'
 
 
 
@@ -440,10 +442,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         )}
 
         {activeTab === 'Calendar' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar</h2>
-            <p className="text-gray-700">Calendar events or date pickers go here.</p>
-          </div>
+          <EventCalendarApp/>
         )}
 
         {activeTab === 'Kanban' &&  <KanbanBoard />}
@@ -457,10 +456,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
 
 
         {activeTab === 'Video' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Video Meetings</h2>
-            <p className="text-gray-700">Video embed or meeting info.</p>
-          </div>
+          <VideoCallPage />
         )}
 
         {activeTab === 'Settings' && (
