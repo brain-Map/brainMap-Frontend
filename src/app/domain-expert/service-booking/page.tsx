@@ -316,7 +316,7 @@ const Index = () => {
       <div className="container mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-primary mb-2">Booking Requests</h1>
-          <p className="text-blue-900">Manage your service booking requests</p>
+          <p className="text-primary">Manage your service booking requests</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v as any)}>

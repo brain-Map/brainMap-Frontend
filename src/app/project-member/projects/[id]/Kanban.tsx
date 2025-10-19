@@ -1017,7 +1017,7 @@ const TaskCard: React.FC<{ task: Task; currentColumnId: string }> = ({ task, cur
               {/* Left Column - Basic Information */}
               <div className="space-y-6">
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="text-lg font-medium text-blue-900 mb-4">Task Information</h3>
+                  <h3 className="text-lg font-medium text-primary mb-4">Task Information</h3>
                   
                   <div className="space-y-4">
                     <div>

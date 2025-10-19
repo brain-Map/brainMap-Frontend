@@ -32,7 +32,7 @@ export default function ProfileSetupPopup({ open, onSetUpProfile, onNotNow }: Pr
         </div>
         {/* Content */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-6 text-blue-900">
+          <h2 className="text-2xl font-bold mb-6 text-primary">
             Complete Your Profile to Get Verified!
           </h2>
           
@@ -59,13 +59,13 @@ export default function ProfileSetupPopup({ open, onSetUpProfile, onNotNow }: Pr
 
           <div className="flex justify-center space-x-4">
             <button
-              className="px-8 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition font-medium"
+              className="px-8 py-3 bg-primary text-white rounded-lg hover-bg-primary-90 transition font-medium"
               onClick={onSetUpProfile}
             >
               Set Up Profile & Get Verified
             </button>
             <button
-              className="px-6 py-3 text-blue-900 hover:text-blue-800 transition font-medium"
+              className="px-6 py-3 text-primary hover:text-primary transition font-medium"
               onClick={onNotNow}
             >
               Maybe Later

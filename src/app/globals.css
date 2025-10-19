@@ -135,7 +135,21 @@
   --color-danger: #FF6B6B;
   --color-info: #00B8D9;
   --color-accent: #F4D06F;
+  /* RGB helper for creating translucent variants from the primary color
+     Default is blue-900 (#3D52A0) -> rgb(61,82,160) */
+  --color-primary-rgb: 61,82,160;
+  
+}
 
+/* Role-based overrides: when the html or body has class `role-mentor` we
+   switch primary variables to Tailwind green-600 (#16A34A) so the UI
+   adapts for mentor users. */
+.role-mentor {
+  --color-primary: #16A34A; /* green-600 */
+  --color-primary-foreground: #ffffff;
+  --sidebar-primary: #16A34A;
+  --ring: rgba(22,163,74,0.5);
+  --color-primary-rgb: 22,163,74;
 }
 
 /* @layer base {
@@ -208,3 +222,15 @@
 .animate-slideUp {
   animation: slideUp 0.3s ease-out;
 }
+
+/* Lightweight utility classes that reference the CSS variable based primary
+  color. Use these where components previously used hard-coded blue values. */
+.text-primary { color: var(--color-primary) !important; }
+.bg-primary { background-color: var(--color-primary) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
+.bg-primary-5 { background-color: rgba(var(--color-primary-rgb), 0.05) !important; }
+.hover-bg-primary-90:hover { background-color: rgba(var(--color-primary-rgb), 0.9) !important; }
+
+/* Focus utilities to map previous focus:border[#...] and focus:ring[#...] usages */
+.focus-border-primary:focus { border-color: var(--color-primary) !important; }
+.focus-ring-primary:focus { box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.12) !important; }

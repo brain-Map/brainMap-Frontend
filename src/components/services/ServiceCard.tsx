@@ -114,7 +114,7 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
           )}
 
           {/* Service Title */}
-          <h3 className="text-xl font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug group-hover:text-blue-900 transition-colors">
+          <h3 className="text-xl font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug group-hover:text-primary transition-colors">
             {service.title}
           </h3>
 

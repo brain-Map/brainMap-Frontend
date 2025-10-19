@@ -85,7 +85,7 @@ const NavBar: React.FC = () => {
   const visitorNavItems: NavItem[] = [
     {
       label: 'Why brainMap?',
-      href: '/why-brainMap',
+      href: '/features',
       hasDropdown: true,
       dropdownItems: [
         { label: 'Project Management', href: '/features/project-management', description: 'Smart tools & collaboration', icon: <Grid3X3 className="w-4 h-4" /> },
@@ -298,7 +298,7 @@ const NavBar: React.FC = () => {
 
   return (
     <>
-      <header className={`z-9999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
+      <header className={`z-999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
         <nav className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             

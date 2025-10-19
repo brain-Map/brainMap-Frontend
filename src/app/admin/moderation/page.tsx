@@ -716,7 +716,7 @@ export default function InquiryManagement() {
                     placeholder="Search by user, title or reason..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                    className="pl-10 border-gray-300 focus-border-primary focus-ring-primary"
                   />
                 </div>
               </div>
@@ -726,7 +726,7 @@ export default function InquiryManagement() {
                     Status
                   </label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                    <SelectTrigger className="border-gray-300 focus-border-primary focus-ring-primary">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -742,7 +742,7 @@ export default function InquiryManagement() {
                     Inquiry Type
                   </label>
                   <Select value={inquiryTypeFilter} onValueChange={setInquiryTypeFilter}>
-                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                    <SelectTrigger className="border-gray-300 focus-border-primary focus-ring-primary">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -833,7 +833,7 @@ export default function InquiryManagement() {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border-2 border-gray-200">
                           <AvatarImage src={userAvatar || ""} />
-                          <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
+                          <AvatarFallback className="bg-primary text-white text-sm font-medium">
                             {avatarInitials}
                           </AvatarFallback>
                         </Avatar>
@@ -966,7 +966,7 @@ export default function InquiryManagement() {
                         onClick={() => setCurrentPage(page)}
                         className={
                           safeCurrentPage === page
-                            ? "bg-[#3D52A0] text-white hover:bg-[#2A3B7D] border-[#3D52A0]"
+                            ? "bg-primary text-white hover-bg-primary-90 border-primary"
                             : "border-gray-300 text-gray-700 hover:bg-white"
                         }
                       >

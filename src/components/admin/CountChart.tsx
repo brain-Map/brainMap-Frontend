@@ -165,39 +165,39 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
             {/* Growth Metrics */}
             <div className="grid gap-4 md:grid-cols-3 mb-6 p-4">
               {/* Total Registrations */}
-              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
-                  <Users className="h-5 w-5 text-blue-600" />
+                  <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary-5">
+                  <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Total Registrations</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                  <p className="text-2xl font-bold text-primary leading-none">
                     {totalRegistrations}
                   </p>
                 </div>
               </div>
 
               {/* Avg Monthly */}
-              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100">
                   <TrendingUp className="h-5 w-5 text-indigo-600" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Avg Monthly</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                  <p className="text-2xl font-bold text-primary leading-none">
                     {monthlyAvg}
                   </p>
                 </div>
               </div>
 
               {/* Peak Month */}
-              <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-100">
                   <Award className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium mb-1">Peak Month</p>
-                  <p className="text-2xl font-bold text-blue-900 leading-none">
+                  <p className="text-2xl font-bold text-primary leading-none">
                     {chartData?.reduce((max: any, item: any) => 
                       (max.total || 0) > item.total ? max : item, {}).month || "N/A"}
                   </p>
@@ -217,10 +217,10 @@ export class CountChart extends Component<{ userTrend?: any }, {}> {
                   <Line
                     type="monotone"
                     dataKey="total"
-                    stroke="#3D52A0"
+                    stroke="var(--color-primary)"
                     strokeWidth={3}
-                    dot={{ fill: "#3D52A0", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: "#3D52A0", strokeWidth: 2 }}
+                    dot={{ fill: 'var(--color-primary)', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: 'var(--color-primary)', strokeWidth: 2 }}
                     name="Total Registrations"
                   />
 
