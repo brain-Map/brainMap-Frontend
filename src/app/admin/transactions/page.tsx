@@ -919,7 +919,7 @@ export default function TransactionsPage() {
                                 className="text-orange-600 focus:text-orange-700"
                               >
                                 <Flag className="w-4 h-4 mr-2" />
-                                Flag for Review
+                                {/* Flag for Review */}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
