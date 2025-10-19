@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, User, X, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import api from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +43,17 @@ const CalendarData = {
       return response.data;
     } catch (error) {
       console.error('Error creating event:', error);
+      throw error;
+    }
+  },
+
+  deleteEvent: async (eventId: string) => {
+    try {
+      const response = await api.delete(`/project-member/projects/delete-events/${eventId}`);
+      console.log('Deleted Event:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting event:', error);
       throw error;
     }
   }
@@ -140,6 +151,26 @@ export default function EventCalendarApp() {
     } catch (error) {
       console.error('Failed to create event:', error);
       alert('Failed to create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    console.log('Deleting event with ID:', eventId);
+    if (!confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await CalendarData.deleteEvent(eventId);
+      await loadEvents();
+      setSelectedEvent(null);
+      alert('Event deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      alert('Failed to delete event. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -281,12 +312,22 @@ export default function EventCalendarApp() {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-2xl font-bold text-gray-800">{selectedEvent.title}</h3>
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDeleteEvent(selectedEvent.eventId)}
+                  disabled={loading}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                  title="Delete Event"
+                >
+                  <Trash2 size={20} />
+                </button>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
+                </button>
+              </div>
             </div>
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-gray-700">
