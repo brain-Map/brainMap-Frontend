@@ -10,6 +10,7 @@ import api from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 import EventCalendarApp from './Calendar';
 import VideoCallPage from '../../../../app/video-call/page'
+import FileUploadInterface from './Files';
 
 
 
@@ -182,6 +183,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
 
   const tabs = [
     { name: 'Overview', icon: Edit },
+    { name: 'Files', icon: List },
     { name: 'Calendar', icon: Calendar },
     { name: 'Kanban', icon: SquareKanban  },
     { name: 'Message', icon: MessageSquare },
@@ -425,6 +427,9 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
           <ProjectSettingsPage />
         )}
 
+        {activeTab === 'Files' && (
+          <FileUploadInterface />
+        )}
 
 
 
