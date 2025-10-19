@@ -55,7 +55,7 @@ export const adminApi = {
   },
 
   deleteProject: async (projectId: string) => {
-    const response = await api.delete(`/project-member/projects/${projectId}`);
+    const response = await api.delete(`/api/v1/admin/projects/${projectId}`);
     return response.data;
   }
 };
