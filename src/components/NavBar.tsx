@@ -256,6 +256,7 @@ const NavBar: React.FC = () => {
         return 'Search projects, experts, or topics...';
     }
   };
+console.log(user);
 
   // Get role-specific create button text and action
   const getCreateButtonConfig = () => {
