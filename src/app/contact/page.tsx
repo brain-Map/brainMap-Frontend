@@ -54,22 +54,54 @@ const ContactUs: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Send email via API (App Router API route lives at /api/send-email)
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 'nadunmadusanka564@gmail.com', // Your support email
+          subject: `[${categories.find(c => c.value === formData.category)?.label}] ${formData.subject}`,
+          replyTo: formData.email,
+          message: `
+            <h2>New Contact Form Submission</h2>
+            <p><strong>From:</strong> ${formData.name}</p>
+            <p><strong>Email:</strong> ${formData.email}</p>
+            <p><strong>Category:</strong> ${categories.find(c => c.value === formData.category)?.label}</p>
+            <p><strong>Subject:</strong> ${formData.subject}</p>
+            <hr/>
+            <p><strong>Message:</strong></p>
+            <p>${formData.message.replace(/\n/g, '<br>')}</p>
+          `,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsSubmitted(true);
+        // Reset form after successful submission
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({
+            name: '',
+            email: '',
+            subject: '',
+            category: 'general',
+            message: ''
+          });
+        }, 3000);
+      } else {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send message. Please try again later.');
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-      // Reset form after successful submission
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          name: '',
-          email: '',
-          subject: '',
-          category: 'general',
-          message: ''
-        });
-      }, 3000);
-    }, 2000);
+    }
   };
 
   const handleClick = (buttonName: string) => {
