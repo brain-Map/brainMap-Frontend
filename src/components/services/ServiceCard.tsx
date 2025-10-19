@@ -52,7 +52,6 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
   const reviewCount = Math.floor(Math.random() * 1000) + 100
   const thumbnailUrl = getImageUrl(service.thumbnailUrl)
   const mentorAvatarUrl = getImageUrl(service.mentorAvatar)
-  const availabilitySummary = getAvailabilitySummary(service.availabilities)
 
   console.log("serrrrr: ", service.pricings);
   

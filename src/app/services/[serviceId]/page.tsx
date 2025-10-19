@@ -31,6 +31,23 @@ export default function ServicePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const getImageUrl = (thumbnailUrl: string | null | undefined): string => {
+  if (!thumbnailUrl) return "/image/default_card.jpg"
+
+  if (thumbnailUrl.startsWith("http://") || thumbnailUrl.startsWith("https://")) {
+    return thumbnailUrl
+  }
+
+  const uploadsIndex = thumbnailUrl.indexOf("uploads/")
+  if (uploadsIndex !== -1) {
+    const relativePath = thumbnailUrl.substring(uploadsIndex)
+    const port = process.env.NEXT_PUBLIC_BACKEND_PORT || "8000"
+    return `http://localhost:${port}/${relativePath}`
+  }
+
+  return "/image/default_card.jpg"
+}
+
   useEffect(() => {
     const fetchService = async () => {
       try {
@@ -42,15 +59,13 @@ export default function ServicePage() {
         console.log("Service data: ", serviceData);
         
         
-        // TODO: Fetch mentor information from backend when endpoint is available
-        // For now, adding mock mentor data
         const serviceWithMentorInfo: ServiceDetailData = {
           ...serviceData,
           subject: (serviceData as any).subject || serviceData.category || 'General',
           duration: (serviceData as any).duration ?? null,
           mentorName: `${serviceData.mentorFirstName} ${serviceData.mentorLastName}`,
           mentorAvatar: `${serviceData.mentorAvatar}` || '/image/avatar/default.jpg',
-          thumbnailUrl: serviceData.thumbnailUrl || '/image/default_card.jpg',
+          thumbnailUrl: getImageUrl(serviceData.thumbnailUrl),
           mentorLevel: 2,
           rating: 4.8,
           reviewCount: Math.floor(Math.random() * 500) + 100,
