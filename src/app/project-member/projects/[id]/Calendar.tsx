@@ -304,10 +304,10 @@ export default function EventCalendarApp() {
                 <Clock size={20} className="text-blue-600" />
                 <span>{selectedEvent.createdTime}</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-700">
+              {/* <div className="flex items-center gap-3 text-gray-700">
                 <User size={20} className="text-blue-600" />
                 <span>User: {selectedEvent.userId}</span>
-              </div>
+              </div> */}
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="font-semibold text-gray-800 mb-2">Description</h4>
                 <p className="text-gray-600">{selectedEvent.description}</p>
