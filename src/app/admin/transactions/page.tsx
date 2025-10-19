@@ -39,15 +39,17 @@ interface TransactionDetail {
 
 const statusBadgeClass = (status: string) => {
   const s = status?.toUpperCase();
-  if (s === "COMPLETED" || s === "APPROVED") return "bg-green-100 text-green-700";
+  if (s === "SUCCESS") return "bg-green-100 text-green-700";
+  if (s === "REFUNDED") return "bg-sky-100 text-sky-700";
   if (s === "PENDING") return "bg-yellow-100 text-yellow-700";
-  if (s === "FAILED" || s === "REJECTED") return "bg-red-100 text-red-700";
+  if (s === "FAILED" || s === "CANCELLED") return "bg-red-100 text-red-700";
   return "bg-gray-100 text-gray-700";
 };
 
 const typeBadgeClass = (type: string) => {
   const t = type?.toUpperCase();
   if (t === "PAYMENT") return "bg-blue-100 text-blue-700";
+  if (t === "REFUND") return "bg-teal-100 text-teal-700";
   if (t === "WITHDRAWAL") return "bg-purple-100 text-purple-700";
   return "bg-gray-100 text-gray-700";
 };
@@ -62,6 +64,7 @@ export default function TransactionsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all"); // Matches either sender or receiver role
+  const [datePeriod, setDatePeriod] = useState("all"); // all | today | 7d | 30d | 90d
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,21 +103,43 @@ export default function TransactionsPage() {
       );
     }
 
+    // Status filter (PENDING, SUCCESS, FAILED, CANCELLED, REFUNDED)
     if (statusFilter !== "all") {
       list = list.filter((t) => t.status?.toUpperCase() === statusFilter.toUpperCase());
     }
 
+    // Type filter (PAYMENT, REFUND, WITHDRAWAL)
     if (typeFilter !== "all") {
       list = list.filter((t) => t.paymentType?.toUpperCase() === typeFilter.toUpperCase());
     }
 
+    // Role filter (sender or receiver)
     if (roleFilter !== "all") {
       const rf = roleFilter.toUpperCase();
       list = list.filter((t) => t.senderRole?.toUpperCase() === rf || t.receiverRole?.toUpperCase() === rf);
     }
 
+    // Day period filter
+    if (datePeriod !== "all") {
+      const now = new Date();
+      let threshold: Date | null = null;
+      if (datePeriod === "today") {
+        // Start of today
+        threshold = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        list = list.filter((t) => new Date(t.createdAt) >= threshold!);
+      } else {
+        const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
+        const days = daysMap[datePeriod];
+        if (days) {
+          const ms = days * 24 * 60 * 60 * 1000;
+          const since = new Date(now.getTime() - ms);
+          list = list.filter((t) => new Date(t.createdAt) >= since);
+        }
+      }
+    }
+
     return list;
-  }, [transactions, searchTerm, statusFilter, typeFilter, roleFilter]);
+  }, [transactions, searchTerm, statusFilter, typeFilter, roleFilter, datePeriod]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const startIndex = Math.max(0, (currentPage - 1) * itemsPerPage);
@@ -123,13 +148,14 @@ export default function TransactionsPage() {
   useEffect(() => {
     // Reset to first page when filters/search change
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, typeFilter, roleFilter]);
+  }, [searchTerm, statusFilter, typeFilter, roleFilter, datePeriod]);
 
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setTypeFilter("all");
     setRoleFilter("all");
+    setDatePeriod("all");
     setCurrentPage(1);
   };
 
@@ -168,7 +194,7 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:w-auto">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 lg:w-auto">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -178,9 +204,10 @@ export default function TransactionsPage() {
                     <SelectContent className="bg-white">
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="SUCCESS">Success</SelectItem>
                       <SelectItem value="FAILED">Failed</SelectItem>
-                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      <SelectItem value="REFUNDED">Refunded</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -194,6 +221,7 @@ export default function TransactionsPage() {
                     <SelectContent className="bg-white">
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="PAYMENT">Payment</SelectItem>
+                      <SelectItem value="REFUND">Refund</SelectItem>
                       <SelectItem value="WITHDRAWAL">Withdrawal</SelectItem>
                     </SelectContent>
                   </Select>
@@ -209,6 +237,22 @@ export default function TransactionsPage() {
                       <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="PROJECT_MEMBER">Member</SelectItem>
                       <SelectItem value="MENTOR">Mentor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                  <Select value={datePeriod} onValueChange={setDatePeriod}>
+                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                      <SelectValue placeholder="All Periods" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">All Periods</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="7d">Last 7 days</SelectItem>
+                      <SelectItem value="30d">Last 30 days</SelectItem>
+                      <SelectItem value="90d">Last 90 days</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -256,7 +300,7 @@ export default function TransactionsPage() {
                   <TableHead className="font-semibold text-gray-900 py-4">Type</TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4">Amount</TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4">Status</TableHead>
-                  <TableHead className="font-semibold text-gray-900 py-4">Service</TableHead>
+                  {/* <TableHead className="font-semibold text-gray-900 py-4">Service</TableHead> */}
                   <TableHead className="font-semibold text-gray-900 py-4">Created</TableHead>
                 </TableRow>
               </TableHeader>
@@ -316,7 +360,7 @@ export default function TransactionsPage() {
                       <TableCell className="py-4">
                         <Badge className={statusBadgeClass(t.status)}>{t.status}</Badge>
                       </TableCell>
-                      <TableCell className="py-4 text-gray-700">{t.serviceListTitle ?? "-"}</TableCell>
+                      {/* <TableCell className="py-4 text-gray-700">{t.serviceListTitle ?? "-"}</TableCell> */}
                       <TableCell className="py-4 text-gray-700">{createdStr}</TableCell>
                     </TableRow>
                   );
