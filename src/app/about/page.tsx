@@ -115,6 +115,7 @@ const AboutUs: React.FC = () => {
       description: 'Former Microsoft PM focused on project management tools and collaborative user experiences for diverse industries.'
     }
   ];
+console.log("hello");
 
   return (
     <>
