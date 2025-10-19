@@ -434,9 +434,9 @@ export default function VideoCallPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/30 via-value3/30 to-secondary/30 p-6">
-      <div className="max-w-4xl mx-auto pt-20 space-y-6">
-        {/* Header */}
+    <div className="min-h-screen p-6">
+      <div className="max-w-4xl mx-auto pt-30 space-y-6">
+        {/* Header
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">
             BrainMap Video Calls
@@ -444,7 +444,7 @@ export default function VideoCallPage() {
           <p className="text-lg text-gray-600">
             Connect, collaborate, and communicate with your team
           </p>
-        </div>
+        </div> */}
 
         {/* Main Actions */}
         {activeView === 'home' && (
