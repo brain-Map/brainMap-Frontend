@@ -74,6 +74,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
     // { title: "Settings", icon: Settings, url: "/admin/settings" },
     {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
+    {title: "Projects", icon: FileText, url: "/admin/projects"},
   ];
 
   // User Management Items
