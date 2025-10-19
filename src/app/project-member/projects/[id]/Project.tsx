@@ -391,45 +391,7 @@ export default function ProjectOverview({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      {/* Project Stats */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 border-b border-gray-200 pb-4">
-          Project Stats
-        </h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-sm text-gray-600">Tasks Completed</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-900">24/37</span>
-              <div className="w-20 bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full"
-                  style={{ width: "65%" }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-600">Time Spent</span>
-            </div>
-            <span className="font-medium text-gray-900">142h</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-orange-600" />
-              <span className="text-sm text-gray-600">Comments</span>
-            </div>
-            <span className="font-medium text-gray-900">156</span>
-          </div>
-        </div>
-      </div>
+      
     </div>
           
         )}
