@@ -521,7 +521,7 @@ useEffect(() => {
                   {selectedUsers.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-3 bg-blue-900 border border-blue-700 rounded"
+                      className="flex items-center justify-between p-3 bg-primary border border-primary rounded"
                     >
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3 overflow-hidden">

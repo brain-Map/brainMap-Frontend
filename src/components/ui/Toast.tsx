@@ -26,7 +26,7 @@ const styleByType: Record<ToastType, { bg: string; border: string; text: string;
   info: {
     bg: 'bg-gradient-to-br from-blue-50 to-blue-100',
     border: 'border-blue-300',
-    text: 'text-blue-900',
+  text: 'text-primary',
     icon: 'text-blue-600',
   },
   warning: {
