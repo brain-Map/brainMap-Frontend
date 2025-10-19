@@ -1,0 +1,345 @@
+"use client";
+
+import React from "react";
+import {
+  Home,
+  Users,
+  FileText,
+  MessageSquare,
+  Settings,
+  CheckCircle,
+  Lock,
+  TrendingUp,
+  Shield,
+  Bell,
+  Calendar,
+  Flag,
+  UserPlus,
+  UserX,
+  UserCheck,
+  GraduationCap,
+  Award,
+  Wallet,
+} from "lucide-react";
+import { Router } from "next/router";
+
+interface MenuItem {
+  title: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  url: string;
+}
+
+interface UserManagementItem {
+  title: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  url: string;
+  count: string;
+  color: string;
+  children?: UserManagementItem[];
+  isOpen?: boolean;
+}
+
+interface ModerationItem {
+  title: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  url: string;
+  count: string;
+  color: string;
+}
+
+interface AdminSideBarProps {
+  currentPage: string;
+  onNavigate?: (url: string) => void;
+}
+
+function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
+  const [isUsersDropdownOpen, setIsUsersDropdownOpen] = React.useState(false);
+
+  // Check if current page is a user management child to keep dropdown open
+  React.useEffect(() => {
+    if (
+      currentPage === "/moderator/userManagement" ||
+      currentPage === "/moderator/members" ||
+      currentPage === "/moderator/experts" ||
+      currentPage === "/moderator/moderators"
+    ) {
+      setIsUsersDropdownOpen(true);
+    }
+  }, [currentPage]);
+  // Admin Menu Items
+  const menuItems: MenuItem[] = [
+    { title: "Dashboard", icon: Home, url: "/moderator" },
+    // { title: "Content", icon: FileText, url: "/moderator/content" },
+    // { title: "Messages", icon: MessageSquare, url: "/moderator/messages" },
+    { title: "Calendar", icon: Calendar, url: "/moderator/calendar" },
+    // { title: "Settings", icon: Settings, url: "/moderator/settings" },
+    {title: "Transactions", icon: Wallet, url: "/moderator/transactions"},
+    {title: "Projects", icon: FileText, url: "/moderator/projects"},
+  ];
+
+  // User Management Items
+  const userManagement: UserManagementItem[] = [
+    {
+      title: "Users",
+      url: "/moderator/userManagement",
+      icon: Users,
+      count: "",
+      color: "bg-blue-500",
+      isOpen: isUsersDropdownOpen,
+    },
+    {
+      title: "Add Moderators",
+      icon: UserPlus,
+      url: "/moderator/userManagement/addModerator",
+      count: "",
+      color: "bg-green-500",
+    },
+    {
+    title: "Add Administrators",
+    icon: UserPlus,
+    url: "/moderator/userManagement/addAdministrator",
+    count: "",
+    color: "bg-green-500",
+    },
+    {
+        title: "Expert Approvals",
+        icon: UserCheck,
+        url: "/moderator/userManagement/expert-approval",
+        count: "",
+        color: "bg-yellow-500",
+      }
+  ];
+
+  // Moderation Items
+  const moderationItems: ModerationItem[] = [
+    {
+      title: "Inquiries",
+      icon: Flag,
+      url: "/moderator/moderation",
+      count: "",
+      color: "bg-orange-500",
+    },
+    // {
+    //   title: "Pending Reports",
+    //   icon: Bell,
+    //   url: "/admin/moderation/report/pending",  
+    //   count: "",
+    //   color: "bg-yellow-500",
+    // },
+    // {
+    //   title: "Security Alerts",
+    //   icon: Shield,
+    //   url: "/admin/moderation/security-alerts",
+    //   count: "2",
+    //   color: "bg-red-500",
+    // },
+  ];
+
+  return (
+    <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col">
+      <div className="flex-1">
+        {/* Header/Logo Section */}
+        <div className="flex items-center gap-3 p-6 border-b border-gray-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+            <Shield className="h-5 w-5" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900">Moderator Pannel</h2>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {/* Main Menu */}
+          <div>
+            <div className="space-y-1">
+              {menuItems.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={() => onNavigate?.(item.url)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentPage === item.url
+                      ? "bg-primary text-white"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* User Management */}
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              USER MANAGEMENT
+            </h3>
+            <div className="space-y-1">
+              {userManagement.map((item) => (
+                <React.Fragment key={item.title}>
+                  <button
+                    onClick={() => {
+                      if (item.children && item.title === "Users") {
+                        // Toggle dropdown
+                        setIsUsersDropdownOpen(!isUsersDropdownOpen);
+                        // Navigate to main Users page
+                        onNavigate?.(item.url);
+                      } else {
+                        onNavigate?.(item.url);
+                      }
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      currentPage === item.url ||
+                      (item.children &&
+                        item.children.some(
+                          (child) => currentPage === child.url
+                        ))
+                        ? "bg-primary text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span className="flex-1 text-left">{item.title}</span>
+                    <span
+                      className={`text-xs ${
+                        currentPage === item.url ||
+                        (item.children &&
+                          item.children.some(
+                            (child) => currentPage === child.url
+                          ))
+                          ? "text-blue-200"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                    {item.children && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-4 w-4 transition-transform ${
+                          item.isOpen ? "transform rotate-180" : ""
+                        } ${
+                          currentPage === item.url ||
+                          (item.children &&
+                            item.children.some(
+                              (child) => currentPage === child.url
+                            ))
+                            ? "text-white"
+                            : "text-gray-500"
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
+                  </button>
+
+                  {item.children && item.isOpen && (
+                    <div className="pl-4 space-y-1 mt-1">
+                      {item.children.map((child) => (
+                        <button
+                          key={child.title}
+                          onClick={() => onNavigate?.(child.url)}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            currentPage === child.url
+                              ? "bg-primary text-white"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full ${child.color}`}
+                          ></div>
+                          <child.icon className="h-4 w-4" />
+                          <span className="flex-1 text-left">
+                            {child.title}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {child.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Moderation */}
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              MODERATION
+            </h3>
+            <div className="space-y-1">
+              {moderationItems.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={() => onNavigate?.(item.url)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    currentPage === item.url
+                      ? "bg-primary text-white"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
+                  <item.icon className="h-4 w-4" />
+                  <span className="flex-1 text-left">{item.title}</span>
+                  <span className="text-xs text-gray-500">{item.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* System */}
+          {/* <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              SYSTEM
+            </h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => onNavigate?.("/admin/compliance")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  currentPage === "/admin/compliance"
+                    ? "bg-primary text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Compliance Monitor</span>
+              </button>
+              <button
+                onClick={() => onNavigate?.("/admin/security")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  currentPage === "/admin/security"
+                    ? "bg-primary text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <Lock className="h-4 w-4" />
+                <span>Security Center</span>
+              </button>
+              <button
+                onClick={() => onNavigate?.("/admin/analytics")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  currentPage === "/admin/analytics"
+                    ? "bg-primary text-white"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Usage Analytics</span>
+              </button>
+            </div>
+          </div> */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default AdminSideBar;

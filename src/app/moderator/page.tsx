@@ -48,7 +48,7 @@ interface RecentActivity {
   type: "brain-map" | "analysis" | "collaboration" | "learning";
 }
 
-export default function AdminDashboard() {
+export default function ModeratorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [DashboardOverview, setDashboardOverview] = useState<any>(null);
   const [UserTrendData, setUserTrendData] = useState<any>(null);
@@ -146,10 +146,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex-1 grid gap-1">
               <h1 className="text-3xl font-bold text-gray-900">
-                Admin Dashboard
+                Moderator Dashboard
               </h1>
               <p className="text-gray-600">
-                Manage users, content, and system settings from your admin
+                Manage users, content, and system settings from your moderator
                 control panel.
               </p>
             </div>

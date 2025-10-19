@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, useState, useEffect } from "react";
-import AdminSideBar from "@/components/admin/AdminSideBar";
+import ModeratorSideBar from "@/components/moderator/ModeratorSideBar";
 // import AdminNavbar from "@/components/admin/AdminNavbar";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <div className="flex min-h-screen">
-        <AdminSideBar currentPage={currentPage} onNavigate={handleNavigate} />
+        <ModeratorSideBar currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="flex-1 flex flex-col">
           {/* <AdminNavbar title="Admin Dashboard" /> */}
           <main className="flex-1 bg-gray-50">{children}</main>
