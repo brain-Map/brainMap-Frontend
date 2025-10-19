@@ -92,6 +92,18 @@ export const projectApi = {
     }
   },
 
+  // Get mentors projects
+  getMentorsProjects: async (id: string | undefined): Promise<ProjectResponse[]> => {
+    try {
+      // endpoint provided by backend to fetch projects for mentors
+      const response = await api.get(`/project-member/projects/mentors-projects/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching mentors projects:', error);
+      throw error;
+    }
+  },
+
   // Get single project by ID
   getProject: async (id: string): Promise<ProjectResponse> => {
     try {

@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ServiceListing, ServiceAvailability } from "@/types/service"
 import { bookingApi } from "@/services/bookingApi"
+import { useToast } from "@/components/ui/ToastProvider"
 
 type ExtendedServiceListing = ServiceListing & {
   mentorName?: string;
@@ -69,6 +70,7 @@ const generateDailyTimeSlots = (): string[] => {
 
 export function BookingForm({ service }: BookingFormProps) {
   const router = useRouter()
+  const { show: showToast } = useToast()
   // Booking mode: HOURLY | MONTHLY | PROJECT_BASED
   const [bookingMode, setBookingMode] = useState<'HOURLY' | 'MONTHLY' | 'PROJECT_BASED'>(() => {
     // initialize booking mode to first available mode from service.availabilityModes or default to HOURLY
@@ -273,19 +275,19 @@ export function BookingForm({ service }: BookingFormProps) {
     // Validate based on bookingMode
     if (bookingMode === 'HOURLY') {
       if (!selectedDate || !startTime || !endTime) {
-        alert("Please select a date and time range")
+        showToast("Please select a date and time range", "warning")
         return
       }
     }
     if (bookingMode === 'MONTHLY') {
       if (requestedMonths.length === 0) {
-        alert('Please select at least one month')
+        showToast('Please select at least one month', 'warning')
         return
       }
     }
     if (bookingMode === 'PROJECT_BASED') {
       if (!projectDeadline) {
-        alert('Please select an approximate project deadline')
+        showToast('Please select an approximate project deadline', 'warning')
         return
       }
     }
@@ -293,8 +295,6 @@ export function BookingForm({ service }: BookingFormProps) {
     setIsSubmitting(true)
 
     try {
-      // Build booking payload per bookingMode
-      // Build booking payload exactly as backend expects
       const bookingData: any = {
         serviceId: service.serviceId.toString(),
         selectedPricingId: selectedPricingId || undefined,
@@ -308,29 +308,25 @@ export function BookingForm({ service }: BookingFormProps) {
         totalPrice: Number(totalPrice) || 0,
       }
 
-      // Remove undefined keys so the backend receives only provided fields
       Object.keys(bookingData).forEach((key) => {
         if (bookingData[key] === undefined) delete bookingData[key]
       })
 
       console.log("Booking details:", bookingData)
 
-      // Call the API
       await bookingApi.createBooking(bookingData)
 
-      // Show success message and redirect
-      alert(`Booking request submitted successfully!\nTotal: Rs.${totalPrice.toLocaleString()}`)
+      showToast(`Booking request submitted successfully! Total: Rs.${totalPrice.toLocaleString()}`, 'success')
       router.push(`/services/${service.serviceId}`)
     } catch (error: any) {
       console.error("Error submitting booking:", error)
       const message = error?.message || error?.response?.data?.message || 'Failed to submit booking. Please try again.'
-      alert(message)
+      showToast(message, 'error')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Render step indicator
   const renderStepIndicator = () => {
     const steps = [
       { key: "datetime", label: "Date & Time", number: 1 },
@@ -388,17 +384,13 @@ export function BookingForm({ service }: BookingFormProps) {
 
   // Render date and time selection
   const renderDateTimeStep = () => {
-    // For MONTHLY mode we show month selector UI here instead of calendar/time slots
     if (bookingMode === 'MONTHLY') {
-      // Render a 12-month grid (current month + next 11) styled like the day cells
       const months: Date[] = []
       const startMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
       for (let i = 0; i < 12; i++) {
         months.push(new Date(startMonth.getFullYear(), startMonth.getMonth() + i, 1))
       }
 
-      // A month is selectable if it's not in the past. We no longer block months
-      // based on mentor availability — users can pick any future month.
       const isMonthAvailable = (monthDate: Date) => {
         const isPastMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getTime() < new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1).getTime()
         return !isPastMonth
@@ -467,7 +459,6 @@ export function BookingForm({ service }: BookingFormProps) {
       )
     }
 
-    // For PROJECT_BASED we show a deadline selector and no time slots
     if (bookingMode === 'PROJECT_BASED') {
       return (
         <Card>

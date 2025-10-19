@@ -64,6 +64,12 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
   const [lastMessageId, setLastMessageId] = useState<number | null>(null)
   const [groupId, setGroupId] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const selectedUserRef = useRef<any | null>(selectedUser)
+
+  // keep ref in sync so websocket handlers see latest selection
+  useEffect(() => {
+    selectedUserRef.current = selectedUser
+  }, [selectedUser])
   const [isConnected, setIsConnected] = useState<boolean>(false)
   const creatingGroupRef = useRef(false)
   const [groupMemberIds, setGroupMemberIds] = useState<string[]>([])
@@ -175,7 +181,6 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
           isOwn: m.senderId === (user?.id || (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : '')),
         }))
 
-        // Merge with existing messages to avoid duplicates when both REST and websocket deliver the same messages
         setMessages((prev) => {
           // If prev is empty, just set normalized apiMessages
           if (!prev || prev.length === 0) return apiMessages
@@ -355,9 +360,6 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
     try {
       privateSubscriptionRef.current?.unsubscribe?.()
       // subscribe to /user/{currentUserId}/private is handled by server to route private messages
-      // Here we still parse incoming messages from general user subscription in the client websocket onConnect
-      // but keep a ref in case custom per-user subscription is required by server.
-      // No-op for now but keep placeholder for future fine-grained subscriptions.
       privateSubscriptionRef.current = { subscribedTo: otherUserId }
     } catch (e) {
       console.error('Failed to subscribe to private user', e)
@@ -470,9 +472,10 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                   timestamp: payload.time || payload.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                   isOwn: payload.senderId === (user?.id || (typeof window !== 'undefined' ? localStorage.getItem('userId') || '' : '')),
                 }
-                // if selectedUser matches sender/receiver, append
+                // Use ref to avoid stale closure for selectedUser
+                const sel = selectedUserRef.current
                 const otherId = payload.senderId === user?.id ? payload.receiverId : payload.senderId
-                if (selectedUser && String(otherId) === String(selectedUser.userId || selectedUser.id)) {
+                if (sel && String(otherId) === String(sel.userId || sel.id)) {
                   setMessages((prev) => {
                     if (prev.some((m) => isSameMessage(m, incoming))) return prev
                     return [...prev, incoming]

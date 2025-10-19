@@ -311,6 +311,7 @@ export default function ChatInterface() {
 
   // Group subscription ref so we can unsubscribe when switching
   const groupSubscriptionRef = useRef<any>(null)
+  const groupSubscriptionRetryRef = useRef<Record<string, number>>({})
 
   // Fetch messages for group
   const fetchGroupMessages = (groupId: string) => {
@@ -344,8 +345,29 @@ export default function ChatInterface() {
   }
 
   const subscribeToGroup = (groupId: string) => {
-    if (!client.current?.connected || !groupId) return
+    if (!groupId) return
+
+    // If client not connected yet, attempt to connect and retry subscription a few times
+    if (!client.current?.connected) {
+      try {
+        connect?.()
+      } catch (e) {
+        // ignore
+      }
+      const attempts = groupSubscriptionRetryRef.current[groupId] || 0
+      if (attempts >= 12) {
+        console.warn(`Giving up subscribing to group ${groupId} after ${attempts} attempts`)
+        return
+      }
+      groupSubscriptionRetryRef.current[groupId] = attempts + 1
+      // retry after a short delay
+      setTimeout(() => subscribeToGroup(groupId), 500)
+      return
+    }
+
     try {
+      // reset retry counter on successful connect
+      if (groupSubscriptionRetryRef.current[groupId]) groupSubscriptionRetryRef.current[groupId] = 0
       groupSubscriptionRef.current?.unsubscribe?.()
       const dest = `/group/${groupId}/messages`
       const sub = subscribe(dest, (msg: any) => {
@@ -377,6 +399,8 @@ export default function ChatInterface() {
     try {
       groupSubscriptionRef.current?.unsubscribe?.()
       groupSubscriptionRef.current = null
+      // clear any pending retry attempts for the active group
+      Object.keys(groupSubscriptionRetryRef.current).forEach(k => { groupSubscriptionRetryRef.current[k] = 0 })
     } catch (e) {
       // ignore
     }
@@ -428,7 +452,7 @@ export default function ChatInterface() {
   const handleSend = () => {
     if (!message.trim() || !client.current?.connected) return
     
-    // Sending to a group
+    // Sending to a group: publish and rely on backend broadcast to update UI
     if (selectedGroup) {
       const groupMessage = {
         senderId: userId,
@@ -436,21 +460,8 @@ export default function ChatInterface() {
         message: message.trim(),
         status: "GROUP_MESSAGE",
       }
-      console.log("Send to the group: ", selectedGroup);
       publish?.("/app/group-message", groupMessage, { Authorization: `Bearer ${token}` })
-      const newMsg = {
-        id: Date.now(),
-        senderId: userId,
-        groupId: selectedGroup.id,
-        message: message.trim(),
-        avatar: "/image/avatar/default.jpg",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isOwn: true,
-      }
-      setMessages((prev) => [...prev, newMsg])
-      setLastMessageId(newMsg.id)
-      // update group's last message
-      setGroups((prev) => prev.map((g) => g.id === selectedGroup.id ? { ...g, lastMessage: message.trim(), time: newMsg.time } : g))
+      // clear input and rely on server broadcast to append message to UI
       setMessage("")
       return
     }
@@ -463,6 +474,7 @@ export default function ChatInterface() {
       message: message.trim(),
       status: "MESSAGE",
     }
+    // Publish private message and rely on backend to broadcast it back to the client
     publish?.("/app/private-message", chatMessage, { Authorization: `Bearer ${token}` })
     const newMsg = {
       id: Date.now(),
