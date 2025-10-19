@@ -154,7 +154,7 @@ export default function ChatPage() {
               <div className="space-y-4">
                 {messages.map((m) => (
                   <div key={m.id} className={`flex ${m.isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${m.isOwn ? 'bg-[#3D52A0] text-white' : 'bg-gray-100 text-gray-900'}`}>
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${m.isOwn ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'}`}>
                       <p className="text-sm">{m.content}</p>
                       <p className="text-xs mt-1 text-gray-400">{m.timestamp}</p>
                     </div>
@@ -197,7 +197,7 @@ export default function ChatPage() {
                     setMessages((prev) => [...prev, msg])
                     setNewMessage('')
                   }}
-                  className="px-4 py-2 bg-[#3D52A0] text-white rounded-md"
+                  className="px-4 py-2 bg-primary text-white rounded-md"
                 >
                   <Send className="h-4 w-4" />
                 </button>

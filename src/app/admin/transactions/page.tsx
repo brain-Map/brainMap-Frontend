@@ -638,7 +638,7 @@ export default function TransactionsPage() {
                           placeholder="Search by username, ID, or project..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                          className="pl-10 border-gray-300 focus-border-primary focus-ring-primary"
                         />
                       </div>
                     </div>
@@ -659,7 +659,7 @@ export default function TransactionsPage() {
                         Type
                       </label>
                       <Select value={typeFilter} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus-border-primary focus-ring-primary">
                           <SelectValue placeholder="All Types" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -674,7 +674,7 @@ export default function TransactionsPage() {
                         Status
                       </label>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus-border-primary focus-ring-primary">
                           <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -691,7 +691,7 @@ export default function TransactionsPage() {
                         Role
                       </label>
                       <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                        <SelectTrigger className="w-full border-gray-300 focus-border-primary focus-ring-primary">
                           <SelectValue placeholder="All Roles" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -715,7 +715,7 @@ export default function TransactionsPage() {
                               start: e.target.value,
                             }))
                           }
-                          className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                          className="border-gray-300 focus-border-primary focus-ring-primary"
                         />
                         <Input
                           type="date"
@@ -726,7 +726,7 @@ export default function TransactionsPage() {
                               end: e.target.value,
                             }))
                           }
-                          className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                          className="border-gray-300 focus-border-primary focus-ring-primary"
                         />
                       </div>
                     </div>
@@ -989,7 +989,7 @@ export default function TransactionsPage() {
                               onClick={() => setCurrentPage(page)}
                               className={
                                 currentPage === page
-                                  ? "bg-[#3D52A0] text-white hover:bg-[#2A3B7D] border-[#3D52A0]"
+                                  ? "bg-primary text-white hover-bg-primary-90 border-primary"
                                   : "border-gray-300 text-gray-700 hover:bg-white"
                               }
                             >

@@ -356,7 +356,7 @@ useEffect(() => {
                     placeholder="Search by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]"
+                    className="pl-10 border-gray-300 focus-border-primary focus-ring-primary"
                   />
                 </div>
               </div>
@@ -366,7 +366,7 @@ useEffect(() => {
                     Role
                   </label>
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                    <SelectTrigger className="border-gray-300 focus-border-primary focus-ring-primary">
                       <SelectValue placeholder="All Roles" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -383,7 +383,7 @@ useEffect(() => {
                     Status
                   </label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="border-gray-300 focus:border-[#3D52A0] focus:ring-[#3D52A0]">
+                    <SelectTrigger className="border-gray-300 focus-border-primary focus-ring-primary">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -495,7 +495,7 @@ useEffect(() => {
                             <AvatarImage
                               src={user.avatar || "/image/user_placeholder.jpg"}
                             />
-                            <AvatarFallback className="bg-[#3D52A0] text-white text-sm font-medium">
+                            <AvatarFallback className="bg-primary text-white text-sm font-medium">
                               {user.username
                                 .split(" ")
                                 .map((n: string) => n[0])
@@ -654,7 +654,7 @@ useEffect(() => {
                         onClick={() => setCurrentPage(page)}
                         className={
                           currentPage === page
-                            ? "bg-[#3D52A0] text-white hover:bg-[#2A3B7D] border-[#3D52A0]"
+                            ? "bg-primary text-white hover-bg-primary-90 border-primary"
                             : "border-gray-300 text-gray-700 hover:bg-white"
                         }
                       >

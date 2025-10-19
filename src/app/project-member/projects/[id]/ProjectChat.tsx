@@ -580,7 +580,7 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
           </div>
           <div className="space-y-2">
             {/* Group selector at top */}
-            <div className={`flex items-center gap-3 p-2 rounded-md border cursor-pointer ${!selectedUser ? 'bg-[#3D52A0]/5' : ''}`} onClick={() => { setSelectedUser(null); if (groupId) { fetchGroupMessages(groupId) } }}>
+            <div className={`flex items-center gap-3 p-2 rounded-md border cursor-pointer ${!selectedUser ? 'bg-primary-5' : ''}`} onClick={() => { setSelectedUser(null); if (groupId) { fetchGroupMessages(groupId) } }}>
               <Avatar className="h-8 w-8">
                 <AvatarFallback>G</AvatarFallback>
               </Avatar>
@@ -591,7 +591,7 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
             </div>
 
             {collaborators.map((c) => (
-              <div key={c.userId} className={`flex items-center justify-between p-2 bg-white rounded-md border cursor-pointer ${selectedUser && String(selectedUser.userId || selectedUser.id) === String(c.userId) ? 'bg-[#3D52A0]/5' : ''}`} onClick={() => { setSelectedUser(c); unsubscribeGroup(); unsubscribePrivate(); fetchPrivateMessages(c.userId || c.id); }}>
+              <div key={c.userId} className={`flex items-center justify-between p-2 bg-white rounded-md border cursor-pointer ${selectedUser && String(selectedUser.userId || selectedUser.id) === String(c.userId) ? 'bg-primary-5' : ''}`} onClick={() => { setSelectedUser(c); unsubscribeGroup(); unsubscribePrivate(); fetchPrivateMessages(c.userId || c.id); }}>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={c.avatar ? `${API_URL}/${c.avatar}` : '/image/avatar/default.jpg'} />
@@ -636,12 +636,12 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                   </Avatar>
                 )}
                 <div className={`max-w-md ${m.isOwn ? 'order-first' : ''}`}>
-                  <div className={`rounded-2xl p-3 ${m.isOwn ? 'bg-[#3D52A0] text-white' : 'bg-gray-100 text-gray-900'}`}>
+                  <div className={`rounded-2xl p-3 ${m.isOwn ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'}`}>
                     <p className="text-sm">{m.content}</p>
                   </div>
                   <div className="flex items-center justify-end gap-2 mt-1">
                     <span className="text-xs text-gray-500">{m.timestamp}</span>
-                    {m.isOwn && <div className="text-[#3D52A0]">✓✓</div>}
+                    {m.isOwn && <div className="text-primary">✓✓</div>}
                   </div>
                 </div>
                 {m.isOwn && (
@@ -666,7 +666,7 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-gray-900">{selectedUser.name || selectedUser.email || selectedUser.userId}</h3>
-                  <p className="text-sm text-[#3D52A0]">Online</p>
+                  <p className="text-sm text-primary">Online</p>
                 </div>
               </div>
               <div />
@@ -679,7 +679,7 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-gray-900">{projectTitle || 'Project Group'}</h3>
-                  <p className="text-sm text-[#3D52A0]">Group chat</p>
+                  <p className="text-sm text-primary">Group chat</p>
                 </div>
               </div>
               <div />
@@ -704,7 +704,7 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                 }}
               />
             </div>
-            <Button size="icon" className="rounded-full bg-[#3D52A0] hover:bg-[#3D52A0]/90" onClick={handleSendMessage}>
+            <Button size="icon" className="rounded-full bg-primary hover-bg-primary-90" onClick={handleSendMessage}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

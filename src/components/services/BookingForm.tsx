@@ -530,7 +530,7 @@ export function BookingForm({ service }: BookingFormProps) {
           {/* Show mentor weekly availability if provided, but do not block selection when empty */}
           {availabilities.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-blue-900 mb-2">
+              <p className="text-sm font-semibold text-primary mb-2">
                 📅 Mentor's Weekly Availability
               </p>
               <div className="flex flex-wrap gap-2">
@@ -848,7 +848,7 @@ export function BookingForm({ service }: BookingFormProps) {
 
         {/* Important Notes */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-          <h3 className="font-semibold text-blue-900 mb-3">
+          <h3 className="font-semibold text-primary mb-3">
             Important Information
           </h3>
           <div className="flex items-start gap-2 text-sm text-blue-800">
@@ -1028,7 +1028,7 @@ export function BookingForm({ service }: BookingFormProps) {
                   <div>
                     <p className="text-sm font-semibold text-gray-700 mb-2">Scheduled</p>
                     <div className="bg-blue-50 rounded-lg p-3">
-                      <p className="text-sm font-medium text-blue-900">
+                      <p className="text-sm font-medium text-primary">
                         {formatDate(selectedDate)}
                       </p>
                       <p className="text-base font-bold text-blue-600">
