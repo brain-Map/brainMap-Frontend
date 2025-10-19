@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentApiService, PaymentStatusResponse } from '@/services/paymentApi';
+import { supabase } from '@/lib/superbaseClient';
 import toast from 'react-hot-toast';
 
 export default function PaymentSuccess() {
@@ -11,6 +12,7 @@ export default function PaymentSuccess() {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mentorId, setMentorId] = useState<string | null>(null);
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -18,6 +20,12 @@ export default function PaymentSuccess() {
         // Get payment details from URL parameters or localStorage
         const paymentId = searchParams.get('payment_id') || searchParams.get('paymentId');
         const orderId = searchParams.get('order_id') || searchParams.get('orderId');
+        const mentorId = searchParams.get('mentorId');
+        
+        console.log('🔍 [SUCCESS] Payment verification started');
+        console.log('🔍 [SUCCESS] Payment ID:', paymentId);
+        console.log('🔍 [SUCCESS] Order ID:', orderId);
+        console.log('🔍 [SUCCESS] Mentor ID:', mentorId);
         
         // Try to get payment info from localStorage as fallback
         const storedPayment = localStorage.getItem('currentPayment');
@@ -25,10 +33,18 @@ export default function PaymentSuccess() {
         
         if (storedPayment) {
           paymentInfo = JSON.parse(storedPayment);
+          console.log('📦 [SUCCESS] Stored payment info:', paymentInfo);
         }
 
         const finalPaymentId = paymentId || paymentInfo?.paymentId;
         const finalOrderId = orderId || paymentInfo?.orderId;
+        const finalMentorId = mentorId || paymentInfo?.mentorId;
+
+        // Store mentorId in state for display
+        if (finalMentorId) {
+          setMentorId(finalMentorId);
+          console.log('💾 [SUCCESS] Mentor ID stored in state:', finalMentorId);
+        }
 
         if (!finalPaymentId && !finalOrderId) {
           throw new Error('No payment information found');
@@ -37,19 +53,77 @@ export default function PaymentSuccess() {
         // Verify payment status with backend
         let status: PaymentStatusResponse;
         if (finalPaymentId) {
+          console.log('🔍 [SUCCESS] Verifying payment by ID:', finalPaymentId);
           status = await paymentApiService.getPaymentStatus(finalPaymentId);
         } else if (finalOrderId) {
+          console.log('🔍 [SUCCESS] Verifying payment by Order ID:', finalOrderId);
           status = await paymentApiService.getPaymentStatusByOrderId(finalOrderId);
         } else {
           throw new Error('Unable to verify payment');
         }
 
+        console.log('✅ [SUCCESS] Payment status:', status);
         setPaymentStatus(status);
 
-        // Clear stored payment info on successful verification
-        if (status.status === 'SUCCESS') {
+        // Record transaction if payment is successful
+        if (status.status === 'PENDING') {
+          try {
+            // Get current user from Supabase session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError) {
+              console.error('❌ [SUCCESS] Error getting session:', sessionError);
+              throw new Error('Failed to get user session');
+            }
+            
+            const user = session?.user;
+            
+            console.log('👤 [SUCCESS] Current user from Supabase:', user);
+            console.log('👤 [SUCCESS] User ID:', user?.id);
+            console.log('👤 [SUCCESS] User email:', user?.email);
+            
+            if (user && user.id && finalMentorId) {
+              console.log('💾 [SUCCESS] Recording transaction...');
+              console.log('💾 [SUCCESS] Amount:', status.amount);
+              console.log('💾 [SUCCESS] Sender ID (current user):', user.id);
+              console.log('💾 [SUCCESS] Receiver ID (mentor):', finalMentorId);
+              
+              // Validate UUID format
+              const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+              const isSenderUUID = uuidRegex.test(user.id);
+              const isReceiverUUID = uuidRegex.test(finalMentorId);
+              
+              console.log('🔍 [SUCCESS] Sender ID UUID format:', isSenderUUID ? '✅ Valid' : '❌ Invalid');
+              console.log('🔍 [SUCCESS] Receiver ID UUID format:', isReceiverUUID ? '✅ Valid' : '❌ Invalid');
+              
+              const transactionData = {
+                amount: status.amount,
+                senderId: user.id,
+                receiverId: finalMentorId,
+                status: 'COMPLETED'
+              };
+              
+              console.log('📦 [SUCCESS] Transaction payload:', JSON.stringify(transactionData, null, 2));
+              
+              await paymentApiService.recordTransaction(transactionData);
+              console.log('✅ [SUCCESS] Transaction recorded successfully');
+              toast.success('Payment and transaction recorded successfully!');
+            } else {
+              console.warn('⚠️ [SUCCESS] Missing user ID or mentor ID, transaction not recorded');
+              console.warn('⚠️ [SUCCESS] User:', user);
+              console.warn('⚠️ [SUCCESS] User ID:', user?.id);
+              console.warn('⚠️ [SUCCESS] Mentor ID:', finalMentorId);
+              toast.success('Payment completed successfully!');
+            }
+          } catch (transactionError: any) {
+            console.error('❌ [SUCCESS] Failed to record transaction:', transactionError);
+            // Don't fail the entire process if transaction recording fails
+            toast.success('Payment completed successfully!');
+            toast.error('Failed to record transaction in database');
+          }
+          
+          // Clear stored payment info on successful verification
           localStorage.removeItem('currentPayment');
-          toast.success('Payment completed successfully!');
         } else if (status.status === 'PENDING') {
           toast.loading('Payment is being processed...');
         } else {
@@ -57,16 +131,17 @@ export default function PaymentSuccess() {
         }
 
       } catch (err: any) {
-        console.error('Payment verification failed:', err);
+        console.error('❌ [SUCCESS] Payment verification failed:', err);
         setError(err.message || 'Failed to verify payment status');
         toast.error('Failed to verify payment status');
       } finally {
         setLoading(false);
       }
     };
+    console.log('🔍 [SUCCESS] Search Params:', searchParams);
 
     verifyPayment();
-  }, [searchParams]);
+  }, []);
 
   const handleContinue = () => {
     // Navigate to dashboard or appropriate page
@@ -146,6 +221,12 @@ export default function PaymentSuccess() {
                   <span className="text-gray-600">Order ID:</span>
                   <span className="font-mono text-xs">{paymentStatus.orderId}</span>
                 </div>
+                {mentorId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Mentor ID:</span>
+                    <span className="font-mono text-xs">{mentorId}</span>
+                  </div>
+                )}
                 {paymentStatus.transactionId && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Transaction ID:</span>
