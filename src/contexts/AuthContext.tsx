@@ -99,6 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    let hasRedirectedThisSession = false;
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       const isVerified = (u: any) => Boolean(u?.email_confirmed_at || u?.confirmed_at || u?.email_confirmed);
@@ -108,18 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("User signed out");
         setUser(null);
       } else if (session?.user) {
-        // If user is not verified, prevent login
         if (!isVerified(session.user)) {
           console.log('User signed in but email not verified — signing out');
           localStorage.removeItem('accessToken');
-          // Clear any server session
           supabase.auth.signOut().catch(err => console.error('Error signing out unverified user', err));
           setUser(null);
           return;
         }
 
-        localStorage.setItem('accessToken', session.access_token);
-        setUser(mapSupabaseUser(session.user));
+  localStorage.setItem('accessToken', session.access_token);
+  setUser(mapSupabaseUser(session.user));
 
         // Ensure user_role metadata is set if we stored it locally during signup
         const user_role = localStorage.getItem("user_role");
@@ -165,17 +165,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         })();
 
-        // Redirect to role-specific dashboard unless a redirectTo param is present
+        // Redirect to the dashboard on a sign-in event (SIGNED_IN)
+        // or when we detect a new session and haven't redirected yet in this page load.
         try {
           const redirectTo = searchParams.get('redirectTo');
-          if (!redirectTo) {
+          const shouldRedirect = !redirectTo && !hasRedirectedThisSession;
+
+          if (shouldRedirect && (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED')) {
             const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
             const dest = getDashboardPath(role);
-            // Delay slightly to let app state settle, similar to signIn behavior
+            hasRedirectedThisSession = true;
             setTimeout(() => router.push(dest), 200);
           }
         } catch (err) {
-          // If router/searchParams aren't available for any reason, silently ignore
           console.error('Redirect after sign-in failed:', err);
         }
       }
@@ -189,15 +191,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      // Prefer explicit redirectTo param if present
       const explicit = searchParams.get('redirectTo');
       if (explicit) {
         setTimeout(() => router.push(explicit), 200);
       } else {
-        // Determine role from returned session/user metadata (if available) or localStorage
         const sessionUser = data?.session?.user;
         const role = sessionUser?.user_metadata?.user_role || localStorage.getItem('user_role');
-        // Map role to dashboard path using same mapping as auth listener
         const getDashboardPath = (role?: string | null) => {
           switch ((role || '').toLowerCase()) {
             case 'domain-expert':
@@ -234,7 +233,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const sendPasswordResetEmail = async (email: string) => {
     try {
-      // redirectTo should point to a page in the app that tells user to check their email
       const redirectTo = (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password` : `${typeof window !== 'undefined' ? window.location.origin + '/reset-password' : '/reset-password'}`);
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       return { data, error };
