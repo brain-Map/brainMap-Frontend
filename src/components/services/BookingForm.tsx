@@ -857,10 +857,6 @@ export function BookingForm({ service }: BookingFormProps) {
           </div>
           <div className="flex items-start gap-2 text-sm text-blue-800">
             <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <span>You can cancel or reschedule up to 24 hours before the session</span>
-          </div>
-          <div className="flex items-start gap-2 text-sm text-blue-800">
-            <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
             <span>Payment will be processed after the mentor confirms your booking</span>
           </div>
         </div>
