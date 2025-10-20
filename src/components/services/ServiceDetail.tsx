@@ -85,7 +85,6 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
   const mentorLevel = service.mentorLevel || 2
   const thumbnailUrl = "/image/default_card.jpg"
   
-console.log("AVARAT",service.mentorAvatar);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -112,7 +111,7 @@ console.log("AVARAT",service.mentorAvatar);
             <Card className="overflow-hidden">
               <div className="relative h-96 bg-gray-200">
                 <img
-                  src={`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${service.thumbnailUrl}` || '/image/default_card.jpg'}
+                  src={`${service.thumbnailUrl}` || '/image/default_card.jpg'}
                   alt={service.title}
                   className="w-full h-full object-cover"
                 />
@@ -352,14 +351,6 @@ console.log("AVARAT",service.mentorAvatar);
                 >
                   Book Session Now
                 </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-6 text-lg"
-                >
-                  Contact Mentor
-                </Button>
-
                 <Separator className="my-4" />
 
                 <div className="space-y-3">

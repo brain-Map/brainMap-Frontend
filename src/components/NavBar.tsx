@@ -98,16 +98,17 @@ const NavBar: React.FC = () => {
     { label: 'Find Experts', href: '/search-experts' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for project members
   const projectMemberNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/project-member/dashboard' },
-    { label: 'Find a Mentor', href: '/search-experts' },
     { label: 'Find a Service', href: '/services' },
     { label: 'Community', href: '/community' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for mentors (previously domain experts)
@@ -118,6 +119,7 @@ const NavBar: React.FC = () => {
     { label: 'Community', href: '/community' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for moderators
@@ -128,6 +130,7 @@ const NavBar: React.FC = () => {
     { label: 'Reports', href: '/moderator/reports' },
     { label: 'Withdrawals', href: '/moderator/withdrawals' },
     { label: 'Settings', href: '/moderator/settings' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Navigation items for admins
@@ -138,6 +141,7 @@ const NavBar: React.FC = () => {
     { label: 'Messages', href: '/admin/messages' },
     { label: 'Reports', href: '/admin/reports' },
     { label: 'Settings', href: '/admin/settings' },
+    { label: 'Help & Support', href: '/help'}
   ];
 
   // Determine which navigation items to use
@@ -170,8 +174,8 @@ const NavBar: React.FC = () => {
         description: 'Manage your profile'
       },
       { 
-        label: userRole == "Mentor" ? "Edit Profile" : 'Settings', 
-        href: userRole == "Mentor" ? "/domain-expert/edit-profile" : '/settings', 
+        label: 'Settings', 
+        href: userRole == "Mentor" ? "/domain-expert/settings" : '/settings', 
         icon: <Settings className="w-4 h-4" />,
         description: 'Account preferences'
       },
@@ -256,6 +260,7 @@ const NavBar: React.FC = () => {
         return 'Search projects, experts, or topics...';
     }
   };
+console.log(user);
 
   // Get role-specific create button text and action
   const getCreateButtonConfig = () => {
@@ -298,7 +303,7 @@ const NavBar: React.FC = () => {
 
   return (
     <>
-      <header className={`z-999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'shadow-lg border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
+      <header className={`z-999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
         <nav className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -363,7 +368,7 @@ const NavBar: React.FC = () => {
 
                         {/* Dropdown */}
                         {item.hasDropdown && activeDropdown === item.label && (
-                          <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                          <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-99999 overflow-hidden">
                             <div className="p-2">
                               {item.dropdownItems?.map((dropdownItem, index) => (
                                 <Link
@@ -483,7 +488,7 @@ const NavBar: React.FC = () => {
 
                   {/* Auth Dropdown */}
                   {isAuthDropdownOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                    <div className="absolute top-full right-0 mt-2 w-90 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-[99999] overflow-hidden">
                       {/* User Info Header */}
                       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-secondary/5">
                         <div className="flex items-center gap-3">

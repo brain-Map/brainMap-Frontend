@@ -22,6 +22,7 @@ const getAvailabilitySummary = (availabilities: ServiceAvailability[]): string =
   return days.join(", ") + (availabilities.length > 3 ? "..." : "")
 }
 
+
 const getImageUrl = (thumbnailUrl: string | null | undefined): string => {
   if (!thumbnailUrl) return "/image/default_card.jpg"
 
@@ -47,21 +48,11 @@ const formatPricing = (pricings: any[]) => {
     return prices;
   };
 
-export function ServiceCard({ service }: { service: ServiceListingType }) {
+export function MentorProfileServiceCard({ service }: { service: ServiceListingType }) {
   const rating = 4.8
   const reviewCount = Math.floor(Math.random() * 1000) + 100
   const thumbnailUrl = getImageUrl(service.thumbnailUrl)
   const mentorAvatarUrl = getImageUrl(service.mentorAvatar)
-
-  console.log("serrrrr: ", service.pricings);
-  
-  const minPrice = service.pricings && service.pricings.length > 0
-    ? Math.min(...service.pricings.map((p) => p.price))
-    : 0
-
-  const modeLabel = service.availabilityModes && service.availabilityModes.length > 0
-    ? (availabilityModeLabels[service.availabilityModes[0]] || service.availabilityModes[0])
-    : "—"
 
   const displayName = (service.mentorFirstName || service.mentorLastName)
     ? `${service.mentorFirstName || ""} ${service.mentorLastName || ""}`.trim()
@@ -128,26 +119,6 @@ export function ServiceCard({ service }: { service: ServiceListingType }) {
             <span className="text-xs font-bold text-gray-900">{rating.toFixed(1)}</span>
             <span className="text-xs text-gray-500">({reviewCount.toLocaleString()})</span>
           </div>
-
-          {/* What You Get */}
-        {service.whatYouGet && service.whatYouGet.length > 0 && (
-          <div className="mb-4 bg-gray-50 p-3 rounded-lg">
-            <p className="text-xs font-semibold text-gray-700 mb-2">What You Get:</p>
-            <ul className="space-y-1">
-              {service.whatYouGet.slice(0, 2).map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-xs">
-                  <CheckCircle className="w-3 h-3 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">{item.title}</span>
-                </li>
-              ))}
-              {service.whatYouGet.length > 2 && (
-                <li className="text-xs text-gray-600 pt-1">
-                  +{service.whatYouGet.length - 2} more benefits
-                </li>
-              )}
-            </ul>
-          </div>
-        )}
           {/* Spacer to push footer to bottom */}
           <div className="flex-grow"></div>
 
