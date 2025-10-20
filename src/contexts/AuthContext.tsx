@@ -80,6 +80,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getSession();
 
+    // Helper to map user roles to dashboard paths
+    const getDashboardPath = (role?: string | null) => {
+      switch ((role || '').toLowerCase()) {
+        case 'project-member':
+        case 'projectmember':
+        case 'project_member':
+          return '/project-member/dashboard';
+        case 'moderator':
+          return '/moderator/dashboard';
+        case 'admin':
+          return '/admin';
+        case 'mentor':
+          return '/domain-expert/dashboard';
+        case 'student':
+        default:
+          return '/';
+      }
+    };
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       const isVerified = (u: any) => Boolean(u?.email_confirmed_at || u?.confirmed_at || u?.email_confirmed);
@@ -145,6 +164,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error processing pending registration:', err);
           }
         })();
+
+        // Redirect to role-specific dashboard unless a redirectTo param is present
+        try {
+          const redirectTo = searchParams.get('redirectTo');
+          if (!redirectTo) {
+            const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
+            const dest = getDashboardPath(role);
+            // Delay slightly to let app state settle, similar to signIn behavior
+            setTimeout(() => router.push(dest), 200);
+          }
+        } catch (err) {
+          // If router/searchParams aren't available for any reason, silently ignore
+          console.error('Redirect after sign-in failed:', err);
+        }
       }
     });
 
@@ -154,10 +187,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      const redirectTo = searchParams.get('redirectTo') || '/';
-      setTimeout(() => router.push(redirectTo), 200);
+      // Prefer explicit redirectTo param if present
+      const explicit = searchParams.get('redirectTo');
+      if (explicit) {
+        setTimeout(() => router.push(explicit), 200);
+      } else {
+        // Determine role from returned session/user metadata (if available) or localStorage
+        const sessionUser = data?.session?.user;
+        const role = sessionUser?.user_metadata?.user_role || localStorage.getItem('user_role');
+        // Map role to dashboard path using same mapping as auth listener
+        const getDashboardPath = (role?: string | null) => {
+          switch ((role || '').toLowerCase()) {
+            case 'domain-expert':
+            case 'domainexpert':
+              return '/domain-expert/dashboard';
+            case 'project-member':
+            case 'projectmember':
+            case 'project_member':
+              return '/project-member/dashboard';
+            case 'moderator':
+              return '/moderator';
+            case 'admin':
+              return '/admin';
+            case 'mentor':
+              return '/domain-expert/dashboard';
+            case 'student':
+            default:
+              return '/';
+          }
+        };
+
+        const dest = getDashboardPath(role);
+        setTimeout(() => router.push(dest), 200);
+      }
     }
     return { error };
   };

@@ -258,7 +258,6 @@ const NavBar: React.FC = () => {
         return 'Search projects, experts, or topics...';
     }
   };
-console.log(user);
 
   // Get role-specific create button text and action
   const getCreateButtonConfig = () => {
@@ -419,8 +418,9 @@ console.log(user);
             {/* Right Section */}
             <div className="flex items-center gap-2">
               
+              
               {/* Dashboard Actions */}
-              {isDashboard && (
+              {isDashboard && userRole && (userRole.toLocaleLowerCase() !== 'admin' && userRole.toLocaleLowerCase() !== 'moderator') && (
                 <>
                   <button 
                     onClick={getCreateButtonConfig().action}
