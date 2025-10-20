@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentApiService, PaymentStatusResponse } from '@/services/paymentApi';
+import api from '@/utils/api';
 import { supabase } from '@/lib/superbaseClient';
 import toast from 'react-hot-toast';
 
@@ -29,12 +30,14 @@ export default function PaymentSuccess() {
         // Get payment details from URL parameters or localStorage
         const paymentId = searchParams.get('payment_id') || searchParams.get('paymentId');
         const orderId = searchParams.get('order_id') || searchParams.get('orderId');
-        const mentorId = searchParams.get('mentorId');
+  const mentorId = searchParams.get('mentorId');
+  let bookingId = searchParams.get('bookingId');
         
         console.log('🔍 [SUCCESS] Payment verification started');
         console.log('🔍 [SUCCESS] Payment ID:', paymentId);
         console.log('🔍 [SUCCESS] Order ID:', orderId);
         console.log('🔍 [SUCCESS] Mentor ID:', mentorId);
+        console.log('🔍 [SUCCESS] Booking ID:', bookingId);
         
         // Try to get payment info from localStorage as fallback
         const storedPayment = localStorage.getItem('currentPayment');
@@ -48,6 +51,11 @@ export default function PaymentSuccess() {
         const finalPaymentId = paymentId || paymentInfo?.paymentId;
         const finalOrderId = orderId || paymentInfo?.orderId;
         const finalMentorId = mentorId || paymentInfo?.mentorId;
+        // Fallback: use bookingId from stored payment if not in URL
+        if (!bookingId && paymentInfo?.bookingId) {
+          bookingId = paymentInfo.bookingId;
+          console.log('📦 [SUCCESS] bookingId loaded from storage:', bookingId);
+        }
 
         // Store mentorId in state for display
         if (finalMentorId) {
@@ -123,14 +131,27 @@ export default function PaymentSuccess() {
               console.log('⚡ [SUCCESS] Executing transaction record and payment status update simultaneously...');
               console.log('📝 [SUCCESS] Will update payment_sessions WHERE payment_id =', finalPaymentId);
               console.log('🛡️ [SUCCESS] Using useRef guard to prevent duplicate execution');
+
+              // Update booking payment status in backend if bookingId is present
+              
+                  console.log('🔄 [SUCCESS] Updating booking payment status for bookingId:', bookingId);
+                  const resp = await api.put(`/project-member/projects/payment/${bookingId}`, null, {
+                    params: { status: 'PENDING' },
+                  });
+                  console.log('✅ [SUCCESS] Booking payment status updated:', resp.data);
+                
               
               const [transactionResult, paymentStatusResult] = await Promise.all([
                 paymentApiService.recordTransaction(transactionData),
                 finalPaymentId ? paymentApiService.updatePaymentSessionStatus(finalPaymentId, 'COMPLETED') : Promise.resolve(null)
               ]);
+
+
               
               console.log('✅ [SUCCESS] Transaction recorded successfully:', transactionResult);
               console.log('✅ [SUCCESS] Payment session status updated successfully:', paymentStatusResult);
+              
+              
               toast.success('Payment and transaction recorded successfully!');
             } else {
               console.warn('⚠️ [SUCCESS] Missing user ID or mentor ID, transaction not recorded');
