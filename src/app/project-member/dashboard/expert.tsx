@@ -87,6 +87,15 @@ const hireingFunctions = {
     }
   },
 
+  cancelService: async (serviceId: string): Promise<void> => {
+    try {
+      await api.delete(`/project-member/projects/${serviceId}/cancel`);
+    } catch (error) {
+      console.error('Error cancelling service:', error);
+      throw error;
+    }
+  },
+
 };
 
 const ServiceListTabs: React.FC = () => {
@@ -122,13 +131,25 @@ const ServiceListTabs: React.FC = () => {
 
 
   const handleCancel = (service: Service) => {
-    console.log('Cancel service:', service.id);
-    // Add your cancel logic here
+    // console.log('Cancel service:', service.id);
+    if (confirm(`Are you sure you want to cancel the service "${service.serviceTitl}"?`)) {
+      hireingFunctions.cancelService(service.id)
+        .then(() => {
+          alert('Service cancelled successfully');
+          // Refresh the service list
+          setServices(prevServices => prevServices.filter(s => s.id !== service.id));
+        })
+        .catch(error => {
+          console.error('Error cancelling service:', error);
+          alert('Failed to cancel the service. Please try again.');
+        });
+    }
+    
   };
 
   const handleMessage = (service: Service) => {
     console.log('Message for service:', service.id);
-    // Add your message logic here
+    router.push(`/chat`);
   };
 
   const handlePayment = async (service: Service) => {
