@@ -58,30 +58,30 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
   // Check if current page is a user management child to keep dropdown open
   React.useEffect(() => {
     if (
-      currentPage === "/admin/userManagement" ||
-      currentPage === "/admin/members" ||
-      currentPage === "/admin/experts" ||
-      currentPage === "/admin/moderators"
+      currentPage === "/moderator/userManagement" ||
+      currentPage === "/moderator/members" ||
+      currentPage === "/moderator/experts" ||
+      currentPage === "/moderator/moderators"
     ) {
       setIsUsersDropdownOpen(true);
     }
   }, [currentPage]);
   // Admin Menu Items
   const menuItems: MenuItem[] = [
-    { title: "Dashboard", icon: Home, url: "/admin" },
-    // { title: "Content", icon: FileText, url: "/admin/content" },
-    // { title: "Messages", icon: MessageSquare, url: "/admin/messages" },
-    { title: "Calendar", icon: Calendar, url: "/admin/calendar" },
-    // { title: "Settings", icon: Settings, url: "/admin/settings" },
-    {title: "Transactions", icon: Wallet, url: "/admin/transactions"},
-    {title: "Projects", icon: FileText, url: "/admin/projects"},
+    { title: "Dashboard", icon: Home, url: "/moderator" },
+    // { title: "Content", icon: FileText, url: "/moderator/content" },
+    // { title: "Messages", icon: MessageSquare, url: "/moderator/messages" },
+    { title: "Calendar", icon: Calendar, url: "/moderator/calendar" },
+    // { title: "Settings", icon: Settings, url: "/moderator/settings" },
+    {title: "Transactions", icon: Wallet, url: "/moderator/transactions"},
+    {title: "Projects", icon: FileText, url: "/moderator/projects"},
   ];
 
   // User Management Items
   const userManagement: UserManagementItem[] = [
     {
       title: "Users",
-      url: "/admin/userManagement",
+      url: "/moderator/userManagement",
       icon: Users,
       count: "",
       color: "bg-blue-500",
@@ -90,21 +90,21 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Add Moderators",
       icon: UserPlus,
-      url: "/admin/userManagement/addModerator",
+      url: "/moderator/userManagement/addModerator",
       count: "",
       color: "bg-green-500",
     },
     {
     title: "Add Administrators",
     icon: UserPlus,
-    url: "/admin/userManagement/addAdministrator",
+    url: "/moderator/userManagement/addAdministrator",
     count: "",
     color: "bg-green-500",
     },
     {
         title: "Expert Approvals",
         icon: UserCheck,
-        url: "/admin/userManagement/expert-approval",
+        url: "/moderator/userManagement/expert-approval",
         count: "",
         color: "bg-yellow-500",
       }
@@ -115,7 +115,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
     {
       title: "Inquiries",
       icon: Flag,
-      url: "/admin/moderation",
+      url: "/moderator/moderation",
       count: "",
       color: "bg-orange-500",
     },
@@ -143,7 +143,7 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
             <Shield className="h-5 w-5" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900">AdminPanel</h2>
+          <h2 className="text-lg font-bold text-gray-900">Moderator Pannel</h2>
         </div>
 
         <div className="p-4 space-y-6">

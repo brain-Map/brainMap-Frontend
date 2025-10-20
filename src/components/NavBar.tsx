@@ -207,7 +207,7 @@ const NavBar: React.FC = () => {
         return [
           { 
             label: 'Dashboard', 
-            href: '/moderator/dashboard', 
+            href: '/moderator', 
             icon: <LayoutDashboard className="w-4 h-4" />,
             description: 'Moderation panel'
           },
