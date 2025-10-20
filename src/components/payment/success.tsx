@@ -298,11 +298,11 @@ export default function PaymentSuccess() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Pending</h2>
-            <p className="text-gray-600 mb-6">
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Payment Successful</h2>
+            {/* <p className="text-gray-600 mb-6">
               Your payment is being processed. You will receive a confirmation email once the payment is completed.
-            </p>
+            </p> */}
             
             {paymentStatus && (
               <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
