@@ -32,7 +32,7 @@ interface TransactionDetail {
   receiverRole: "PROJECT_MEMBER" | "MENTOR" | string;
   amount: number;
   status: string; // PENDING | COMPLETED | FAILED | REJECTED
-  paymentType: string; // PAYMENT | WITHDRAWAL
+  paymentType: string; // PAYMENT | WITHDRAWAL | REFUND
   createdAt: string; // ISO timestamp
   serviceListTitle: string | null;
 }
