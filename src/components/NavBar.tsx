@@ -92,7 +92,6 @@ const NavBar: React.FC = () => {
     },
     { label: 'Community', href: '/community' },
     { label: 'Become an Expert', href: '/becomeamentor' },
-    { label: 'Find Experts', href: '/search-experts' },
     { label: 'About Us', href: '/about' },
     { label: 'Contact', href: '/contact' },
     { label: 'Help & Support', href: '/help'}
