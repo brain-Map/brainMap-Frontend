@@ -21,8 +21,6 @@ export function useNotifications(userId?: string | null, token?: string | null) 
   const [connected, setConnected] = useState(false);
   const mountedRef = useRef(false);
 
-  console.log("Noti Token: ", token);
-  
   const refresh = useCallback(async () => {
     if (!token) return;
     try {
@@ -192,9 +190,6 @@ export function useNotifications(userId?: string | null, token?: string | null) 
     },
     [token]
   );
-
-  console.log("Noti: ",notifications);
-  
 
   return {
     notifications,
