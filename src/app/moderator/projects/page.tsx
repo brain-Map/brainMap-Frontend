@@ -367,7 +367,7 @@ export default function ProjectsPage() {
                           </Avatar>
                           <div className="grid">
                             <span className="font-medium text-gray-900">{project.userName}</span>
-                            <span className="text-xs text-gray-500">{project.ownerId.slice(0,8)}...</span>
+                            <span className="text-xs text-gray-500">{project.ownerId?.slice(0,8) || 'N/A'}...</span>
                           </div>
                         </div>
                       </TableCell>

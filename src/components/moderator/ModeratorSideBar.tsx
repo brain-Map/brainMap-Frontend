@@ -88,20 +88,6 @@ function AdminSideBar({ currentPage, onNavigate }: AdminSideBarProps) {
       isOpen: isUsersDropdownOpen,
     },
     {
-      title: "Add Moderators",
-      icon: UserPlus,
-      url: "/moderator/userManagement/addModerator",
-      count: "",
-      color: "bg-green-500",
-    },
-    {
-    title: "Add Administrators",
-    icon: UserPlus,
-    url: "/moderator/userManagement/addAdministrator",
-    count: "",
-    color: "bg-green-500",
-    },
-    {
         title: "Expert Approvals",
         icon: UserCheck,
         url: "/moderator/userManagement/expert-approval",
