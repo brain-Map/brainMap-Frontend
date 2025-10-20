@@ -717,7 +717,7 @@ useEffect(() => {
       // Show error message
       await Swal.fire({
         title: 'Error!',
-        text: 'Failed to delete user. Check console for details.',
+        text: 'Failed to delete user. Please try again.',
         icon: 'error',
         confirmButtonColor: '#d33'
       });
