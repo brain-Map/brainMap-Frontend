@@ -303,7 +303,7 @@ const NavBar: React.FC = () => {
 
   return (
     <>
-      <header className={`z-999 bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
+  <header className={`z-[1000] bg-white backdrop-blur-md ${getRoleHeaderClass()} ${isDashboard? 'border-b border-gray-200' : 'border-b border-gray-200/50 fixed top-0 left-0 right-0'}`}>
         <nav className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -368,7 +368,7 @@ const NavBar: React.FC = () => {
 
                         {/* Dropdown */}
                         {item.hasDropdown && activeDropdown === item.label && (
-                          <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-99999 overflow-hidden">
+                          <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-[1000] overflow-hidden">
                             <div className="p-2">
                               {item.dropdownItems?.map((dropdownItem, index) => (
                                 <Link
@@ -459,8 +459,12 @@ const NavBar: React.FC = () => {
               {user ? (
                 <div className="relative auth-dropdown">
                   <button
+                    id="auth-menu-button"
+                    aria-haspopup="menu"
+                    aria-controls="auth-menu"
+                    aria-expanded={isAuthDropdownOpen}
                     onClick={handleAuthDropdownToggle}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
                     <Avatar className='w-8 h-8 bg-gradient-to-r from-primary to-secondary text-white font-semibold'>
                       <AvatarImage src="" alt="User Avatar" />
@@ -475,7 +479,12 @@ const NavBar: React.FC = () => {
 
                   {/* Auth Dropdown */}
                   {isAuthDropdownOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-90 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-[99999] overflow-hidden">
+                    <div
+                      id="auth-menu"
+                      role="menu"
+                      aria-labelledby="auth-menu-button"
+                      className="absolute top-full right-0 mt-2 w-[22rem] sm:w-96 max-w-[90vw] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-[1000] overflow-hidden"
+                    >
                       {/* User Info Header */}
                       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-secondary/5">
                         <div className="flex items-center gap-3">
@@ -485,10 +494,10 @@ const NavBar: React.FC = () => {
                               {user.email?.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <div className="font-semibold text-gray-900">{user.name ||user.email}</div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-gray-900 truncate">{user.name ||user.email}</div>
+                            <div className="flex items-center gap-2 min-w-0">
+                              {/* <div className="text-sm text-gray-500 truncate">{user.email}</div> */}
                               {userRole && (
                                 <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
                                   userRole === 'Admin' ? 'bg-red-100 text-red-700' :
@@ -510,29 +519,33 @@ const NavBar: React.FC = () => {
                       </div>
 
                       {/* Menu Items */}
-                      <div className="p-2">
+                      <ul className="p-2 max-h-[60vh] overflow-y-auto" role="none">
                         {authDropdownItems.map((item, index) => (
-                          <Link
-                            key={index}
-                            href={item.href}
-                            className="flex items-start p-3 rounded-xl hover:bg-primary/10 transition-all duration-200 group"
-                            onClick={() => setIsAuthDropdownOpen(false)}
-                          >
-                            <div className="flex-shrink-0 w-9 h-9 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center group-hover:from-primary/20 group-hover:to-secondary/20">
-                              {item.icon}
-                            </div>
-                            <div className="ml-3">
-                              <div className="text-sm font-semibold text-gray-900 group-hover:text-primary">{item.label}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
-                            </div>
-                          </Link>
+                          <li key={index} role="none">
+                            <Link
+                              href={item.href}
+                              role="menuitem"
+                              className="flex items-start p-3 rounded-xl hover:bg-primary/10 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                              onClick={() => setIsAuthDropdownOpen(false)}
+                            >
+                              <div className="flex-shrink-0 w-9 h-9 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center group-hover:from-primary/20 group-hover:to-secondary/20">
+                                {item.icon}
+                              </div>
+                              <div className="ml-3">
+                                <div className="text-sm font-semibold text-gray-900 group-hover:text-primary">{item.label}</div>
+                                <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
+                              </div>
+                            </Link>
+                          </li>
                         ))}
-                        
-                        <div className="my-2 border-t border-gray-200"></div>
-                        
+                      </ul>
+
+                      {/* Footer */}
+                      <div className="border-t border-gray-200 p-2">
                         <button
+                          role="menuitem"
                           onClick={handleSignOut}
-                          className="w-full flex items-start p-3 rounded-xl hover:bg-red-50 transition-all duration-200 group text-left"
+                          className="w-full flex items-start p-3 rounded-xl hover:bg-red-50 transition-all duration-200 group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
                         >
                           <div className="flex-shrink-0 w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200">
                             <LogOut className="w-4 h-4 text-red-600" />
@@ -579,7 +592,7 @@ const NavBar: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200">
+          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200 relative z-[1000]">
             <div className="px-4 py-6 space-y-2">
 
               {navItems.map((item) => {

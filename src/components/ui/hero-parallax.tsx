@@ -227,93 +227,93 @@ export const products = [
     title: "Moonbeam",
     link: "https://gomoonbeam.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/moonbeam.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/1.jpeg",
   },
   {
     title: "Cursor",
     link: "https://cursor.so",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/cursor.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/3.jpeg",
   },
   {
     title: "Rogue",
     link: "https://userogue.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/rogue.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/5.jpeg",
   },
  
   {
     title: "Editorially",
     link: "https://editorially.org",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/editorially.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/6.jpeg",
   },
   {
     title: "Editrix AI",
     link: "https://editrix.ai",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/editrix.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/7.jpeg",
   },
   {
     title: "Pixel Perfect",
     link: "https://app.pixelperfect.quest",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/pixelperfect.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/11.jpeg",
   },
  
   {
     title: "Algochurn",
     link: "https://algochurn.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/algochurn.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/12.jpeg",
   },
   {
     title: "Aceternity UI",
     link: "https://ui.aceternity.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/aceternityui.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/14.jpeg",
   },
   {
     title: "Tailwind Master Kit",
     link: "https://tailwindmasterkit.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/tailwindmasterkit.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/15.jpeg",
   },
   {
     title: "SmartBridge",
     link: "https://smartbridgetech.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/smartbridge.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/16.jpeg",
   },
   {
     title: "Renderwork Studio",
     link: "https://renderwork.studio",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/renderwork.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/8.jpeg",
   },
  
   {
     title: "Creme Digital",
     link: "https://cremedigital.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/cremedigital.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/10.jpeg",
   },
   {
     title: "Golden Bells Academy",
     link: "https://goldenbellsacademy.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/goldenbellsacademy.png",
+     "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/17.jpeg",
   },
   {
     title: "Invoker Labs",
     link: "https://invoker.lol",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/invoker.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/18.jpeg",
   },
   {
     title: "E Free Invoice",
     link: "https://efreeinvoice.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/efreeinvoice.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/19.jpeg",
   },
 ];
