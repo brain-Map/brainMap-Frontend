@@ -21,6 +21,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<{ data: any, error: any }>;
   updatePassword: (newPassword: string) => Promise<{ data: any, error: any }>;
+  sendPasswordResetEmail: (email: string) => Promise<{ data: any, error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateUserMetadata: async () => ({ data: null, error: null }),
   updatePassword: async () => ({ data: null, error: null }),
+  sendPasswordResetEmail: async () => ({ data: null, error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -78,6 +80,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getSession();
 
+    // Helper to map user roles to dashboard paths
+    const getDashboardPath = (role?: string | null) => {
+      switch ((role || '').toLowerCase()) {
+        case 'project-member':
+        case 'projectmember':
+        case 'project_member':
+          return '/project-member/dashboard';
+        case 'moderator':
+          return '/moderator/dashboard';
+        case 'admin':
+          return '/admin';
+        case 'mentor':
+          return '/domain-expert/dashboard';
+        case 'student':
+        default:
+          return '/';
+      }
+    };
+
+    let hasRedirectedThisSession = false;
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       const isVerified = (u: any) => Boolean(u?.email_confirmed_at || u?.confirmed_at || u?.email_confirmed);
@@ -87,18 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("User signed out");
         setUser(null);
       } else if (session?.user) {
-        // If user is not verified, prevent login
         if (!isVerified(session.user)) {
           console.log('User signed in but email not verified — signing out');
           localStorage.removeItem('accessToken');
-          // Clear any server session
           supabase.auth.signOut().catch(err => console.error('Error signing out unverified user', err));
           setUser(null);
           return;
         }
 
-        localStorage.setItem('accessToken', session.access_token);
-        setUser(mapSupabaseUser(session.user));
+  localStorage.setItem('accessToken', session.access_token);
+  setUser(mapSupabaseUser(session.user));
 
         // Ensure user_role metadata is set if we stored it locally during signup
         const user_role = localStorage.getItem("user_role");
@@ -143,6 +164,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error processing pending registration:', err);
           }
         })();
+
+        // Redirect to the dashboard on a sign-in event (SIGNED_IN)
+        // or when we detect a new session and haven't redirected yet in this page load.
+        // try {
+        //   const redirectTo = searchParams.get('redirectTo');
+        //   const shouldRedirect = !redirectTo && !hasRedirectedThisSession;
+
+          // if (event === 'SIGNED_IN') {
+          //   const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
+          //   const dest = getDashboardPath(role);
+          //   hasRedirectedThisSession = true;
+          //   setTimeout(() => router.push(dest), 200);
+          // }
+        // } catch (err) {
+        //   console.error('Redirect after sign-in failed:', err);
+        // }
       }
     });
 
@@ -152,10 +189,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      const redirectTo = searchParams.get('redirectTo') || '/';
-      setTimeout(() => router.push(redirectTo), 200);
+      const explicit = searchParams.get('redirectTo');
+      if (explicit) {
+        setTimeout(() => router.push(explicit), 200);
+      } else {
+        const sessionUser = data?.session?.user;
+        const role = sessionUser?.user_metadata?.user_role || localStorage.getItem('user_role');
+        const getDashboardPath = (role?: string | null) => {
+          switch ((role || '').toLowerCase()) {
+            case 'domain-expert':
+            case 'domainexpert':
+              return '/domain-expert/dashboard';
+            case 'project-member':
+            case 'projectmember':
+            case 'project_member':
+              return '/project-member/dashboard';
+            case 'moderator':
+              return '/moderator';
+            case 'admin':
+              return '/admin';
+            case 'mentor':
+              return '/domain-expert/dashboard';
+            case 'student':
+            default:
+              return '/';
+          }
+        };
+
+        const dest = getDashboardPath(role);
+        setTimeout(() => router.push(dest), 200);
+      }
     }
     return { error };
   };
@@ -164,6 +229,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('accessToken');
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      const redirectTo = (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password` : `${typeof window !== 'undefined' ? window.location.origin + '/reset-password' : '/reset-password'}`);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
   };
 
   const updateUserMetadata = async (metadata: { name?: string; user_role?: string }) => {
@@ -187,6 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateUserMetadata,
     updatePassword,
+    sendPasswordResetEmail,
   };
 
   return (

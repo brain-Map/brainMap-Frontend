@@ -65,12 +65,12 @@ export const MentorHeader: React.FC<MentorHeaderProps> = ({ mentor }) => {
 
             {/* Stats Row */}
             <div className="flex flex-wrap gap-6 mb-6">
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 <span className="text-lg font-semibold">
                   {mentor.rating.toFixed(1)} ({mentor.reviewsCount} reviews)
                 </span>
-              </div>
+              </div> */}
 
               <div className="flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-blue-300" />

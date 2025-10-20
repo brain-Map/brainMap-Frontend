@@ -5,7 +5,12 @@ import type { NextRequest } from 'next/server';
 // Adjust the matcher below to protect additional paths as needed.
 export const config = {
   matcher: [
-    
+    // '/admin/:path*',
+    // '/project-member/:path*',
+    // '/mentor/:path*',
+    // '/student/:path*',
+    // '/moderator/:path*',
+    // '/payment-gateway/:path*',
   ],
 };
 

@@ -666,7 +666,6 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-gray-900">{selectedUser.name || selectedUser.email || selectedUser.userId}</h3>
-                  <p className="text-sm text-primary">Online</p>
                 </div>
               </div>
               <div />
@@ -689,7 +688,6 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
 
         <div className="p-4 border-t bg-white">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon"><Paperclip className="h-5 w-5 text-gray-500" /></Button>
             <div className="flex-1 relative">
               <Input
                 placeholder="Write a message..."
@@ -707,6 +705,10 @@ export default function ProjectChat({ projectId, projectTitle }: Props) {
             <Button size="icon" className="rounded-full bg-primary hover-bg-primary-90" onClick={handleSendMessage}>
               <Send className="h-4 w-4" />
             </Button>
+          </div>
+          {/* Warning about encryption/privacy */}
+          <div className="mt-2 text-xs text-yellow-800 bg-yellow-50 border border-yellow-100 p-2 rounded-md">
+            <strong className="font-medium">Warning:</strong> Messages are not encrypted. Please do not share sensitive or private information here.
           </div>
         </div>
       </div>

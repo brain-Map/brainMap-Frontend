@@ -351,22 +351,6 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                 >
                   Book Session Now
                 </Button>
-                <Separator className="my-4" />
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Instant booking confirmation</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Free cancellation up to 24h before</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Money-back guarantee</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>

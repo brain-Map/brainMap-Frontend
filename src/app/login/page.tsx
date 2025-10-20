@@ -6,7 +6,6 @@ import { Mail, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/superbaseClient'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
@@ -18,20 +17,9 @@ export default function LoginPage() {
 
  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })  
-
+    const { error } = await signIn(email, password)
     if (error) {
-      setError(error.message)
-
-    } else {
-      console.log('Login successful:', data)
-      localStorage.setItem('accessToken', data?.session?.access_token || '');
-      console.log(data?.session?.access_token);
-      
-      router.push('/')
+      setError(error.message || String(error))
     }
   }
   return (
@@ -95,7 +83,7 @@ export default function LoginPage() {
             <p className="text-center text-black">
               Lost password?{' '}
               <Link
-                href="/forgot-password"
+                href="/login/forgot-password"
                 className="text-blue-600 hover:text-primary hover:underline underline-offset-2 font-medium transition-colors duration-200"
               >
                 Reset it

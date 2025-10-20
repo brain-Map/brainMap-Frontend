@@ -293,25 +293,25 @@ export default function PaymentSuccess() {
           </div>
         ) : (
           <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Pending</h2>
-            <p className="text-gray-600 mb-6">
+            </div> */}
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Payment is Successful</h2>
+            {/* <p className="text-gray-600 mb-6">
               Your payment is being processed. You will receive a confirmation email once the payment is completed.
-            </p>
+            </p> */}
             
             {paymentStatus && (
               <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
                 <h3 className="font-semibold text-gray-900 mb-3">Payment Details</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-600">Status:</span>
                     <span className="font-semibold text-yellow-600">{paymentStatus.status}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Order ID:</span>
                     <span className="font-mono text-xs">{paymentStatus.orderId}</span>
@@ -325,12 +325,12 @@ export default function PaymentSuccess() {
             )}
 
             <div className="space-y-3">
-              <button
+              {/* <button
                 onClick={() => window.location.reload()}
                 className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold"
               >
                 Check Status Again
-              </button>
+              </button> */}
               <button
                 onClick={handleContinue}
                 className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
