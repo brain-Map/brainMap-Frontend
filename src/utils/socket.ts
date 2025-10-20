@@ -73,10 +73,8 @@ export function connect(
 
   if (useRawWebSocket) {
     clientOptions.brokerURL = envUrl;
-    console.info(`Notification socket: using raw WebSocket brokerURL ${envUrl}`);
   } else {
     clientOptions.webSocketFactory = () => new SockJS(envUrl);
-    console.info(`Notification socket: using SockJS endpoint ${envUrl}`);
   }
 
   client = new Client(clientOptions as any);
@@ -93,10 +91,8 @@ function scheduleReconnect(
   // Exponential backoff with a cap
   reconnectAttempts += 1;
   const delay = Math.min(30000, Math.pow(2, reconnectAttempts) * 1000); // ms
-  console.info(`Notification socket: reconnect attempt ${reconnectAttempts} in ${delay}ms`);
 
   if (reconnectAttempts >= 4) {
-    console.warn('Notification socket: multiple reconnect attempts failed. Verify server endpoint and CORS / SockJS configuration.');
   }
 
   if (backoffTimer) clearTimeout(backoffTimer);
