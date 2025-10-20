@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, ChevronLeft, ChevronRight, DollarSign, PiggyBank, Wallet, Percent } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, DollarSign, PiggyBank, Wallet, Percent, ArrowUpFromLine } from "lucide-react";
 import api from "@/utils/api";
 
 interface TransactionDetail {
@@ -41,6 +41,7 @@ interface WalletTotals {
   holdTotal: number;
   releasedTotal: number;
   systemChargedTotal: number;
+  withdrawnTotal: number;
 }
 
 const statusBadgeClass = (status: string) => {
@@ -103,8 +104,8 @@ export default function TransactionsPage() {
       try {
         setTotalsLoading(true);
         setTotalsError(null);
-        const res = await api.get<WalletTotals>("/api/v1/wallet/totals");
-        setWalletTotals(res.data || { holdTotal: 0, releasedTotal: 0, systemChargedTotal: 0 });
+  const res = await api.get<WalletTotals>("/api/v1/wallet/totals");
+  setWalletTotals(res.data || { holdTotal: 0, releasedTotal: 0, systemChargedTotal: 0, withdrawnTotal: 0 });
       } catch (e: any) {
         console.error("Failed to fetch wallet totals:", e);
         setTotalsError(e?.message || "Failed to load totals");
@@ -187,7 +188,9 @@ export default function TransactionsPage() {
     setCurrentPage(1);
   };
 
-  const formatCurrency = (n?: number) => `$${((n ?? 0)).toFixed(2)}`;
+  // Format currency as LKR
+  const lkr = useMemo(() => new Intl.NumberFormat("en-LK", { style: "currency", currency: "LKR" }), []);
+  const formatCurrency = (n?: number) => lkr.format(n ?? 0);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -210,7 +213,7 @@ export default function TransactionsPage() {
         {/* Wallet Totals Summary */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               {/* On-Hold Total */}
               <div className="rounded-lg border border-gray-200 p-5 flex items-start gap-4">
                 <div className="p-3 rounded-lg bg-yellow-100 text-yellow-700">
@@ -251,7 +254,7 @@ export default function TransactionsPage() {
                   <Percent className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm text-gray-600">System Charges</div>
+                  <div className="text-sm text-gray-600">Brain-Map Earnings</div>
                   <div className="text-2xl font-semibold text-gray-900 mt-1">
                     {totalsLoading ? (
                       <span className="inline-block h-6 w-24 bg-gray-200 rounded animate-pulse" />
@@ -260,6 +263,23 @@ export default function TransactionsPage() {
                     )}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">5% platform fee on expert payments</div>
+                </div>
+              </div>
+
+              {/* Total Withdrawn */}
+              <div className="rounded-lg border border-gray-200 p-5 flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-purple-100 text-purple-700">
+                  <ArrowUpFromLine className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">Total Withdrawn</div>
+                  <div className="text-2xl font-semibold text-gray-900 mt-1">
+                    {totalsLoading ? (
+                      <span className="inline-block h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      formatCurrency(walletTotals?.withdrawnTotal)
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -420,7 +440,7 @@ export default function TransactionsPage() {
                 {!loading && paginated.map((t) => {
                   const created = new Date(t.createdAt);
                   const createdStr = created.toLocaleString();
-                  const amountStr = `$${(t.amount ?? 0).toFixed(2)}`;
+                  const amountStr = formatCurrency(t.amount);
                   return (
                     <TableRow key={t.transactionId} className="hover:bg-gray-50">
                       <TableCell className="py-4">
