@@ -17,6 +17,7 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  DollarSign,
 } from "lucide-react"
 
 interface MenuItem {
@@ -77,6 +78,11 @@ export function Sidebar() {
       title: "Finances",
       icon: CreditCard,
       url: "/domain-expert/finances",
+    },
+    {
+      title: "Withdraw Funds",
+      icon: DollarSign,
+      url: "/domain-expert/withdraw",
     },
   ]
 
