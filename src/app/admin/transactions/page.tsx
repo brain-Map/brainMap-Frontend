@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, DollarSign, PiggyBank, Wallet, Percent } from "lucide-react";
 import api from "@/utils/api";
 
 interface TransactionDetail {
@@ -32,9 +32,15 @@ interface TransactionDetail {
   receiverRole: "PROJECT_MEMBER" | "MENTOR" | string;
   amount: number;
   status: string; // PENDING | COMPLETED | FAILED | REJECTED
-  paymentType: string; // PAYMENT | WITHDRAWAL
+  paymentType: string; // PAYMENT | WITHDRAWAL | REFUND
   createdAt: string; // ISO timestamp
   serviceListTitle: string | null;
+}
+
+interface WalletTotals {
+  holdTotal: number;
+  releasedTotal: number;
+  systemChargedTotal: number;
 }
 
 const statusBadgeClass = (status: string) => {
@@ -58,6 +64,11 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Wallet Totals
+  const [walletTotals, setWalletTotals] = useState<WalletTotals | null>(null);
+  const [totalsLoading, setTotalsLoading] = useState(true);
+  const [totalsError, setTotalsError] = useState<string | null>(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,6 +96,23 @@ export default function TransactionsPage() {
       }
     };
     fetchTransactions();
+  }, []);
+
+  useEffect(() => {
+    const fetchTotals = async () => {
+      try {
+        setTotalsLoading(true);
+        setTotalsError(null);
+        const res = await api.get<WalletTotals>("/api/v1/wallet/totals");
+        setWalletTotals(res.data || { holdTotal: 0, releasedTotal: 0, systemChargedTotal: 0 });
+      } catch (e: any) {
+        console.error("Failed to fetch wallet totals:", e);
+        setTotalsError(e?.message || "Failed to load totals");
+      } finally {
+        setTotalsLoading(false);
+      }
+    };
+    fetchTotals();
   }, []);
 
   const filtered = useMemo(() => {
@@ -159,6 +187,8 @@ export default function TransactionsPage() {
     setCurrentPage(1);
   };
 
+  const formatCurrency = (n?: number) => `$${((n ?? 0)).toFixed(2)}`;
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid gap-3">
@@ -174,6 +204,69 @@ export default function TransactionsPage() {
                 <p className="text-gray-600">View and filter all transactions.</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Wallet Totals Summary */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* On-Hold Total */}
+              <div className="rounded-lg border border-gray-200 p-5 flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-yellow-100 text-yellow-700">
+                  <PiggyBank className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">Total On-Hold</div>
+                  <div className="text-2xl font-semibold text-gray-900 mt-1">
+                    {totalsLoading ? (
+                      <span className="inline-block h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      formatCurrency(walletTotals?.holdTotal)
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Released Total */}
+              <div className="rounded-lg border border-gray-200 p-5 flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-emerald-100 text-emerald-700">
+                  <Wallet className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">Total Released</div>
+                  <div className="text-2xl font-semibold text-gray-900 mt-1">
+                    {totalsLoading ? (
+                      <span className="inline-block h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      formatCurrency(walletTotals?.releasedTotal)
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* System Charges */}
+              <div className="rounded-lg border border-gray-200 p-5 flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-indigo-100 text-indigo-700">
+                  <Percent className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600">System Charges</div>
+                  <div className="text-2xl font-semibold text-gray-900 mt-1">
+                    {totalsLoading ? (
+                      <span className="inline-block h-6 w-24 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      formatCurrency(walletTotals?.systemChargedTotal)
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">5% platform fee on expert payments</div>
+                </div>
+              </div>
+            </div>
+
+            {totalsError && (
+              <div className="mt-4 text-sm text-red-600">{totalsError}</div>
+            )}
           </div>
         </div>
 

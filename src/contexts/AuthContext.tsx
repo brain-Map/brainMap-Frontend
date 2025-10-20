@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             payload.userId = session.user.id;
 
             const token = session.access_token;
-            const backendUrl = `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/v1/users/register`;
+            const backendUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/register`;
 
             const resp = await fetch(backendUrl, {
               method: 'POST',
