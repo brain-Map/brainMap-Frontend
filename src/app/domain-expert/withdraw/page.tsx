@@ -126,7 +126,7 @@ export default function WithdrawPage() {
 		}
 	};
 
-	const formatCurrency = (n?: number) => `$${(n ?? 0).toFixed(2)}`;
+	const formatCurrency = (n?: number) => `LKR${(n ?? 0).toFixed(2)}`;
 
 	return (
 		<div className="flex-1 overflow-auto">
