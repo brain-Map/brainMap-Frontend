@@ -1,25 +1,33 @@
-'use client';
+"use client";
 
-import React, { ReactNode, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import ModeratorSidebar from '@/components/moderator-sidebar';
+import React, { ReactNode, useState, useEffect } from "react";
+import ModeratorSideBar from "@/components/moderator/ModeratorSideBar";
+// import AdminNavbar from "@/components/admin/AdminNavbar";
+import { useRouter, usePathname } from "next/navigation";
 
-export default function ModeratorLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
-  const [currentPage, setCurrentPage] = useState<string>(pathname.split('/').pop() || 'dashboard');
-
+  const [currentPage, setCurrentPage] = useState<string>(pathname || "/admin");
+  
+  useEffect(() => {
+    setCurrentPage(pathname);
+  }, [pathname]);
+  
   const handleNavigate = (url: string) => {
     setCurrentPage(url);
-    // In a real app, you would navigate to the actual page
-    console.log(`Navigating to: ${url}`);
+    router.push(url);
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="flex">
-        <ModeratorSidebar currentPage={currentPage} onNavigate={handleNavigate} />
-        <main className="flex-1 bg-gray-50 min-h-[calc(100vh-64px)]">{children}</main>
+    <>
+      <div className="flex min-h-screen">
+        <ModeratorSideBar currentPage={currentPage} onNavigate={handleNavigate} />
+        <div className="flex-1 flex flex-col">
+          {/* <AdminNavbar title="Admin Dashboard" /> */}
+          <main className="flex-1 bg-gray-50">{children}</main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
