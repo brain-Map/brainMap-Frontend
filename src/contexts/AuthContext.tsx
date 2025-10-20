@@ -21,6 +21,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: { name?: string; user_role?: string }) => Promise<{ data: any, error: any }>;
   updatePassword: (newPassword: string) => Promise<{ data: any, error: any }>;
+  sendPasswordResetEmail: (email: string) => Promise<{ data: any, error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateUserMetadata: async () => ({ data: null, error: null }),
   updatePassword: async () => ({ data: null, error: null }),
+  sendPasswordResetEmail: async () => ({ data: null, error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -77,6 +79,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     getSession();
+
+    // Helper to map user roles to dashboard paths
+    const getDashboardPath = (role?: string | null) => {
+      switch ((role || '').toLowerCase()) {
+        case 'project-member':
+        case 'projectmember':
+        case 'project_member':
+          return '/project-member/dashboard';
+        case 'moderator':
+          return '/moderator/dashboard';
+        case 'admin':
+          return '/admin';
+        case 'mentor':
+          return '/domain-expert/dashboard';
+        case 'student':
+        default:
+          return '/';
+      }
+    };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
@@ -143,6 +164,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Error processing pending registration:', err);
           }
         })();
+
+        // Redirect to role-specific dashboard unless a redirectTo param is present
+        try {
+          const redirectTo = searchParams.get('redirectTo');
+          if (!redirectTo) {
+            const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
+            const dest = getDashboardPath(role);
+            // Delay slightly to let app state settle, similar to signIn behavior
+            setTimeout(() => router.push(dest), 200);
+          }
+        } catch (err) {
+          // If router/searchParams aren't available for any reason, silently ignore
+          console.error('Redirect after sign-in failed:', err);
+        }
       }
     });
 
@@ -152,10 +187,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      const redirectTo = searchParams.get('redirectTo') || '/';
-      setTimeout(() => router.push(redirectTo), 200);
+      // Prefer explicit redirectTo param if present
+      const explicit = searchParams.get('redirectTo');
+      if (explicit) {
+        setTimeout(() => router.push(explicit), 200);
+      } else {
+        // Determine role from returned session/user metadata (if available) or localStorage
+        const sessionUser = data?.session?.user;
+        const role = sessionUser?.user_metadata?.user_role || localStorage.getItem('user_role');
+        // Map role to dashboard path using same mapping as auth listener
+        const getDashboardPath = (role?: string | null) => {
+          switch ((role || '').toLowerCase()) {
+            case 'domain-expert':
+            case 'domainexpert':
+              return '/domain-expert/dashboard';
+            case 'project-member':
+            case 'projectmember':
+            case 'project_member':
+              return '/project-member/dashboard';
+            case 'moderator':
+              return '/moderator';
+            case 'admin':
+              return '/admin';
+            case 'mentor':
+              return '/domain-expert/dashboard';
+            case 'student':
+            default:
+              return '/';
+          }
+        };
+
+        const dest = getDashboardPath(role);
+        setTimeout(() => router.push(dest), 200);
+      }
     }
     return { error };
   };
@@ -164,6 +230,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('accessToken');
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      // redirectTo should point to a page in the app that tells user to check their email
+      const redirectTo = (process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password` : `${typeof window !== 'undefined' ? window.location.origin + '/reset-password' : '/reset-password'}`);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
   };
 
   const updateUserMetadata = async (metadata: { name?: string; user_role?: string }) => {
@@ -187,6 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateUserMetadata,
     updatePassword,
+    sendPasswordResetEmail,
   };
 
   return (

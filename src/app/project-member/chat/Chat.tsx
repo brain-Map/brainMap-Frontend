@@ -187,9 +187,6 @@ export default function ChatPage() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-md">
-                  <Paperclip className="h-4 w-4" />
-                </button>
                 <button
                   onClick={() => {
                     if (!newMessage.trim()) return

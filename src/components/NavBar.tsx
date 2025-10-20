@@ -51,10 +51,6 @@ const NavBar: React.FC = () => {
   const { user, signOut } = useAuth();
   const router = useRouter();
 
-  console.log('user in NavBar:', user);
-  
-
-  // Determine if we're in dashboard mode based on user role and pathname
   const isDashboard = user && (
     pathname.startsWith('/admin') || 
     pathname.startsWith('/dashboard') || 
@@ -65,6 +61,7 @@ const NavBar: React.FC = () => {
 
   // Get user role for navigation logic
   const userRole = user?.user_role;
+  const roleKey = userRole ? String(userRole).toLowerCase() : '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,7 +108,7 @@ const NavBar: React.FC = () => {
     { label: 'Help & Support', href: '/help'}
   ];
 
-  // Navigation items for mentors (previously domain experts)
+  // Navigation items for mentors
   const mentorNavItems: NavItem[] = [
     { label: 'Dashboard', href: '/domain-expert/dashboard' },
     { label: 'My Services', href: '/domain-expert/packages' },
@@ -147,15 +144,16 @@ const NavBar: React.FC = () => {
   // Determine which navigation items to use
   const getNavItems = (): NavItem[] => {
     if (!user) return visitorNavItems;
+    console.log("userrrrrR: ", userRole);
     
-    switch (userRole) {
-      case 'Project Member':
+    switch (roleKey) {
+      case 'project member':
         return projectMemberNavItems;
-      case 'Mentor':
+      case 'mentor':
         return mentorNavItems;
       case 'moderator':
         return moderatorNavItems;
-      case 'Admin':
+      case 'admin':
         return adminNavItems;
       default:
         return visitorNavItems;
@@ -182,8 +180,8 @@ const NavBar: React.FC = () => {
     ];
 
     // Add role-specific dashboard link
-    switch (userRole) {
-      case 'Project Member':
+    switch (roleKey) {
+      case 'project member':
         return [
           { 
             label: 'Dashboard', 
@@ -193,17 +191,17 @@ const NavBar: React.FC = () => {
           },
           ...baseItems
         ];
-      case 'Mentor':
+      case 'mentor':
         return [
           { 
             label: 'Dashboard', 
-            href: '/mentor/dashboard', 
+            href: '/domain-expert/dashboard', 
             icon: <LayoutDashboard className="w-4 h-4" />,
             description: 'Manage your services'
           },
           ...baseItems
         ];
-      case 'Moderator':
+      case 'moderator':
         return [
           { 
             label: 'Dashboard', 
@@ -213,7 +211,7 @@ const NavBar: React.FC = () => {
           },
           ...baseItems
         ];
-      case 'Admin':
+      case 'admin':
         return [
           { 
             label: 'Dashboard', 
@@ -260,7 +258,6 @@ const NavBar: React.FC = () => {
         return 'Search projects, experts, or topics...';
     }
   };
-console.log(user);
 
   // Get role-specific create button text and action
   const getCreateButtonConfig = () => {
@@ -271,8 +268,6 @@ console.log(user);
         return { text: 'New Package', action: () => console.log('Create package') };
       case 'Moderator':
         return { text: 'New Report', action: () => console.log('Create report') };
-      case 'Admin':
-        return { text: 'Create', action: () => console.log('Admin create') };
       default:
         return { text: 'Create', action: () => console.log('Default create') };
     }
@@ -420,25 +415,12 @@ console.log(user);
               )}
             </div>
 
-            {/* Center Section - Search (Dashboard Mode) */}
-              <div className="hidden md:flex flex-1 max-w-md mx-8">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder={getSearchPlaceholder()}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white transition-all"
-                  />
-                </div>
-              </div>
-
             {/* Right Section */}
             <div className="flex items-center gap-2">
               
+              
               {/* Dashboard Actions */}
-              {isDashboard && (
+              {isDashboard && userRole && (userRole.toLocaleLowerCase() !== 'admin' && userRole.toLocaleLowerCase() !== 'moderator') && (
                 <>
                   <button 
                     onClick={getCreateButtonConfig().action}
@@ -455,7 +437,7 @@ console.log(user);
               )}
 
               {/* Notifications and Chat */}
-              {(userRole === 'Project Member' || userRole === 'Mentor') && (
+              {(userRole) && (
                 <button onClick={() => router.push('/chat')} className="p-2.5 hover:bg-gray-100 rounded-lg relative transition-all duration-200 group">
                   <MessageCircle className="w-5 h-5 text-gray-600 group-hover:text-primary" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
@@ -476,7 +458,7 @@ console.log(user);
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <Avatar className='w-8 h-8 bg-gradient-to-r from-primary to-secondary text-white font-semibold'>
-                      <AvatarImage src="/image/BrainMap.png" alt="User Avatar" />
+                      <AvatarImage src="" alt="User Avatar" />
                       <AvatarFallback className="bg-primary">
                         {user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -493,7 +475,7 @@ console.log(user);
                       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-secondary/5">
                         <div className="flex items-center gap-3">
                           <Avatar className='w-12 h-12 bg-primary text-white font-semibold'>
-                            <AvatarImage src="/image/BrainMap.png" alt="User Avatar" />
+                            <AvatarImage src="" alt="User Avatar" />
                             <AvatarFallback className="bg-primary">
                               {user.email?.charAt(0).toUpperCase()}
                             </AvatarFallback>

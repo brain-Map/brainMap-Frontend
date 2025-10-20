@@ -1,7 +1,9 @@
 "use client"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/components/ui/ToastProvider'
 import {
   Home,
   User,
@@ -39,6 +41,11 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [showAllProjects, setShowAllProjects] = useState(false)
+  const { user } = useAuth()
+  const { show: showToast } = useToast()
+
+  const [verificationDocs, setVerificationDocs] = useState<any[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(false)
 
   const handleNavigate = (url: string) => {
     router.push(url)
@@ -79,6 +86,64 @@ export function Sidebar() {
       url: "/domain-expert/finances",
     },
   ]
+
+  // Fetch verification documents for the logged-in domain expert
+  useEffect(() => {
+    const fetchDocs = async () => {
+      if (!user?.id) return
+      setLoadingDocs(true)
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+        const base = process.env.NEXT_PUBLIC_BACKEND_URL || `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}`
+        const res = await fetch(`${base}/api/v1/domain-experts/${user.id}/verification-documents`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+        if (!res.ok) throw new Error('Failed to load verification documents')
+        const data = await res.json()
+        setVerificationDocs(Array.isArray(data) ? data : [])
+      } catch (err: any) {
+        console.error('Error fetching verification docs', err)
+      } finally {
+        setLoadingDocs(false)
+      }
+    }
+
+    fetchDocs()
+  }, [user?.id])
+
+  const handleResubmitFile = async (documentId: string, file?: File) => {
+    if (!file) return
+    if (!user?.id) {
+      showToast('Missing user id', 'error')
+      return
+    }
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const base = process.env.NEXT_PUBLIC_BACKEND_URL || `http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}`
+      const fd = new FormData()
+      fd.append('file', file)
+
+      const resp = await fetch(`${base}/api/v1/domain-experts/${user.id}/verification-documents/${documentId}/resubmit`, {
+        method: 'POST',
+        body: fd,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '')
+        showToast('Resubmit failed: ' + (txt || resp.statusText), 'error')
+        return
+      }
+
+      const updated = await resp.json()
+      setVerificationDocs((prev) => prev.map((d) => (String(d.id) === String(documentId) ? updated : d)))
+      showToast('Document resubmitted successfully', 'success')
+    } catch (err: any) {
+      console.error(err)
+      showToast('Resubmit failed: ' + (err?.message || 'unknown'), 'error')
+    }
+  }
 
 
   return (
@@ -145,6 +210,22 @@ export function Sidebar() {
                   <span className="flex-1 text-left">{item.title}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Verification Status - separate page */}
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">VERIFICATION</h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleNavigate('/domain-expert/verification-status')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  pathname === '/domain-expert/verification-status' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Verification Status</span>
+              </button>
             </div>
           </div>
 
