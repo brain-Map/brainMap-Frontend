@@ -377,17 +377,17 @@ const ProjectDashboard = () => {
             
 
             {/* About Me Section */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6 relative">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
               {/* Edit Icon - top right */}
-              {!isEditingAbout && (
-                <button 
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" 
-                  onClick={handleEditAbout}
-                  title="Edit About"
-                >
-                  <Ellipsis className="text-gray-500 hover:text-gray-800" />
-                </button>
-              )}
+              {/* {!isEditingAbout && (
+                // <button 
+                //   className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" 
+                //   onClick={handleEditAbout}
+                //   title="Edit About"
+                // >
+                //   <Ellipsis className="text-gray-500 hover:text-gray-800" />
+                // </button>
+              )} */}
 
               <h3 className="font-semibold text-xl mb-4 text-gray-900">About Me</h3>
 

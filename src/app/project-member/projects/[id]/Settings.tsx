@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import MembersAndTeams from "./MemberSupervisorAdd";
 import api from "@/utils/api";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 
 const projectSettingBackend = {
@@ -40,6 +40,16 @@ const projectSettingBackend = {
       throw error;
     }
   },
+
+  deleteProject: async (projectId: string) => {
+    try {
+      const response = await api.delete(`/project-member/projects/${projectId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      throw error;
+    }
+  }
 };
 
 // ---------------- Types ----------------
@@ -84,6 +94,7 @@ type SidebarItem = {
 
 const ProjectSettingsPage: React.FC = () => {
   const { id } = useParams();
+  const router = useRouter();
 
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
 
@@ -109,7 +120,9 @@ const ProjectSettingsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState<EditingState>({ name: false, description: false, visibility: false });
   const [tempValues, setTempValues] = useState<TempValues>({});
   const [showPopup, setShowPopup] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [tempVisibility, setTempVisibility] = useState<boolean | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleVisibilityClick = (newVisibility: boolean) => {
     setTempVisibility(newVisibility);
@@ -177,6 +190,22 @@ const ProjectSettingsPage: React.FC = () => {
     }
     setShowPopup(false);
     setTempVisibility(null);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectData) return;
+    
+    try {
+      setIsDeleting(true);
+      await projectSettingBackend.deleteProject(projectData.id);
+      // Redirect to projects list after successful deletion
+      router.push('/project-member/projects/');
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      alert("Failed to delete project. Please try again.");
+      setIsDeleting(false);
+      setShowDeletePopup(false);
+    }
   };
 
 
@@ -512,12 +541,74 @@ const ProjectSettingsPage: React.FC = () => {
                     <p className="text-sm text-red-700 mb-4">
                       Once you delete a project, there is no going back. Please be certain.
                     </p>
-                    <button className="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                    <button 
+                      onClick={() => setShowDeletePopup(true)}
+                      className="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                    >
                       Delete Project
                     </button>
                   </div>
                 </div>
               </div>
+
+              {/* Delete Confirmation Popup */}
+              {showDeletePopup && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                      <h2 className="text-xl font-semibold text-red-900">Delete Project</h2>
+                      <button
+                        onClick={() => setShowDeletePopup(false)}
+                        disabled={isDeleting}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <div className="flex items-center mb-4">
+                        <Trash2 className="w-8 h-8 text-red-600 mr-3" />
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900">
+                            Are you absolutely sure?
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            This will permanently delete <span className="font-semibold">{projectData?.title}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Warning Box */}
+                      <div className="p-4 rounded-lg mb-6 bg-red-50 border border-red-200">
+                        <p className="text-sm text-red-800">
+                          ⚠️ This action cannot be undone. This will permanently delete the project, all its data, members, and settings.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                      <button
+                        onClick={() => setShowDeletePopup(false)}
+                        disabled={isDeleting}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDeleteProject}
+                        disabled={isDeleting}
+                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete Project'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

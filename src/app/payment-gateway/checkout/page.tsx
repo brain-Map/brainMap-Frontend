@@ -204,7 +204,9 @@ export default function CheckoutPage({
         orderId: response.orderId,
         amount: response.amount,
         currency: response.currency,
-        mentorId: mentorId || undefined
+        mentorId: mentorId || undefined,
+        bookingId: bookingId || undefined,
+        serviceId: serviceId || undefined
       }));
 
       console.log('💾 [CHECKOUT] Stored payment info with mentor ID:', mentorId);

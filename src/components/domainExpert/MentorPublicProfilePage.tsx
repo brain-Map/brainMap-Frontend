@@ -38,8 +38,7 @@ export const MentorPublicProfilePage: React.FC<MentorPublicProfilePageProps> = (
 
           {/* Right Sidebar - Quick Info */}
           <div className="lg:col-span-1 space-y-4 h-fit lg:sticky lg:top-4">
-            {/* Contact Card */}
-            <div className="bg-white rounded-lg shadow-md p-6 space-y-4 border border-gray-200">
+            {/* <div className="bg-white rounded-lg shadow-md p-6 space-y-4 border border-gray-200">
               <h3 className="text-xl font-bold">Get Started</h3>
               <p className="text-gray-600 text-sm">
                 Connect with {mentor.firstName} and start your mentorship journey today.
@@ -47,7 +46,7 @@ export const MentorPublicProfilePage: React.FC<MentorPublicProfilePageProps> = (
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                 Contact Mentor
               </Button>
-            </div>
+            </div> */}
 
             {/* Quick Stats Card */}
             <div className="bg-white rounded-lg shadow-md p-6 space-y-4 border border-gray-200">
