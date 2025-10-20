@@ -167,19 +167,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Redirect to the dashboard on a sign-in event (SIGNED_IN)
         // or when we detect a new session and haven't redirected yet in this page load.
-        try {
-          const redirectTo = searchParams.get('redirectTo');
-          const shouldRedirect = !redirectTo && !hasRedirectedThisSession;
+        // try {
+        //   const redirectTo = searchParams.get('redirectTo');
+        //   const shouldRedirect = !redirectTo && !hasRedirectedThisSession;
 
-          if (shouldRedirect && (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED')) {
-            const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
-            const dest = getDashboardPath(role);
-            hasRedirectedThisSession = true;
-            setTimeout(() => router.push(dest), 200);
-          }
-        } catch (err) {
-          console.error('Redirect after sign-in failed:', err);
-        }
+          // if (event === 'SIGNED_IN') {
+          //   const role = session.user.user_metadata?.user_role || localStorage.getItem('user_role');
+          //   const dest = getDashboardPath(role);
+          //   hasRedirectedThisSession = true;
+          //   setTimeout(() => router.push(dest), 200);
+          // }
+        // } catch (err) {
+        //   console.error('Redirect after sign-in failed:', err);
+        // }
       }
     });
 
