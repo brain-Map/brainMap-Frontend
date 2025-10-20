@@ -207,7 +207,7 @@ const NavBar: React.FC = () => {
         return [
           { 
             label: 'Dashboard', 
-            href: '/moderator/dashboard', 
+            href: '/moderator', 
             icon: <LayoutDashboard className="w-4 h-4" />,
             description: 'Moderation panel'
           },
@@ -476,7 +476,7 @@ console.log(user);
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                   >
                     <Avatar className='w-8 h-8 bg-gradient-to-r from-primary to-secondary text-white font-semibold'>
-                      <AvatarImage src="/default-avatar.png" alt="User Avatar" />
+                      <AvatarImage src="/image/BrainMap.png" alt="User Avatar" />
                       <AvatarFallback className="bg-primary">
                         {user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -493,7 +493,7 @@ console.log(user);
                       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-secondary/5">
                         <div className="flex items-center gap-3">
                           <Avatar className='w-12 h-12 bg-primary text-white font-semibold'>
-                            <AvatarImage src="/default-avatar.png" alt="User Avatar" />
+                            <AvatarImage src="/image/BrainMap.png" alt="User Avatar" />
                             <AvatarFallback className="bg-primary">
                               {user.email?.charAt(0).toUpperCase()}
                             </AvatarFallback>
