@@ -122,7 +122,7 @@ export default function EditServicePackage() {
           availabilityModes: service.availabilityModes || []
         });
         setAvailabilities(service.availabilities || []);
-        if (service.thumbnailUrl) setPhotoPreview(`http://localhost:${process.env.NEXT_PUBLIC_BACKEND_PORT}/${service.thumbnailUrl}`);
+        if (service.thumbnailUrl) setPhotoPreview(`${service.thumbnailUrl}`);
       } catch (err) {
         alert('Failed to fetch service data');
       }
@@ -387,31 +387,6 @@ export default function EditServicePackage() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col justify-center h-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                  <input
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) => updateFormData('subject', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., Data Science, Career Guidance"
-                    required
-                  />
-                </div>
-                <div className="flex flex-col justify-center h-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Type *</label>
-                  <input
-                    type="text"
-                    value={formData.serviceType}
-                    onChange={(e) => updateFormData('serviceType', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-                    placeholder="e.g., Mentorship, Consulting"
-                    required
-                  />
-        </div>
-      </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <input

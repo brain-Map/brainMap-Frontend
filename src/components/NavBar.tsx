@@ -78,6 +78,7 @@ const NavBar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeDropdown]);
 
+
   // Navigation items for visitors (not logged in)
   const visitorNavItems: NavItem[] = [
     {
@@ -161,24 +162,30 @@ const NavBar: React.FC = () => {
 
   const navItems = getNavItems();
 
-  // Role-specific auth dropdown items
   const getAuthDropdownItems = () => {
+    let settingsUrl = '/settings'
+    const roleLower = userRole?.toLocaleLowerCase();
+    if (roleLower === 'mentor') {
+      settingsUrl = '/domain-expert/settings';
+    } else if (roleLower === 'project member') {
+      settingsUrl = '/project-member/settings';
+    }
+  
     const baseItems = [
       { 
         label: 'Profile', 
-        href: userRole == "Mentor" ? `/mentor/${user?.id}` : '/profile',
+        href: roleLower === 'mentor' ? `/mentor/${user?.id}` : '/profile',
         icon: <UserCircle className="w-4 h-4" />,
         description: 'Manage your profile'
       },
       { 
         label: 'Settings', 
-        href: userRole == "Mentor" ? "/domain-expert/settings" : '/settings', 
+        href: settingsUrl, 
         icon: <Settings className="w-4 h-4" />,
         description: 'Account preferences'
       },
     ];
 
-    // Add role-specific dashboard link
     switch (roleKey) {
       case 'project member':
         return [
@@ -217,8 +224,7 @@ const NavBar: React.FC = () => {
             href: '/admin', 
             icon: <LayoutDashboard className="w-4 h-4" />,
             description: 'Admin panel'
-          },
-          ...baseItems
+          }
         ];
       default:
         return baseItems;
