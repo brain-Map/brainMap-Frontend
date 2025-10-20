@@ -248,9 +248,6 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                       <h3 className="text-2xl font-bold text-gray-900">
                         {service.mentorName || "Expert Mentor"}
                       </h3>
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-200">
-                        Level {mentorLevel}
-                      </Badge>
                     </div>
                     
                     <div className="flex items-center gap-2 mb-4">
@@ -265,7 +262,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                     </p>
 
                     {/* Mentor Stats */}
-                    <div className="grid grid-cols-3 gap-4">
+                    {/* <div className="grid grid-cols-3 gap-4">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
                         <Users className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                         <p className="text-2xl font-bold text-gray-900">
@@ -287,7 +284,7 @@ export function ServiceDetail({ service }: { service: ServiceDetailProps }) {
                         </p>
                         <p className="text-sm text-gray-600">Years Exp.</p>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
