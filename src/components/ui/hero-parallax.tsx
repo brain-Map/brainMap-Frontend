@@ -7,6 +7,8 @@ import {
   useSpring,
   MotionValue,
 } from "motion/react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 
@@ -102,10 +104,10 @@ export const HeroParallax = ({
 };
 
 export const Header = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   return (
-    
- <section className="relative min-h-screen flex items-center justify-center overflow-hidden w-full ">
-      
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden w-full ">
       {/* Background Image */}
       {/* <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -146,7 +148,11 @@ export const Header = () => {
 
     {/* CTA Buttons */}
     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-      <button className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
+      <button
+        type="button"
+        onClick={() => (user ? router.push('/community') : router.push('/register'))}
+        className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring"
+      >
         <span className="flex items-center gap-3">
           Start Connecting
           <svg
@@ -160,19 +166,11 @@ export const Header = () => {
         </span>
       </button>
 
-      <button className="px-8 py-4 text-lg font-medium text-white hover:text-black border-2 border-gray-700 rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
-        Browse Experts
+      <button onClick={()=> router.push('/services')} className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
+        <span className="flex items-center gap-3">
+          Browse Experts
+        </span>
       </button>
-    </div>
-  </div>
-
-  {/* Scroll Indicator */}
-  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce z-10">
-    <div className="flex flex-col items-center">
-      <span className="text-sm mb-2 font-light">Discover More</span>
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-      </svg>
     </div>
   </div>
 </section>

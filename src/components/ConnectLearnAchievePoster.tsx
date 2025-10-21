@@ -17,7 +17,7 @@ interface CTASectionProps {
 const ConnectLearnAchieveHero: React.FC<HeroSectionProps> = ({
   className = '',
   onGetStarted,
-  getStartedLink = '/signup'
+  getStartedLink = '/loging'
 }) => {
   const handleGetStarted = () => {
     if (onGetStarted) {
