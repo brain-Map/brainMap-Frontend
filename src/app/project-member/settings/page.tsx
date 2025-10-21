@@ -16,6 +16,7 @@ import ProfileEditor from "./ProfileEditor";
 import DeleteModal from "@/components/modals/DeleteModal";
 import { useDeleteModal } from "@/hooks/useDeleteModal";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 interface SettingsProps {}
 
@@ -60,9 +61,19 @@ const settingsFunctions = {
       throw error;
     }
   },
+
+  deleteUserAccount: async (userId: string) => {
+    try {
+      await api.delete(`/api/v1/admin/deleteUser/${userId}`);
+    } catch (error) {
+      console.error("Error deleting user account:", error);
+      throw error;
+    }
+  },
 };
 
 const SettingsPage: React.FC<SettingsProps> = () => {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const userId = user?.id;
   const [imageUrls, setImageUrls] = useState<string[]>([]);

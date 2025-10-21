@@ -10,7 +10,7 @@ interface JoinCommunityProps {
 const JoinCommunity: React.FC<JoinCommunityProps> = ({ 
   className = '',
   onGetStarted,
-  getStartedLink = '/signup'
+  getStartedLink = '/login',
 }) => {
   const handleGetStarted = () => {
     if (onGetStarted) {
