@@ -61,6 +61,7 @@ export default function CommunityPage() {
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set())
   const [popularTags, setPopularTags] = useState<PopularTag[]>([])
   const [tagsLoading, setTagsLoading] = useState(true)
+  const [showMyPosts, setShowMyPosts] = useState(false)
 
   // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -110,7 +111,9 @@ const formatDate = (dateString: string) => {
         setError(null)
         
         // Check if API endpoint is reachable
-        const data = await communityApi.getPosts()
+        const data = showMyPosts 
+          ? await communityApi.getUserPosts() 
+          : await communityApi.getPosts()
         
         console.log("Posts Data: ", data)
         
@@ -168,7 +171,7 @@ const formatDate = (dateString: string) => {
     }
 
     fetchPosts()
-  }, [])
+  }, [showMyPosts])
 
   const handleLike = async (postId: string) => {
     // Prevent multiple simultaneous like requests for the same post
@@ -333,6 +336,13 @@ const formatDate = (dateString: string) => {
               />
             </div>
             <Button
+              variant={showMyPosts ? "default" : "outline"}
+              onClick={() => setShowMyPosts(!showMyPosts)}
+              className={showMyPosts ? "bg-blue-600 text-white hover:bg-blue-700" : "text-gray-700 hover:bg-gray-100"}
+            >
+              {showMyPosts ? "All Posts" : "My Posts"}
+            </Button>
+            <Button
               className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary hover:text-black font-medium"
               onClick={() => router.push("/community/create")}
             >
@@ -405,7 +415,9 @@ const formatDate = (dateString: string) => {
           <div className="lg:col-span-3">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Recent Questions</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {showMyPosts ? "My Posts" : "Recent Questions"}
+              </h1>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid grid-cols-4 bg-gray-100 rounded-lg p-1">
                   <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
