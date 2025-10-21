@@ -527,11 +527,10 @@ export const communityApi = {
     }
   },
 
-  // Get user's posts
-  getUserPosts: async (userId?: string): Promise<PostResponse[]> => {
+  // Get user's posts (logged in user's own posts)
+  getUserPosts: async (): Promise<PostResponse[]> => {
     try {
-      const endpoint = userId ? `/api/v1/users/${userId}/posts` : '/api/v1/posts/my-posts';
-      const response = await api.get(endpoint);
+      const response = await api.get('/api/v1/posts/me');
       return response.data;
     } catch (error) {
       console.error('Error fetching user posts:', error);
