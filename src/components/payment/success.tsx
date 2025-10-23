@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentApiService, PaymentStatusResponse } from '@/services/paymentApi';
+import api from '@/utils/api';
 import { supabase } from '@/lib/superbaseClient';
 import toast from 'react-hot-toast';
 
@@ -29,12 +30,14 @@ export default function PaymentSuccess() {
         // Get payment details from URL parameters or localStorage
         const paymentId = searchParams.get('payment_id') || searchParams.get('paymentId');
         const orderId = searchParams.get('order_id') || searchParams.get('orderId');
-        const mentorId = searchParams.get('mentorId');
+  const mentorId = searchParams.get('mentorId');
+  let bookingId = searchParams.get('bookingId');
         
         console.log('🔍 [SUCCESS] Payment verification started');
         console.log('🔍 [SUCCESS] Payment ID:', paymentId);
         console.log('🔍 [SUCCESS] Order ID:', orderId);
         console.log('🔍 [SUCCESS] Mentor ID:', mentorId);
+        console.log('🔍 [SUCCESS] Booking ID:', bookingId);
         
         // Try to get payment info from localStorage as fallback
         const storedPayment = localStorage.getItem('currentPayment');
@@ -48,6 +51,11 @@ export default function PaymentSuccess() {
         const finalPaymentId = paymentId || paymentInfo?.paymentId;
         const finalOrderId = orderId || paymentInfo?.orderId;
         const finalMentorId = mentorId || paymentInfo?.mentorId;
+        // Fallback: use bookingId from stored payment if not in URL
+        if (!bookingId && paymentInfo?.bookingId) {
+          bookingId = paymentInfo.bookingId;
+          console.log('📦 [SUCCESS] bookingId loaded from storage:', bookingId);
+        }
 
         // Store mentorId in state for display
         if (finalMentorId) {
@@ -123,14 +131,27 @@ export default function PaymentSuccess() {
               console.log('⚡ [SUCCESS] Executing transaction record and payment status update simultaneously...');
               console.log('📝 [SUCCESS] Will update payment_sessions WHERE payment_id =', finalPaymentId);
               console.log('🛡️ [SUCCESS] Using useRef guard to prevent duplicate execution');
+
+              // Update booking payment status in backend if bookingId is present
+              
+                  console.log('🔄 [SUCCESS] Updating booking payment status for bookingId:', bookingId);
+                  const resp = await api.put(`/project-member/projects/payment/${bookingId}`, null, {
+                    params: { status: 'PENDING' },
+                  });
+                  console.log('✅ [SUCCESS] Booking payment status updated:', resp.data);
+                
               
               const [transactionResult, paymentStatusResult] = await Promise.all([
                 paymentApiService.recordTransaction(transactionData),
                 finalPaymentId ? paymentApiService.updatePaymentSessionStatus(finalPaymentId, 'COMPLETED') : Promise.resolve(null)
               ]);
+
+
               
               console.log('✅ [SUCCESS] Transaction recorded successfully:', transactionResult);
               console.log('✅ [SUCCESS] Payment session status updated successfully:', paymentStatusResult);
+              
+              
               toast.success('Payment and transaction recorded successfully!');
             } else {
               console.warn('⚠️ [SUCCESS] Missing user ID or mentor ID, transaction not recorded');
@@ -293,25 +314,25 @@ export default function PaymentSuccess() {
           </div>
         ) : (
           <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Pending</h2>
-            <p className="text-gray-600 mb-6">
+            </div> */}
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Payment is Successful</h2>
+            {/* <p className="text-gray-600 mb-6">
               Your payment is being processed. You will receive a confirmation email once the payment is completed.
-            </p>
+            </p> */}
             
             {paymentStatus && (
               <div className="bg-gray-50 p-4 rounded-lg mb-6 text-left">
                 <h3 className="font-semibold text-gray-900 mb-3">Payment Details</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-600">Status:</span>
                     <span className="font-semibold text-yellow-600">{paymentStatus.status}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Order ID:</span>
                     <span className="font-mono text-xs">{paymentStatus.orderId}</span>
@@ -325,12 +346,12 @@ export default function PaymentSuccess() {
             )}
 
             <div className="space-y-3">
-              <button
+              {/* <button
                 onClick={() => window.location.reload()}
                 className="w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold"
               >
                 Check Status Again
-              </button>
+              </button> */}
               <button
                 onClick={handleContinue}
                 className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"

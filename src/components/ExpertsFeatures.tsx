@@ -16,7 +16,7 @@ interface ExpertsFeaturesProps {
 const ExpertsFeatures: React.FC<ExpertsFeaturesProps> = ({
   className = '',
   onJoinNow,
-  joinNowLink = '/signup'
+  joinNowLink = '/login'
 }) => {
   const features: Feature[] = [
     {

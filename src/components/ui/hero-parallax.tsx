@@ -7,6 +7,8 @@ import {
   useSpring,
   MotionValue,
 } from "motion/react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 
@@ -102,10 +104,10 @@ export const HeroParallax = ({
 };
 
 export const Header = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   return (
-    
- <section className="relative min-h-screen flex items-center justify-center overflow-hidden w-full ">
-      
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden w-full ">
       {/* Background Image */}
       {/* <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -146,7 +148,11 @@ export const Header = () => {
 
     {/* CTA Buttons */}
     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-      <button className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
+      <button
+        type="button"
+        onClick={() => (user ? router.push('/community') : router.push('/register'))}
+        className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring"
+      >
         <span className="flex items-center gap-3">
           Start Connecting
           <svg
@@ -160,19 +166,11 @@ export const Header = () => {
         </span>
       </button>
 
-      <button className="px-8 py-4 text-lg font-medium text-white hover:text-black border-2 border-gray-700 rounded-lg hover:bg-muted hover:border-primary/20 transition-all duration-300">
-        Browse Experts
+      <button onClick={()=> router.push('/services')} className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary/90 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 focus:outline-none focus:ring-2 focus:ring-ring">
+        <span className="flex items-center gap-3">
+          Browse Experts
+        </span>
       </button>
-    </div>
-  </div>
-
-  {/* Scroll Indicator */}
-  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce z-10">
-    <div className="flex flex-col items-center">
-      <span className="text-sm mb-2 font-light">Discover More</span>
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-      </svg>
     </div>
   </div>
 </section>
@@ -227,93 +225,93 @@ export const products = [
     title: "Moonbeam",
     link: "https://gomoonbeam.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/moonbeam.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/1.jpeg",
   },
   {
     title: "Cursor",
     link: "https://cursor.so",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/cursor.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/3.jpeg",
   },
   {
     title: "Rogue",
     link: "https://userogue.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/rogue.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/5.jpeg",
   },
  
   {
     title: "Editorially",
     link: "https://editorially.org",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/editorially.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/6.jpeg",
   },
   {
     title: "Editrix AI",
     link: "https://editrix.ai",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/editrix.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/7.jpeg",
   },
   {
     title: "Pixel Perfect",
     link: "https://app.pixelperfect.quest",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/pixelperfect.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/11.jpeg",
   },
  
   {
     title: "Algochurn",
     link: "https://algochurn.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/algochurn.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/12.jpeg",
   },
   {
     title: "Aceternity UI",
     link: "https://ui.aceternity.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/aceternityui.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/14.jpeg",
   },
   {
     title: "Tailwind Master Kit",
     link: "https://tailwindmasterkit.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/tailwindmasterkit.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/15.jpeg",
   },
   {
     title: "SmartBridge",
     link: "https://smartbridgetech.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/smartbridge.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/16.jpeg",
   },
   {
     title: "Renderwork Studio",
     link: "https://renderwork.studio",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/renderwork.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/8.jpeg",
   },
  
   {
     title: "Creme Digital",
     link: "https://cremedigital.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/cremedigital.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/10.jpeg",
   },
   {
     title: "Golden Bells Academy",
     link: "https://goldenbellsacademy.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/goldenbellsacademy.png",
+     "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/17.jpeg",
   },
   {
     title: "Invoker Labs",
     link: "https://invoker.lol",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/invoker.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/18.jpeg",
   },
   {
     title: "E Free Invoice",
     link: "https://efreeinvoice.com",
     thumbnail:
-      "https://aceternity.com/images/products/thumbnails/new/efreeinvoice.png",
+      "/image/WhatsApp Unknown 2025-10-21 at 1.32.46 AM/19.jpeg",
   },
 ];

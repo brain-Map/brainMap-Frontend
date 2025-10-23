@@ -2,27 +2,35 @@
 
 import React, { useState } from "react";
 import MentorEditForm from "../../../components/domainExpert/MentorEditForm";
+import DeleteConfirmationModal from "../../../components/domainExpert/DeleteConfirmationModal";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import axios from "axios";
 
 export default function DomainExpertSettings() {
   const [activeTab, setActiveTab] = useState<"edit" | "delete">("edit");
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleDelete = async () => {
-    const confirmed = confirm(
-      "Are you sure you want to delete your profile? This action is irreversible."
-    );
-    if (!confirmed) return;
+    // open confirmation modal
+    openModal();
+  };
+
+  const confirmDelete = async () => {
     try {
       setDeleting(true);
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-      const userId = typeof window !== 'undefined' && localStorage.getItem('userId');
       if (!userId) throw new Error('Missing user id');
 
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/domain-experts/${userId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/deleteUser/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -33,6 +41,7 @@ export default function DomainExpertSettings() {
       alert('Failed to delete profile: ' + (err?.response?.data?.message || err?.message));
     } finally {
       setDeleting(false);
+      closeModal();
     }
   };
 
@@ -101,6 +110,13 @@ export default function DomainExpertSettings() {
           </div>
         </div>
       </div>
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onCancel={closeModal}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }
+
