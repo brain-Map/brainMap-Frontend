@@ -178,7 +178,7 @@ export default function ExpertReviewInterface() {
 
         // Filter only ACCEPTED experts
         const acceptedExperts = fetchedServices
-          .filter((service) => service.status === 'ACCEPTED')
+          .filter((service) => service.status === 'CONFIRMED')
           .map((service) => {
             // Log each service to see what fields are available
             console.log('Full service object:', service);
